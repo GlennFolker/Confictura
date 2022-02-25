@@ -1,0 +1,10 @@
+{
+    "displayName": "[royal]Confictura[]",
+    "name": "confictura",
+    "author": "GlennFolker",
+    "main": "confictura.ConficturaMod",
+    "description": "... far beneath the reality.",
+    "version": 0.1,
+    "minGameVersion": 135,
+    "java": true
+}

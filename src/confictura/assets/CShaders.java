@@ -81,7 +81,7 @@ public final class CShaders{
                 shader = new SlashShader(this);
             }
 
-            buffer.set(attribute.items, 0, attribute.size, 0);
+            buffer.set(attribute.items, 0, attribute.size);
         }
 
         public SlashShaderContainer uniform(float angle, float length){

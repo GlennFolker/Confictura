@@ -5,6 +5,8 @@ import arc.files.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.graphics.gl.*;
+import arc.struct.*;
+import confictura.graphics.GLBuffer.*;
 import mindustry.game.EventType.*;
 import mindustry.graphics.*;
 import mindustry.mod.*;
@@ -19,7 +21,7 @@ public final class CShaders{
     /** Buffers everything; to be used with several shaders that need to back-read rendered pixels. */
     public static FrameBuffer screenBuffer;
 
-    public static SlashShader slash;
+    public static SlashShaderContainer slash;
 
     private CShaders(){
         throw new AssertionError();
@@ -40,22 +42,96 @@ public final class CShaders{
             screenBuffer.blit(Shaders.screenspace);
         }));
 
-        slash = new SlashShader();
+        slash = new SlashShaderContainer();
+    }
+
+    public static class SlashShaderContainer{
+        public int noiseOctaves = 4;
+        public float noiseScale = 25.0f;
+        public float noiseLacunarity = 0.6f;
+        public float noisePersistence = 0.5f;
+        public float blend = 1f;
+
+        protected SlashShader shader;
+        protected final FloatSeq uniform;
+        protected final FloatSeq attribute;
+        protected final ArrayBuffer buffer;
+
+        public SlashShaderContainer(){
+            int uniformCount = 128, attributeCount = uniformCount * 4;
+
+            uniform = new FloatSeq(uniformCount);
+            attribute = new FloatSeq(attributeCount);
+            buffer = new ArrayBuffer(false, attributeCount);
+            shader = new SlashShader(this);
+        }
+
+        public SlashShader getShader(){
+            return shader;
+        }
+
+        public void begin(){
+            uniform.clear();
+            attribute.clear();
+        }
+
+        public void end(){
+            if(shader.dataCount < uniform.items.length){
+                shader.dispose();
+                shader = new SlashShader(this);
+            }
+
+            buffer.set(attribute.items, 0, attribute.size, 0);
+        }
+
+        public SlashShaderContainer uniform(float angle, float length){
+            uniform.add(angle, length);
+            return this;
+        }
+
+        public SlashShaderContainer attribute(float center, float intensity, int index){
+            attribute.add(center, intensity, index);
+            return this;
+        }
     }
 
     public static class SlashShader extends Shader{
-        public float noiseScale;
+        protected final int dataCount;
+        protected final SlashShaderContainer container;
+        protected final VertexAttribute attribute;
+        protected final int location;
 
-        public SlashShader(){
-            super(getFile("batch.vert"), getFile("slash.frag"));
+        public SlashShader(SlashShaderContainer container){
+            super(
+                getFile("slash.vert").readString(),
+                "#define DATA_COUNT " + container.uniform.items.length + "\n" + getFile("slash.frag").readString()
+            );
+            this.container = container;
+            dataCount = container.uniform.items.length;
+
+            attribute = new VertexAttribute(3, Gl.floatV, false, "a_slashInput");
+            location = getAttributeLocation(attribute.alias);
         }
 
         @Override
         public void apply(){
+            // Bind a non-SpriteBatch vertex attribute to a custom buffer.
+            container.buffer.bind();
+            Gl.enableVertexAttribArray(location);
+            Gl.vertexAttribPointer(location, attribute.components, attribute.type, attribute.normalized, attribute.size, 0);
+
+            // Set relevant uniform.
             setUniformf("u_campos", Core.camera.position.x - Core.camera.width / 2f, Core.camera.position.y - Core.camera.height / 2f);
             setUniformf("u_resolution", Core.camera.width, Core.camera.height);
             setUniformf("u_viewport", Core.graphics.getWidth(), Core.graphics.getHeight());
-            setUniformf("u_scale", noiseScale);
+            setUniform2fv("u_slashVerts", container.uniform.items, 0, container.uniform.size);
+            setUniformi("u_slashVertsLen", container.uniform.size);
+
+            setUniformi("u_noiseOct", container.noiseOctaves);
+            setUniformf("u_noiseScl", container.noiseScale);
+            setUniformf("u_noiseLac", container.noiseLacunarity);
+            setUniformf("u_noisePer", container.noisePersistence);
+            setUniformf("u_blend", container.blend);
 
             // First, bind the screen texture to active unit 1...
             screenBuffer.getTexture().bind(1);

@@ -3,89 +3,94 @@
 varying lowp vec4 v_color;
 varying lowp vec4 v_mix_color;
 varying highp vec2 v_texCoords;
+varying highp vec2 v_slashData;
+flat varying int v_slashIndex;
+
+uniform highp sampler2D u_texture;
 
 uniform highp sampler2D u_screenTexture;
-uniform highp sampler2D u_texture;
 uniform highp vec2 u_campos;
 uniform highp vec2 u_resolution;
-uniform vec2 u_viewport;
+uniform highp vec2 u_viewport;
+uniform lowp float u_blend;
 
-uniform float u_scale;
+uniform lowp float u_noiseScl;
+uniform lowp float u_noiseLac;
+uniform lowp float u_noisePer;
+uniform int u_noiseOct;
 
-const int octaves = 3;
-const float persistence = 0.4;
+uniform highp vec2 u_slashVerts[DATA_COUNT];
+uniform int u_slashVertsLen;
 
-//https://www.shadertoy.com/view/Mls3RS
-float noise(int x, int y){
-    float fx = float(x);
-    float fy = float(y);
-    return 2.0 * fract(sin(dot(vec2(fx, fy), vec2(12.9898, 78.233))) * 43758.5453) - 1.0;
-}
-
-float smoothNoise(int x, int y){
-    return
-        noise(x, y) / 4.0 +
-        (noise(x + 1, y) + noise(x - 1, y) + noise(x, y + 1) + noise(x, y - 1)) / 8.0 +
-        (noise(x + 1, y + 1) + noise(x + 1, y - 1) + noise(x - 1, y + 1) + noise(x - 1, y - 1)) / 16.0;
-}
-
-float cosInterpolation(float x, float y, float n){
-    float r = n * 3.1415926;
-    float f = (1.0 - cos(r)) * 0.5;
-    return x * (1.0 - f) + y * f;
-}
-
-float interpolationNoise(float x, float y){
-    int ix = int(x);
-    int iy = int(y);
-    float fracx = x - float(int(x));
-    float fracy = y - float(int(y));
+float hash(vec2 p){
+    vec3 p3 = fract(vec3(p.xyx) * 0.13);
+    p3 += dot(p3, p3.yzx + 3.333);
     
-    float v1 = smoothNoise(ix, iy);
-    float v2 = smoothNoise(ix + 1, iy);
-    float v3 = smoothNoise(ix, iy + 1);
-    float v4 = smoothNoise(ix + 1, iy + 1);
-    
-    float i1 = cosInterpolation(v1, v2, fracx);
-    float i2 = cosInterpolation(v3, v4, fracx);
-    
-    return cosInterpolation(i1, i2, fracy);
+    return fract((p3.x + p3.y) * p3.z);
 }
 
-float perlinNoise2D(float x, float y){
+float noise(vec2 pos){
+    vec2 i = floor(pos);
+    vec2 f = fract(pos);
+    
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+float octaveNoise(vec2 pos){
+    pos /= u_noiseScl;
+    
+    float frequency = 1.0;
+    float magnitude = 1.0;
     float sum = 0.0;
-    float frequency = 0.0;
-    float amplitude = 0.0;
-
-    for(int i = 0; i < octaves; i++){
-        frequency = pow(2.0, float(i));
-        amplitude = pow(persistence, float(i));
-
-        sum += interpolationNoise(x * frequency, y * frequency) * amplitude;
+    float total = 0.0;
+    for(int i = 0; i < u_noiseOct; i++){
+        sum += noise(pos / frequency) * magnitude;
+        total += magnitude;
+        
+        frequency *= u_noiseLac;
+        magnitude *= u_noisePer;
     }
     
-    return sum;
+    return sum / total;
+}
+
+float interp(float val){
+    float res = val * val * (3.0 - 2.0 * val);
+    return res * res;
+}
+
+vec2 trns(float angle, float amount){
+    return vec2(amount * cos(angle), amount * sin(angle));
 }
 
 void main(){
-    vec2 c = gl_FragCoord.xy / u_viewport;
-    vec2 coords = c * u_resolution + u_campos;
-
-    float noise = perlinNoise2D(coords.x * u_scale, coords.y * u_scale);
-    float center = (1.0 - abs(v_color.g - 0.5) * 2.0);
-    center = pow(center - 1.0, 2.0) * -1.0 + 1.0;
-
-    float angle = (v_color.r * 3.1415927 * 2.0), angleCos = cos(angle), angleSin = sin(angle);
-    float intensity = (noise * 2.0 - 1.0) * center * v_color.b * 32.0;
+    float center = interp(v_slashData.x);
+    float intensity = v_slashData.y * center;
     
-    vec2 vec = vec2(intensity, 0.0);
-    vec.x = vec.x * angleCos - vec.y * angleSin;
-    vec.y = vec.x * angleSin + vec.y * angleCos;
+    vec2 deviation = vec2(0.0, 0.0);
+    for(int slashVertsIndex = v_slashIndex; slashVertsIndex < u_slashVertsLen; slashVertsIndex++){
+        if(intensity <= 0.0) break;
+        
+        vec2 slashVert = u_slashVerts[slashVertsIndex];
+        float angle = slashVert.x, len = slashVert.y;
     
-    coords = (coords + vec - u_campos) / u_resolution;
+        deviation += trns(angle, min(intensity, len));
+        intensity -= len;
+    }
     
-    vec4 tex = texture2D(u_texture, v_texCoords) * v_mix_color;
-    tex.a *= center;
-
-    gl_FragColor = vec4(tex.rgb * tex.a, 1.0) + texture2D(u_screenTexture, coords);
+    vec2 coords = (gl_FragCoord.xy / u_viewport) * u_resolution + u_campos;
+    coords = (coords + deviation - u_campos) / u_resolution;
+    
+    vec4 screen = texture2D(u_screenTexture, coords);
+    
+    vec4 tex = texture2D(u_texture, v_texCoords);
+    tex = v_color * mix(tex, vec4(v_mix_color.rgb, tex.a), v_mix_color.a);
+    
+    gl_FragColor = screen * tex.a * u_blend + tex * tex.a;
 }

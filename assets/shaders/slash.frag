@@ -3,8 +3,7 @@
 varying lowp vec4 v_color;
 varying lowp vec4 v_mix_color;
 varying highp vec2 v_texCoords;
-varying highp vec2 v_slashData;
-flat varying int v_slashIndex;
+varying highp vec3 v_slashData;
 
 uniform highp sampler2D u_texture;
 
@@ -74,7 +73,7 @@ void main(){
     float intensity = v_slashData.y * center;
     
     vec2 deviation = vec2(0.0, 0.0);
-    for(int slashVertsIndex = v_slashIndex; slashVertsIndex < u_slashVertsLen; slashVertsIndex++){
+    for(int slashVertsIndex = int(v_slashData.z); slashVertsIndex < u_slashVertsLen; slashVertsIndex++){
         if(intensity <= 0.0) break;
         
         vec2 slashVert = u_slashVerts[slashVertsIndex];

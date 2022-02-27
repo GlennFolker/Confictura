@@ -1,10 +1,10 @@
 #define HIGHP
 
-attribute highp vec2 a_position;
-attribute lowp vec4 a_color;
-attribute highp vec2 a_texCoord0;
-attribute lowp vec4 a_mix_color;
-attribute highp vec3 a_slashInput;
+attribute vec2 a_position;
+attribute vec4 a_color;
+attribute vec2 a_texCoord0;
+attribute vec4 a_mix_color;
+attribute vec3 a_slashInput;
 
 uniform mat4 u_projTrans;
 
@@ -21,7 +21,7 @@ void main(){
     v_mix_color.a *= (255.0 / 254.0);
     
     v_texCoords = a_texCoord0;
-    v_slashData = vec3(1.0 - abs(a_slashInput.x - 0.5) * 2.0, a_slashInput.y, a_slashInput.z);
+    v_slashData = a_slashInput;
     
     gl_Position = u_projTrans * vec4(a_position, 0.0, 1.0);
 }

@@ -61,6 +61,10 @@ public abstract class GLBuffer implements Disposable{
             Gl.bindBuffer(Gl.arrayBuffer, handle);
         }
 
+        public void unbind(){
+            Gl.bindBuffer(Gl.arrayBuffer, 0);
+        }
+
         public void set(float[] src, int offset, int length){
             resize(length * 4);
 
@@ -70,12 +74,15 @@ public abstract class GLBuffer implements Disposable{
 
             Gl.bindBuffer(Gl.arrayBuffer, handle);
             Gl.bufferData(Gl.arrayBuffer, length * 4, buffer, usage);
+            Gl.bindBuffer(Gl.arrayBuffer, 0);
         }
 
         @Override
-        public void dispose(){
-            Gl.bindBuffer(Gl.arrayBuffer, 0);
-            super.dispose();
+        public void resize(int size){
+            if(this.size >= size) return;
+
+            super.resize(size);
+            buffer = super.buffer.asFloatBuffer();
         }
     }
 }

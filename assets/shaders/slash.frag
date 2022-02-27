@@ -1,5 +1,8 @@
 #define HIGHP
 
+#define PI 3.1415927
+#define PI2 2 * PI
+
 varying lowp vec4 v_color;
 varying lowp vec4 v_mix_color;
 varying highp vec2 v_texCoords;
@@ -13,10 +16,11 @@ uniform highp vec2 u_resolution;
 uniform highp vec2 u_viewport;
 uniform lowp float u_blend;
 
-uniform lowp float u_noiseScl;
-uniform lowp float u_noiseLac;
-uniform lowp float u_noisePer;
 uniform int u_noiseOct;
+uniform float u_noiseScl;
+uniform float u_noiseLac;
+uniform float u_noisePer;
+uniform float u_noiseMag;
 
 uniform highp vec2 u_slashVerts[DATA_COUNT];
 uniform int u_slashVertsLen;
@@ -43,6 +47,7 @@ float noise(vec2 pos){
 
 float octaveNoise(vec2 pos){
     pos /= u_noiseScl;
+    pos += vec2(1000.0, 1000.0);
     
     float frequency = 1.0;
     float magnitude = 1.0;
@@ -60,8 +65,7 @@ float octaveNoise(vec2 pos){
 }
 
 float interp(float val){
-    float res = val * val * (3.0 - 2.0 * val);
-    return res * res;
+    return val * val * (3.0 - 2.0 * val);
 }
 
 vec2 trns(float angle, float amount){
@@ -69,27 +73,38 @@ vec2 trns(float angle, float amount){
 }
 
 void main(){
-    float center = interp(v_slashData.x);
-    float intensity = v_slashData.y * center;
-    
+    vec2 coords = (gl_FragCoord.xy / u_viewport) * u_resolution + u_campos;
+    float magRaw = interp(octaveNoise(coords));
+    float mag = pow((magRaw * u_noiseMag - u_noiseMag / 2.0) * v_slashData.y, 2.0);
+
+    float center = interp(1.0 - abs(v_slashData.x - 0.5) * 2.0);
+    float intensity = (v_slashData.y + mag) * center;
+
     vec2 deviation = vec2(0.0, 0.0);
-    for(int slashVertsIndex = int(v_slashData.z); slashVertsIndex < u_slashVertsLen; slashVertsIndex++){
+
+    int startIndex = int(v_slashData.z);
+    float fractIndex = fract(v_slashData.z);
+    for(int slashVertsIndex = min(startIndex, u_slashVertsLen - 1); slashVertsIndex >= 0; slashVertsIndex--){
         if(intensity <= 0.0) break;
         
-        vec2 slashVert = u_slashVerts[slashVertsIndex];
-        float angle = slashVert.x, len = slashVert.y;
+        vec2
+            slashVert = u_slashVerts[slashVertsIndex],
+            slashVertNext = slashVertsIndex == 0 ? slashVert : u_slashVerts[slashVertsIndex - 1];
+        float
+            angle = slashVert.x,
+            len = mix(slashVert.y, slashVertNext.y, fractIndex);
     
         deviation += trns(angle, min(intensity, len));
         intensity -= len;
     }
     
-    vec2 coords = (gl_FragCoord.xy / u_viewport) * u_resolution + u_campos;
     coords = (coords + deviation - u_campos) / u_resolution;
     
     vec4 screen = texture2D(u_screenTexture, coords);
     
     vec4 tex = texture2D(u_texture, v_texCoords);
+    tex.a *= center * (0.5 + magRaw * 0.5);
     tex = v_color * mix(tex, vec4(v_mix_color.rgb, tex.a), v_mix_color.a);
     
-    gl_FragColor = screen * tex.a * u_blend + tex * tex.a;
+    gl_FragColor = vec4((tex * tex.a + screen * screen.a * (1.0 - tex.a * (1.0 - u_blend))).rgb, 1.0);
 }

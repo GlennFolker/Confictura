@@ -19,9 +19,11 @@ public class ConficturaMod extends Mod{
         Events.on(ClientLoadEvent.class, e -> mods.getScripts().runConsole("""
             importPackage(java.lang);
             let bindTrail = (len, col, z) => {
-                let trail = Class.forName("confictura.graphics.SlashTrail", true, Vars.mods.mainLoader()).getConstructor(Integer.TYPE).newInstance(new Integer(len));
-                Events.run(Trigger.update, () => trail.update(Vars.player.x, Vars.player.y));
+                let trail = Class.forName("confictura.graphics.SlashTrail", true, Vars.mods.mainLoader()).getConstructor(TextureRegion, Integer.TYPE).newInstance(Core.atlas.find("confictura-slash-trail"), new Integer(len));
+                Events.run(Trigger.update, () => { if(!Vars.state.isPaused()) trail.update(Vars.player.x, Vars.player.y); });
                 Events.run(Trigger.drawOver, () => { Draw.z(z); trail.draw(col, 20); });
+
+                return trail;
             }
             """
         ));

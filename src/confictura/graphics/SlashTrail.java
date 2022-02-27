@@ -23,17 +23,19 @@ public class SlashTrail extends Trail{
     /** The trail's mix color alpha, used in {@link #draw(Color, float)}. Fades as the trail goes. */
     public float mixAlpha = 0.5f;
     /** The slashing intensity scale to the trail velocity. */
-    public float slashScl = 4f;
+    public float slashScale = 7f;
     /** The slashing noise octaves. */
     public int noiseOctaves = 4;
     /** The slashing noise scale. */
-    public float noiseScale = 25.0f;
+    public float noiseScale = 24.0f;
     /** The slashing noise lacunarity. */
-    public float noiseLacunarity = 0.6f;
+    public float noiseLacunarity = 0.67f;
     /** The slashing noise persistence. */
-    public float noisePersistence = 0.5f;
+    public float noisePersistence = 0.67f;
+    /** The slashing noise magnitude. */
+    public float noiseMagnitude = 0.3f;
     /** The trail blending. `0f` is identical to {@link Blending#normal}, and `1f` to {@link Blending#additive}. */
-    public float blend = 1f;
+    public float blend = 0.5f;
 
     private static final float[] vertices = new float[24];
 
@@ -59,11 +61,12 @@ public class SlashTrail extends Trail{
         out.shrink = shrink;
         out.fadeAlpha = fadeAlpha;
         out.mixAlpha = mixAlpha;
-        out.slashScl = slashScl;
+        out.slashScale = slashScale;
         out.noiseOctaves = noiseOctaves;
         out.noiseScale = noiseScale;
         out.noiseLacunarity = noiseLacunarity;
         out.noisePersistence = noisePersistence;
+        out.noiseMagnitude = noiseMagnitude;
         out.blend = blend;
         out.points.addAll(points);
         out.lastX = lastX;
@@ -104,6 +107,8 @@ public class SlashTrail extends Trail{
             u = region.u2, v = region.v, u2 = region.u, v2 = region.v2;
 
         Draw.draw(Draw.z(), () -> {
+            CShaders.subBuffer.begin(Color.clear);
+
             Draw.blend();
             Draw.shader(CShaders.slash.getShader(), true);
 
@@ -112,6 +117,7 @@ public class SlashTrail extends Trail{
             CShaders.slash.noiseScale = noiseScale;
             CShaders.slash.noiseLacunarity = noiseLacunarity;
             CShaders.slash.noisePersistence = noisePersistence;
+            CShaders.slash.noiseMagnitude = noiseMagnitude;
             CShaders.slash.blend = blend;
 
             float lastAngle = endAngle;
@@ -172,7 +178,7 @@ public class SlashTrail extends Trail{
                 vertices[15] = u2;
                 vertices[16] = mv2;
                 vertices[17] = mix2;
-                CShaders.slash.attribute(1f, in2, index);
+                CShaders.slash.attribute(1f, in2, index + 1);
 
                 vertices[18] = x2 - nx;
                 vertices[19] = y2 - ny;
@@ -180,7 +186,7 @@ public class SlashTrail extends Trail{
                 vertices[21] = u;
                 vertices[22] = mv2;
                 vertices[23] = mix2;
-                CShaders.slash.attribute(0f, in2, index);
+                CShaders.slash.attribute(0f, in2, index + 1);
 
                 Draw.vert(region.texture, vertices, 0, 24);
                 lastAngle = z2;
@@ -188,6 +194,9 @@ public class SlashTrail extends Trail{
 
             CShaders.slash.end();
             Draw.shader();
+
+            CShaders.subBuffer.end();
+            CShaders.subBuffer.blit(Shaders.screenspace);
         });
     }
 
@@ -208,11 +217,11 @@ public class SlashTrail extends Trail{
 
             counter %= 1f;
             points.add(x, y, width, 0f);
-            points.add(Mathf.dst(x, y, lastX, lastY) * slashScl);
+            points.add(Mathf.dst(x, y, lastX, lastY) * slashScale);
         }
 
         lastAngle = -Angles.angleRad(x, y, lastX, lastY);
-        lastIntensity = Mathf.dst(x, y, lastX, lastY) * slashScl;
+        lastIntensity = Mathf.dst(x, y, lastX, lastY) * slashScale;
         lastX = x;
         lastY = y;
         lastW = width;
@@ -245,7 +254,7 @@ public class SlashTrail extends Trail{
                 float f = items[i + 3] = (v + last - first) / maxDist * frac;
                 last += v;
 
-                items[i + 4] *= f;
+                items[i + 4] *= Interp.pow10Out.apply(f);
             }
         }
     }

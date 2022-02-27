@@ -20,6 +20,8 @@ import static mindustry.Vars.*;
 public final class CShaders{
     /** Buffers everything; to be used with several shaders that need to back-read rendered pixels. */
     public static FrameBuffer screenBuffer;
+    /** To avoid writing to the currently read {@link #screenBuffer}. */
+    public static FrameBuffer subBuffer;
 
     public static SlashShaderContainer slash;
 
@@ -30,7 +32,10 @@ public final class CShaders{
     /** Initializes this class' shaders and hooks rendering codes. Should be called in {@link Mod#loadContent()}. */
     public static void load(){
         screenBuffer = new FrameBuffer(Core.graphics.getWidth(), Core.graphics.getHeight());
+        subBuffer = new FrameBuffer(Core.graphics.getWidth(), Core.graphics.getHeight());
+
         Events.run(Trigger.draw, () -> {
+            subBuffer.resize(Core.graphics.getWidth(), Core.graphics.getHeight());
             screenBuffer.resize(Core.graphics.getWidth(), Core.graphics.getHeight());
             screenBuffer.begin(Color.clear);
         });
@@ -50,6 +55,7 @@ public final class CShaders{
         public float noiseScale = 25.0f;
         public float noiseLacunarity = 0.6f;
         public float noisePersistence = 0.5f;
+        public float noiseMagnitude = 8f;
         public float blend = 1f;
 
         protected SlashShader shader;
@@ -119,6 +125,7 @@ public final class CShaders{
             container.buffer.bind();
             Gl.enableVertexAttribArray(location);
             Gl.vertexAttribPointer(location, attribute.components, attribute.type, attribute.normalized, attribute.size, 0);
+            container.buffer.unbind();
 
             // Set relevant uniform.
             setUniformf("u_campos", Core.camera.position.x - Core.camera.width / 2f, Core.camera.position.y - Core.camera.height / 2f);
@@ -131,6 +138,7 @@ public final class CShaders{
             setUniformf("u_noiseScl", container.noiseScale);
             setUniformf("u_noiseLac", container.noiseLacunarity);
             setUniformf("u_noisePer", container.noisePersistence);
+            setUniformf("u_noiseMag", container.noiseMagnitude);
             setUniformf("u_blend", container.blend);
 
             // First, bind the screen texture to active unit 1...
@@ -139,6 +147,18 @@ public final class CShaders{
 
             // ... then, just set the active unit to 0, and let the sprite batch bind its texture by itself.
             Gl.activeTexture(Gl.texture0);
+        }
+
+        @Override
+        public void disableVertexAttribute(String name){
+            super.disableVertexAttribute(name);
+            if(name.equals("a_position")) super.disableVertexAttribute("a_slashInput");
+        }
+
+        @Override
+        public void disableVertexAttribute(int location){
+            super.disableVertexAttribute(location);
+            if(location == getAttributeLocation("a_position")) super.disableVertexAttribute(this.location);
         }
     }
 

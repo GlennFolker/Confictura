@@ -2,7 +2,8 @@
 A Mindustry v7 experimental mod.
 
 ### Features
-- "Shockwave" effect implementation.
+- "Shockwave" effect, distorting the screen pixels.
+- Slash trail effect.
 
 ## Building for Desktop Testing
 

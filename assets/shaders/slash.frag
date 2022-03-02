@@ -16,6 +16,9 @@ uniform highp vec2 u_resolution;
 uniform highp vec2 u_viewport;
 uniform lowp float u_blend;
 
+uniform vec4 u_glowColor;
+uniform float u_glowThreshold;
+
 uniform int u_noiseOct;
 uniform float u_noiseScl;
 uniform float u_noiseLac;
@@ -82,29 +85,34 @@ void main(){
 
     vec2 deviation = vec2(0.0, 0.0);
 
-    int startIndex = int(v_slashData.z);
-    float fractIndex = fract(v_slashData.z);
-    for(int slashVertsIndex = min(startIndex, u_slashVertsLen - 1); slashVertsIndex >= 0; slashVertsIndex--){
+    int startIndex = min(int(v_slashData.z), u_slashVertsLen - 1);
+    float fractIndex = 1.0 - fract(v_slashData.z);
+    float delta = startIndex > 0
+        ? mix(u_slashVerts[startIndex].y, u_slashVerts[startIndex - 1].y, fractIndex)
+        : u_slashVerts[0].y;
+
+    for(int slashVertsIndex = startIndex; slashVertsIndex >= 0; slashVertsIndex--){
         if(intensity <= 0.0) break;
-        
-        vec2
-            slashVert = u_slashVerts[slashVertsIndex],
-            slashVertNext = slashVertsIndex == 0 ? slashVert : u_slashVerts[slashVertsIndex - 1];
+
+        vec2 slashVert = u_slashVerts[slashVertsIndex];
         float
             angle = slashVert.x,
-            len = mix(slashVert.y, slashVertNext.y, fractIndex);
-    
+            len = slashVertsIndex == startIndex ? delta : slashVert.y;
+
         deviation += trns(angle, min(intensity, len));
         intensity -= len;
     }
-    
+
     coords = (coords + deviation - u_campos) / u_resolution;
-    
     vec4 screen = texture2D(u_screenTexture, coords);
-    
+
     vec4 tex = texture2D(u_texture, v_texCoords);
-    tex.a *= center * (0.5 + magRaw * 0.5);
-    tex = v_color * mix(tex, vec4(v_mix_color.rgb, tex.a), v_mix_color.a);
-    
+    tex.a = min(tex.a * center * (0.3 + magRaw), 1.0);
+    tex = mix(
+        v_color * mix(tex, vec4(v_mix_color.rgb, tex.a), v_mix_color.a),
+        u_glowColor,
+        pow(interp(min((1.0 + pow(1.0 - v_slashData.x, 2.0)) * min(delta / u_glowThreshold, 1.0) * v_color.a, 1.0)), 2.0)
+    );
+
     gl_FragColor = vec4((tex * tex.a + screen * screen.a * (1.0 - tex.a * (1.0 - u_blend))).rgb, 1.0);
 }

@@ -51,12 +51,15 @@ public final class CShaders{
     }
 
     public static class SlashShaderContainer{
-        public int noiseOctaves = 4;
-        public float noiseScale = 25.0f;
-        public float noiseLacunarity = 0.6f;
-        public float noisePersistence = 0.5f;
-        public float noiseMagnitude = 8f;
-        public float blend = 1f;
+        public Color glowColor = new Color();
+        public float glowThreshold;
+
+        public int noiseOctaves;
+        public float noiseScale;
+        public float noiseLacunarity;
+        public float noisePersistence;
+        public float noiseMagnitude;
+        public float blend;
 
         protected SlashShader shader;
         protected final FloatSeq uniform;
@@ -127,7 +130,10 @@ public final class CShaders{
             Gl.vertexAttribPointer(location, attribute.components, attribute.type, attribute.normalized, attribute.size, 0);
             container.buffer.unbind();
 
-            // Set relevant uniform.
+            // Set relevant uniforms.
+            setUniformf("u_glowColor", container.glowColor);
+            setUniformf("u_glowThreshold", container.glowThreshold);
+
             setUniformf("u_campos", Core.camera.position.x - Core.camera.width / 2f, Core.camera.position.y - Core.camera.height / 2f);
             setUniformf("u_resolution", Core.camera.width, Core.camera.height);
             setUniformf("u_viewport", Core.graphics.getWidth(), Core.graphics.getHeight());

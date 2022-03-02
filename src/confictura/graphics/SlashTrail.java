@@ -14,16 +14,18 @@ import mindustry.graphics.*;
  * @author GlennFolker
  */
 public class SlashTrail extends Trail{
+    /** Whether the glow should be on the left side instead of right. */
+    public boolean flip;
     /** The texture region of this trail. */
     public TextureRegion region;
-    /** The trail's width shrink as it goes, in percentage. `1f` makes the trail triangle-shaped. */
-    public float shrink = 0f;
-    /** The trail's alpha as it goes, in percentage. `1f` makes the trail's tail completely invisible. */
-    public float fadeAlpha = 1f;
     /** The trail's mix color alpha, used in {@link #draw(Color, float)}. Fades as the trail goes. */
     public float mixAlpha = 0.5f;
     /** The slashing intensity scale to the trail velocity. */
     public float slashScale = 7f;
+    /** The trail's glow color which appears when the trail's velocity is fast enough. */
+    public Color glowColor = Pal.lighterOrange;
+    /** The delta length at which the trail starts glowing. */
+    public float glowThreshold = 16f;
     /** The slashing noise octaves. */
     public int noiseOctaves = 4;
     /** The slashing noise scale. */
@@ -35,7 +37,7 @@ public class SlashTrail extends Trail{
     /** The slashing noise magnitude. */
     public float noiseMagnitude = 0.3f;
     /** The trail blending. `0f` is identical to {@link Blending#normal}, and `1f` to {@link Blending#additive}. */
-    public float blend = 0.5f;
+    public float blend = 1f;
 
     private static final float[] vertices = new float[24];
 
@@ -52,16 +54,17 @@ public class SlashTrail extends Trail{
         super(0); // Don't allocate anything for base class' point array.
 
         this.length = length;
-        points = new FloatSeq(length * 5);
+        points = new FloatSeq(length * 6);
     }
 
     @Override
     public SlashTrail copy(){
         SlashTrail out = new SlashTrail(region, length);
-        out.shrink = shrink;
-        out.fadeAlpha = fadeAlpha;
+        out.flip = flip;
         out.mixAlpha = mixAlpha;
         out.slashScale = slashScale;
+        out.glowColor = glowColor;
+        out.glowThreshold = glowThreshold;
         out.noiseOctaves = noiseOctaves;
         out.noiseScale = noiseScale;
         out.noiseLacunarity = noiseLacunarity;
@@ -85,7 +88,7 @@ public class SlashTrail extends Trail{
 
     @Override
     public int size(){
-        return points.size / 5;
+        return points.size / 6;
     }
 
     @Override
@@ -103,7 +106,7 @@ public class SlashTrail extends Trail{
 
         float
             endAngle = this.lastAngle,
-            size = width / (psize / 5f), fracOffset = psize - psize * shrink, fracStride = 1f - fracOffset / psize,
+            size = width / (psize / 6f), fracOffset = psize - psize * 0.5f, fracStride = 1f - fracOffset / psize,
             u = region.u2, v = region.v, u2 = region.u, v2 = region.v2;
 
         Draw.draw(Draw.z(), () -> {
@@ -113,6 +116,8 @@ public class SlashTrail extends Trail{
             Draw.shader(CShaders.slash.getShader(), true);
 
             CShaders.slash.begin();
+            CShaders.slash.glowColor.set(glowColor);
+            CShaders.slash.glowThreshold = glowThreshold;
             CShaders.slash.noiseOctaves = noiseOctaves;
             CShaders.slash.noiseScale = noiseScale;
             CShaders.slash.noiseLacunarity = noiseLacunarity;
@@ -121,17 +126,18 @@ public class SlashTrail extends Trail{
             CShaders.slash.blend = blend;
 
             float lastAngle = endAngle;
-            for(int i = 0; i < psize; i += 5){
+            for(int i = 0; i < psize; i += 6){
                 float
                     x1 = items[i], y1 = items[i + 1], w1 = items[i + 2], rv1 = items[i + 3], in1 = items[i + 4],
-                    x2, y2, w2, rv2, in2;
+                    x2, y2, w2, rv2, in2,
+                    glow = items[i + 5];
 
-                if(i < psize - 5){
-                    x2 = items[i + 5];
-                    y2 = items[i + 6];
-                    w2 = items[i + 7];
-                    rv2 = items[i + 8];
-                    in2 = items[i + 9];
+                if(i < psize - 6){
+                    x2 = items[i + 6];
+                    y2 = items[i + 7];
+                    w2 = items[i + 8];
+                    rv2 = items[i + 9];
+                    in2 = items[i + 10];
                 }else{
                     x2 = lastX;
                     y2 = lastY;
@@ -141,19 +147,19 @@ public class SlashTrail extends Trail{
                 }
 
                 float
-                    z2 = i == psize - 5 ? endAngle : -Angles.angleRad(x1, y1, x2, y2), z1 = i == 0 ? z2 : lastAngle,
-                    fs1 = ((fracOffset + i * fracStride) / 5f) * size * w1,
-                    fs2 = ((fracOffset + (i + 5f) * fracStride) / 5f) * size * w2,
+                    z2 = i == psize - 6 ? endAngle : -Angles.angleRad(x1, y1, x2, y2), z1 = i == 0 ? z2 : lastAngle,
+                    fs1 = ((fracOffset + i * fracStride) / 6f) * size * w1,
+                    fs2 = ((fracOffset + (i + 6f) * fracStride) / 6f) * size * w2,
 
                     cx = Mathf.sin(z1) * fs1, cy = Mathf.cos(z1) * fs1,
                     nx = Mathf.sin(z2) * fs2, ny = Mathf.cos(z2) * fs2,
 
                     mv1 = Mathf.lerp(v2, v, rv1), mv2 = Mathf.lerp(v2, v, rv2),
-                    col1 = Tmp.c1.set(Draw.getColor()).a(rv1 * fadeAlpha + (1f - fadeAlpha)).toFloatBits(),
-                    col2 = Tmp.c1.set(Draw.getColor()).a(rv2 * fadeAlpha + (1f - fadeAlpha)).toFloatBits(),
+                    col1 = Tmp.c1.set(Draw.getColor()).a(rv1).toFloatBits(),
+                    col2 = Tmp.c1.set(Draw.getColor()).a(rv2).toFloatBits(),
                     mix1 = Tmp.c1.set(color).a(rv1 * mixAlpha).toFloatBits(),
                     mix2 = Tmp.c1.set(color).a(rv2 * mixAlpha).toFloatBits();
-                int index = i / 5;
+                int index = i / 6;
 
                 CShaders.slash.uniform(Angles.angleRad(x2, y2, x1, y1), Mathf.dst(x2, y2, x1, y1));
                 vertices[0] = x1 - cx;
@@ -162,7 +168,7 @@ public class SlashTrail extends Trail{
                 vertices[3] = u;
                 vertices[4] = mv1;
                 vertices[5] = mix1;
-                CShaders.slash.attribute(0f, in1, index);
+                CShaders.slash.attribute(glow, in1, index);
 
                 vertices[6] = x1 + cx;
                 vertices[7] = y1 + cy;
@@ -170,7 +176,7 @@ public class SlashTrail extends Trail{
                 vertices[9] = u2;
                 vertices[10] = mv1;
                 vertices[11] = mix1;
-                CShaders.slash.attribute(1f, in1, index);
+                CShaders.slash.attribute(1f - glow, in1, index);
 
                 vertices[12] = x2 + nx;
                 vertices[13] = y2 + ny;
@@ -178,7 +184,7 @@ public class SlashTrail extends Trail{
                 vertices[15] = u2;
                 vertices[16] = mv2;
                 vertices[17] = mix2;
-                CShaders.slash.attribute(1f, in2, index + 1);
+                CShaders.slash.attribute(1f - glow, in2, index + 1);
 
                 vertices[18] = x2 - nx;
                 vertices[19] = y2 - ny;
@@ -186,7 +192,7 @@ public class SlashTrail extends Trail{
                 vertices[21] = u;
                 vertices[22] = mv2;
                 vertices[23] = mix2;
-                CShaders.slash.attribute(0f, in2, index + 1);
+                CShaders.slash.attribute(glow, in2, index + 1);
 
                 Draw.vert(region.texture, vertices, 0, 24);
                 lastAngle = z2;
@@ -203,7 +209,7 @@ public class SlashTrail extends Trail{
     @Override
     public void shorten(){
         if((counter += Time.delta) >= 1f){
-            if(points.size >= 5) points.removeRange(0, 4);
+            if(points.size >= 6) points.removeRange(0, 5);
             counter %= 1f;
         }
 
@@ -213,11 +219,11 @@ public class SlashTrail extends Trail{
     @Override
     public void update(float x, float y, float width){
         if((counter += Time.delta) >= 1f){
-            if(points.size > length * 5) points.removeRange(0, 4);
+            if(points.size > length * 6) points.removeRange(0, 5);
 
             counter %= 1f;
             points.add(x, y, width, 0f);
-            points.add(Mathf.dst(x, y, lastX, lastY) * slashScale);
+            points.add(Mathf.dst(x, y, lastX, lastY) * slashScale, flip ? 0f : 1f);
         }
 
         lastAngle = -Angles.angleRad(x, y, lastX, lastY);
@@ -235,20 +241,20 @@ public class SlashTrail extends Trail{
             float[] items = points.items;
 
             float maxDist = 0f;
-            for(int i = 0; i < psize; i += 5){
+            for(int i = 0; i < psize; i += 6){
                 float
                     x1 = items[i], y1 = items[i + 1],
-                    dst = i < psize - 5 ? Mathf.dst(x1, y1, items[i + 5], items[i + 6]) : Mathf.dst(x1, y1, lastX, lastY);
+                    dst = i < psize - 6 ? Mathf.dst(x1, y1, items[i + 6], items[i + 7]) : Mathf.dst(x1, y1, lastX, lastY);
 
                 maxDist += dst;
                 items[i + 3] = dst;
             }
 
-            float frac = length / (points.size / 5f);
+            float frac = length / (points.size / 6f);
             float first = items[3];
 
             float last = 0f;
-            for(int i = 0; i < psize; i += 5){
+            for(int i = 0; i < psize; i += 6){
                 float v = items[i + 3];
 
                 float f = items[i + 3] = (v + last - first) / maxDist * frac;

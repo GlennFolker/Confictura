@@ -4,6 +4,9 @@ import arc.*;
 import arc.graphics.*;
 import confictura.assets.*;
 import confictura.content.*;
+import confictura.editor.*;
+import confictura.graphics.*;
+import confictura.world.*;
 import mindustry.game.EventType.*;
 import mindustry.mod.*;
 
@@ -15,24 +18,33 @@ import static mindustry.Vars.*;
  */
 public class ConficturaMod extends Mod{
     public ConficturaMod(){
-        Events.on(FileTreeInitEvent.class, e -> Core.app.post(CShaders::load));
+        Events.on(FileTreeInitEvent.class, e -> Core.app.post(() -> {
+            CShaders.load();
+            CCacheLayer.load();
+
+            WorldState.configure();
+            Editors.configure();
+        }));
+
         Events.on(ClientLoadEvent.class, e -> mods.getScripts().runConsole("""
             importPackage(java.lang);
-            let bindTrail = (len, col, z) => {
-                let trail = Class.forName("confictura.graphics.SlashTrail", true, Vars.mods.mainLoader()).getConstructor(TextureRegion, Integer.TYPE).newInstance(Core.atlas.find("confictura-slash-trail"), new Integer(len));
-                Events.run(Trigger.update, () => { if(!Vars.state.isPaused()) trail.update(Vars.player.x, Vars.player.y); });
-                Events.run(Trigger.drawOver, () => { Draw.z(z); trail.draw(col, 30); });
-
-                return trail;
+            importPackage(Packages.rhino);
+            
+            function iclass(name){
+                importClass(new NativeJavaClass(Vars.mods.getScripts().scope, Class.forName(name, true, Vars.mods.mainLoader())));
             }
+            
+            iclass("confictura.world.WorldState")
             """
         ));
     }
 
     @Override
     public void loadContent(){
+        CBlocks.load();
         CTerrains.load();
         CPlanets.load();
+        CUnitTypes.load();
     }
 
     /** Throws an exception if OpenGL encountered an error. */

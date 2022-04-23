@@ -1,7 +1,8 @@
 #define HIGHP
 
 #define PI 3.1415927
-#define PI2 2 * PI
+#define PI_HALF (PI * 0.5)
+#define PI2 (2 * PI)
 
 varying lowp vec4 v_color;
 varying lowp vec4 v_mix_color;
@@ -16,7 +17,7 @@ uniform highp vec2 u_resolution;
 uniform highp vec2 u_viewport;
 uniform lowp float u_blend;
 
-uniform vec4 u_glowColor;
+uniform lowp vec4 u_glowColor;
 uniform float u_glowThreshold;
 
 uniform int u_noiseOct;
@@ -25,7 +26,7 @@ uniform float u_noiseLac;
 uniform float u_noisePer;
 uniform float u_noiseMag;
 
-uniform highp vec2 u_slashVerts[DATA_COUNT];
+uniform highp vec3 u_slashVerts[DATA_COUNT];
 uniform int u_slashVertsLen;
 
 float hash(vec2 p){
@@ -75,6 +76,16 @@ vec2 trns(float angle, float amount){
     return vec2(amount * cos(angle), amount * sin(angle));
 }
 
+vec2 vertLen(int index){
+    if(index == 0) return vec2(0.0, 0.0);
+    
+    vec3 vert1 = u_slashVerts[index], vert2 = u_slashVerts[index - 1];
+    vec2
+        p1 = mix(trns(vert1.x - PI_HALF, vert1.z), trns(vert1.x + PI_HALF, vert1.z), v_slashData.x),
+        p2 = mix(trns(vert2.x - PI_HALF, vert2.z), trns(vert2.x + PI_HALF, vert2.z), v_slashData.x);
+    return p1 + trns(vert2.x + PI, vert2.y) - p2;
+}
+
 void main(){
     vec2 coords = (gl_FragCoord.xy / u_viewport) * u_resolution + u_campos;
     float magRaw = interp(octaveNoise(coords));
@@ -94,12 +105,12 @@ void main(){
     for(int slashVertsIndex = startIndex; slashVertsIndex >= 0; slashVertsIndex--){
         if(intensity <= 0.0) break;
 
-        vec2 slashVert = u_slashVerts[slashVertsIndex];
+        vec2 slashVert = vertLen(slashVertsIndex);
         float
-            angle = slashVert.x,
-            len = slashVertsIndex == startIndex ? delta : slashVert.y;
+            len = slashVertsIndex == startIndex ? delta : u_slashVerts[slashVertsIndex].y,
+            limit = slashVertsIndex == startIndex ? u_slashVerts[slashVertsIndex].y : len;
 
-        deviation += trns(angle, min(intensity, len));
+        deviation += slashVert * (min(intensity, len) / limit);
         intensity -= len;
     }
 
@@ -111,7 +122,7 @@ void main(){
     tex = mix(
         v_color * mix(tex, vec4(v_mix_color.rgb, tex.a), v_mix_color.a),
         u_glowColor,
-        pow(interp(min((1.0 + pow(1.0 - v_slashData.x, 2.0)) * min(delta / u_glowThreshold, 1.0) * v_color.a, 1.0)), 2.0)
+        pow(interp(min((1.0 + pow(v_slashData.x - 1.0, 2.0) * -1.0) * min(delta / u_glowThreshold, 1.0) * v_color.a, 1.0)), 2.0)
     );
 
     gl_FragColor = vec4((tex * tex.a + screen * screen.a * (1.0 - tex.a * (1.0 - u_blend))).rgb, 1.0);

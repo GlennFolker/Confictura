@@ -9,8 +9,12 @@ import mindustry.type.*;
  * Defines all the planets this mod provides.
  * @author GlennFolker
  */
-public class CPlanets{
+public final class CPlanets{
     public static Planet confictura;
+    
+    private CPlanets(){
+        throw new AssertionError();
+    }
 
     /** Initializes this class' contents. Should be called in {@link Mod#loadContent()}. */
     public static void load(){

@@ -29,7 +29,6 @@ public final class WorldState{
     public static final IntGrid collapseGrid = new IntGrid(0, 0);
     public static final Seq<CollapseData> collapses = new Seq<>();
 
-    private static boolean bound;
     private static final ReusableByteOutStream out = new ReusableByteOutStream();
     private static final ReusableByteInStream in = new ReusableByteInStream();
     private static final Writes write = new Writes(null);
@@ -88,10 +87,9 @@ public final class WorldState{
     }
 
     public static void update(){
-        if(!bound) return;
-        for(CollapseData data : collapses){
+        /*for(CollapseData data : collapses){
             if(data.triggered && !data.handled) data.handle();
-        }
+        }*/
     }
 
     public static StringMap write(IntGrid collapseGrid){
@@ -149,9 +147,9 @@ public final class WorldState{
     public static class CollapseData{
         public final Rect bound = new Rect();
         public final int index;
-        public float timestamp = -1f, duration = 60f;
+        public float timestamp = -1f, duration = 120f;
 
-        private boolean triggered, handled;
+        //private boolean triggered, handled;
 
         public CollapseData(int index){
             this(index, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
@@ -169,18 +167,22 @@ public final class WorldState{
         }
 
         public void trigger(){
-            if(triggered) return;
-            triggered = true;
+            //if(triggered) return;
+            //triggered = true;
 
             if(!headless){
                 CollapseDraw draw = Structs.find(CShaders.collapse.draws, e -> e.data == this);
-                if(draw != null) draw.prepareCapture();
+                if(draw != null) draw.capture();
             }
+
+            handle();
         }
 
         public void handle(){
-            if(handled) return;
-            handled = true;
+            //if(handled) return;
+            //handled = true;
+
+            timestamp = Time.time;
 
             int tx = World.toTile(bound.x), ty = World.toTile(bound.y),
                 ex = tx + World.toTile(bound.width), ey = ty + World.toTile(bound.height);

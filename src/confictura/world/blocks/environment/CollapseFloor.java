@@ -73,7 +73,7 @@ public class CollapseFloor extends Floor{
     @Override
     public void drawBase(Tile tile){
         Draw.color((float)index / CShaders.collapse.draws.length, 0f, 0f, 1f);
-        Draw.rect(region, tile.worldx(), tile.worldy());
+        Draw.rect(region, tile.worldx(), tile.worldy(), 8f, 8f);
         Draw.color();
     }
 }

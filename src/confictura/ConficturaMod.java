@@ -29,12 +29,18 @@ public class ConficturaMod extends Mod{
         Events.on(ClientLoadEvent.class, e -> mods.getScripts().runConsole("""
             importPackage(java.lang);
             importPackage(Packages.rhino);
-            
+
+            iclass("confictura.world.WorldState")
+            iclass("confictura.assets.CShaders")
+
             function iclass(name){
                 importClass(new NativeJavaClass(Vars.mods.getScripts().scope, Class.forName(name, true, Vars.mods.mainLoader())));
             }
-            
-            iclass("confictura.world.WorldState")
+
+            function loadCollapse(){
+                WorldState.read(JsonIO.json.fromJson(StringMap, java.lang.String, Vars.state.map.tags.get(WorldState.dataKey, "{}")), WorldState.collapseGrid);
+                WorldState.init();
+            }
             """
         ));
     }

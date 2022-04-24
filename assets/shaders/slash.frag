@@ -96,7 +96,7 @@ void main(){
 
     vec2 deviation = vec2(0.0, 0.0);
 
-    int startIndex = min(int(v_slashData.z), u_slashVertsLen - 1);
+    int startIndex = int(min(float(int(v_slashData.z)), float(u_slashVertsLen - 1)));
     float fractIndex = 1.0 - fract(v_slashData.z);
     float delta = startIndex > 0
         ? mix(u_slashVerts[startIndex].y, u_slashVerts[startIndex - 1].y, fractIndex)

@@ -23,6 +23,10 @@ public class CollapseFloor extends Floor{
     public CollapseFloor(String name){
         super(name);
         variants = 0;
+        placeableOn = false;
+        solid = true;
+        canShadow = false;
+
         index = lastIndex++;
 
         CollapseFloor[] prev = all;

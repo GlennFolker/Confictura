@@ -7,13 +7,15 @@ import mindustry.graphics.*;
 import static mindustry.Vars.*;
 
 public class CCacheLayer{
-    public static CacheLayer collapse;
+    public static CollapseLayer collapse;
 
     public static void load(){
         CacheLayer.add(collapse = new CollapseLayer());
     }
 
     public static class CollapseLayer extends CacheLayer{
+        public boolean stenciling;
+
         @Override
         public void begin(){
             renderer.blocks.floor.endc();
@@ -28,7 +30,7 @@ public class CCacheLayer{
             renderer.blocks.floor.endc();
             renderer.effectBuffer.end();
 
-            renderer.effectBuffer.blit(CShaders.collapse);
+            renderer.effectBuffer.blit(stenciling ? Shaders.screenspace : CShaders.collapse);
             renderer.blocks.floor.beginc();
         }
     }

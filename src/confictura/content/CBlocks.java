@@ -15,6 +15,6 @@ public final class CBlocks{
 
     /** Initializes this class' contents. Should be called in {@link Mod#loadContent()}. */
     public static void load(){
-        for(int i = 0; i < 7; i++) new CollapseFloor("collapse-" + i);
+        for(int i = 0; i < 3; i++) new CollapseFloor("collapse-" + i);
     }
 }

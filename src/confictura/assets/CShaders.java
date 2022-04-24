@@ -2,20 +2,18 @@ package confictura.assets;
 
 import arc.*;
 import arc.files.*;
-import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.graphics.gl.*;
 import arc.math.*;
 import arc.struct.*;
 import arc.util.*;
-import confictura.assets.CShaders.CollapseShader.*;
+import confictura.graphics.*;
 import confictura.graphics.GLBuffer.*;
 import confictura.world.*;
 import confictura.world.WorldState.*;
 import confictura.world.blocks.environment.*;
 import mindustry.game.EventType.*;
-import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.mod.*;
 
@@ -178,7 +176,7 @@ public final class CShaders{
     }
 
     public static class CollapseShader extends Shader{
-        public float fallScale = 3f;
+        public float fallScale = 100f;
 
         public final CollapseDraw[] draws = new CollapseDraw[CollapseFloor.max()];
         public int count;
@@ -223,7 +221,7 @@ public final class CShaders{
 
         @Override
         public void apply(){
-            int unit = count;
+            int unit = count * 2;
             for(int i = 0; i < draws.length; i++){
                 CollapseDraw draw = draws[i];
                 if(draw == null) continue;
@@ -239,41 +237,34 @@ public final class CShaders{
                     setUniformf("u_datas[" + i + "].progress", data.timestamp == -1f ? 0f : Mathf.clamp((Time.time - data.timestamp) / data.duration));
 
                     draw.buffer.getTexture().bind(unit);
+                    draw.stencil.getTexture().bind(unit - 1);
                     setUniformi("u_datas[" + i + "].texture", unit);
+                    setUniformi("u_datas[" + i + "].stencil", unit - 1);
 
-                    unit--;
+                    unit -= 2;
                 }
             }
 
             renderer.effectBuffer.getTexture().bind(0);
             setUniformi("u_texture", 0);
-            setUniformf("u_view", Core.camera.position.x, Core.camera.position.y, Core.camera.width, Core.camera.height);
+            setUniformf("u_view", Core.camera.position.x - Core.camera.width / 2f + 4f, Core.camera.position.y - Core.camera.height / 2f + 4f, Core.camera.width, Core.camera.height);
             setUniformf("u_fallScale", fallScale);
         }
 
-        @SuppressWarnings("unchecked")
         public static class CollapseDraw implements Disposable{
             public CollapseData data;
             public final FrameBuffer buffer;
-
-            private final Cons<Trigger> capturer = new Cons<>(){
-                @Override
-                public void get(Trigger trigger){
-                    capture();
-                    Events.remove((Class<Trigger>)trigger.getClass(), this);
-                }
-            };
+            public final FrameBuffer stencil;
 
             public CollapseDraw(CollapseData data){
                 this.data = data;
-                buffer = new FrameBuffer(Mathf.round(data.bound.width * 8f, 32), Mathf.round(data.bound.height * 8f, 32));
+
+                int w = Mathf.round(data.bound.width * 8f, 32), h = Mathf.round(data.bound.height * 8f, 32);
+                buffer = new FrameBuffer(w, h);
+                stencil = new FrameBuffer(w, h);
             }
 
-            public void prepareCapture(){
-                Events.on((Class<Trigger>)Trigger.preDraw.getClass(), capturer);
-            }
-
-            public void capture(){
+            public void captureTexture(){
                 float
                     cx = Core.camera.position.x, cy = Core.camera.position.y,
                     cw = Core.camera.width, ch = Core.camera.height;
@@ -328,6 +319,39 @@ public final class CShaders{
                 Draw.sort(false);
 
                 buffer.end();
+
+                Core.camera.position.set(cx, cy);
+                Core.camera.width = cw;
+                Core.camera.height = ch;
+                Core.camera.update();
+            }
+
+            public void captureStencil(){
+                float
+                    cx = Core.camera.position.x, cy = Core.camera.position.y,
+                    cw = Core.camera.width, ch = Core.camera.height;
+
+                Core.camera.position.set(data.bound.x + data.bound.width / 2f - 4f, data.bound.y + data.bound.height / 2f - 4f);
+                Core.camera.width = data.bound.width;
+                Core.camera.height = data.bound.height;
+                Core.camera.update();
+
+                stencil.begin(Color.clear);
+
+                Draw.proj(Core.camera);
+                Draw.sort(true);
+
+                CCacheLayer.collapse.stenciling = true;
+                renderer.blocks.floor.beginDraw();
+                renderer.blocks.floor.drawLayer(CCacheLayer.collapse);
+                renderer.blocks.floor.endDraw();
+                CCacheLayer.collapse.stenciling = false;
+
+                Draw.reset();
+                Draw.flush();
+                Draw.sort(false);
+
+                stencil.end();
 
                 Core.camera.position.set(cx, cy);
                 Core.camera.width = cw;

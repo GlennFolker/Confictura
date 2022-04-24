@@ -19,7 +19,7 @@ import static mindustry.Vars.*;
 public class ConficturaMod extends Mod{
     public ConficturaMod(){
         Events.on(FileTreeInitEvent.class, e -> Core.app.post(() -> {
-            CShaders.load();
+            if(!headless) CShaders.load();
             CCacheLayer.load();
 
             WorldState.configure();

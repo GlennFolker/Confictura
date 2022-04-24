@@ -12,9 +12,7 @@ import confictura.util.*;
 import confictura.world.blocks.environment.*;
 import mindustry.content.*;
 import mindustry.core.*;
-import mindustry.core.GameState.*;
 import mindustry.game.EventType.*;
-import mindustry.io.*;
 import mindustry.world.*;
 
 import java.io.*;
@@ -86,11 +84,7 @@ public final class WorldState{
         if(!headless) CShaders.collapse.reset();
     }
 
-    public static void update(){
-        /*for(CollapseData data : collapses){
-            if(data.triggered && !data.handled) data.handle();
-        }*/
-    }
+    public static void update(){}
 
     public static StringMap write(IntGrid collapseGrid){
         StringMap data = new StringMap();
@@ -149,7 +143,7 @@ public final class WorldState{
         public final int index;
         public float timestamp = -1f, duration = 120f;
 
-        //private boolean triggered, handled;
+        private boolean triggered;
 
         public CollapseData(int index){
             this(index, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
@@ -167,23 +161,13 @@ public final class WorldState{
         }
 
         public void trigger(){
-            //if(triggered) return;
-            //triggered = true;
+            if(triggered) return;
+            triggered = true;
 
-            if(!headless){
-                CollapseDraw draw = Structs.find(CShaders.collapse.draws, e -> e.data == this);
-                if(draw != null) draw.capture();
-            }
-
-            handle();
-        }
-
-        public void handle(){
-            //if(handled) return;
-            //handled = true;
+            CollapseDraw draw = null;
+            if(!headless && (draw = Structs.find(CShaders.collapse.draws, e -> e.data == this)) != null) draw.captureTexture();
 
             timestamp = Time.time;
-
             int tx = World.toTile(bound.x), ty = World.toTile(bound.y),
                 ex = tx + World.toTile(bound.width), ey = ty + World.toTile(bound.height);
 
@@ -193,10 +177,17 @@ public final class WorldState{
                     if(!world.tiles.in(x, y) || collapseGrid.get(x, y) != index) continue;
 
                     Tile tile = world.rawTile(x, y);
+                    if(tile.build != null) tile.build.kill();
+
                     tile.setBlock(Blocks.air);
                     tile.setOverlay(Blocks.air);
                     tile.setFloor(floor);
                 }
+            }
+
+            if(!headless && draw != null){
+                renderer.blocks.floor.checkChanges();
+                draw.captureStencil();
             }
         }
     }

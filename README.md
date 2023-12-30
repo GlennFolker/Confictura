@@ -5,12 +5,12 @@
 A [Mindustry](https://github.com/Anuken/Mindustry) mod that aims towards an enjoyable storyline spiced up with dazzling sorts of contents.
 
 ## Using this Mod
+
 **You cannot simply download the `.zip` and add it to your mods folder**, as this is a Java mod. If you open an issue report revolving around this, I will simply ignore you and refer you to this file. <br>
 <br>
 Instead, you have two options:
 - ### Release
-  _(There is not a single released version as of now, but will be in the future. Hopefully.)_ <br>
-  <br>
+
   Head over to the [releases](https://github.com/GlennFolker/Confictura/releases) page. Pay attention to the described Mindustry _minimum game version_. Download the uploaded `Confictura.jar` and put it in the Mindustry mods folder:
    - On Windows, it should be `%APPDATA%\Mindustry\mods\`.
    - On Linux, it should be `$HOME/.local/share/Mindustry/mods/`.
@@ -19,11 +19,13 @@ Instead, you have two options:
 
   You can also use Mindustry's built-in "Import mod" button in the mods menu dialog, restart the game, and play.
 - ### Bleeding-Edge
+
   Make sure you have a GitHub account. Head over to the [actions](https://github.com/GlennFolker/Confictura/actions) page, click the most recent successful workflow runs *(marked by green checkmark)*, scroll down to "Artifacts" section, and download the one titled `Confictura (zipped)`. As the name suggests, **you must unzip it first to extract the actual `.jar`**, then you can import it. If you open an issue report that is exactly this, I too will simply ignore you and refer you to this file. <br>
   <br>
   Be aware that the bleeding-edge builds are **highly unstable**, and might require a certain Mindustry version constraint. Do this at your own risk.
 
 ## Reporting Issues
+
 Head over to the [issue tracker](https://github.com/GlennFolker/Confictura/issues/new) page. **Do not use this to propose new contents/mechanics**, I will instantly close it without second thoughts.
 
 ## License and Contributing

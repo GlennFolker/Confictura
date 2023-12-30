@@ -1,6 +1,9 @@
 import arc.files.*
+import arc.struct.*
 import arc.util.*
+import arc.util.io.*
 
+import java.nio.charset.*
 import java.util.regex.*
 
 buildscript{
@@ -23,12 +26,32 @@ plugins{
     id 'com.github.GlennFolker.EntityAnno' version "$entVersion" apply false
 }
 
+def localProps = {
+    def props = new StringMap()
+
+    def local = rootProject.layout.projectDirectory.file('local.properties').asFile
+    if(local.exists()){
+        logger.log(LogLevel.LIFECYCLE, 'Found local.properties file.')
+        try(def reader = new FileReader(local, StandardCharsets.UTF_8)){
+            PropertiesUtils.load(props, reader)
+        }
+    }
+
+    props
+}()
+
 configure(allprojects){
     sourceSets.main.java.srcDirs = [layout.projectDirectory.dir('src')]
 
     ext{
+        for(def prop : localProps){
+            ext."$prop.key" = prop.value
+        }
+
         compilerVersion = JavaVersion.current().ordinal() - JavaVersion.VERSION_17.ordinal() + 17
         useJitpack = Boolean.valueOf(mindustryBE)
+
+        isDev = project.hasProperty('modDev') && Boolean.valueOf(project.property('modDev') as String)
 
         arc = {String module ->
             return "com.github.Anuken.Arc$module:$arcVersion"
@@ -120,7 +143,11 @@ configure(rootProject){
             from layout.projectDirectory.file('LICENSE')
         }
 
+        if(!isDev) exclude 'confictura/DevBuildImpl*'
+
         doFirst{
+            logger.log(LogLevel.LIFECYCLE, "Building ${isDev ? 'developer' : 'user'} artifact.")
+
             def name = Pattern
                 .compile('"name": "(.*)"')
                 .matcher(layout.projectDirectory.file('mod.json').asFile.text)

@@ -38,8 +38,6 @@ public final class CMeshBuilder{
         float vertLeap = (centerLeap * 0.5f) / (0.5f * Mathf.sqrt3);
 
         var shapes = new Hex[width][height];
-
-        int hexCount = 0;
         for(int y = 0; y < height; y++){
             for(int x = 0; x < width; x++){
                 var hex = shapes[x][y] = new Hex();
@@ -47,11 +45,7 @@ public final class CMeshBuilder{
                 hex.y = (y - (float)(height / 2)) * centerLeap - (1 - x % 2) * centerLeap * 0.5f;
 
                 shaper.get(hex.x, hex.y, hex);
-                if(hex.low > hex.high){
-                    shapes[x][y] = null;
-                }else{
-                    hexCount += 1;
-                }
+                if(hex.low > hex.high) shapes[x][y] = null;
             }
         }
 
@@ -125,7 +119,7 @@ public final class CMeshBuilder{
             }
         }
 
-        begin(hexCount * 2 * 6 * 3);
+        begin(tiles.size * 2 * 6 * 3);
         for(var tile : tiles){
             Vec3[] l = tile.lows, h = tile.highs;
             v1.set(normal(l[0], l[2], l[4]));

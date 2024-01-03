@@ -30,7 +30,7 @@ Head over to the [issue tracker](https://github.com/GlennFolker/Confictura/issue
 
 ## License and Contributing
 
-This project's source codes *(files located under `src/**`)* and assets *(files located under `assets/**`)* are licensed under [GNU GPL v3](/LICENSE). The copyright notice is as follows:
+This project's source codes *(files located under `src/**`)* and assets *(files located under `assets/**`)* are licensed under [GNU GPL v3](/LICENSE), unless explicitly stated otherwise *(usually on file headers)*. The copyright notice is as follows:
 
 > ```
 > Confictura: A Mindustry Java mod.

@@ -2,6 +2,7 @@ package confictura;
 
 import arc.util.*;
 import arc.util.Log.*;
+import confictura.util.*;
 import mindustry.ui.dialogs.*;
 
 /**
@@ -12,5 +13,10 @@ public class DevBuildImpl implements DevBuild{
     public DevBuildImpl(){
         Log.level = LogLevel.debug;
         PlanetDialog.debugSelect = true;
+    }
+
+    @Override
+    public void init(){
+        ScriptUtils.importDefaults(ScriptUtils.vanillaScope);
     }
 }

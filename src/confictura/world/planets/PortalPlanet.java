@@ -1,9 +1,11 @@
 package confictura.world.planets;
 
 import arc.graphics.*;
+import arc.graphics.g3d.*;
 import arc.math.*;
 import arc.math.geom.*;
 import arc.util.*;
+import confictura.assets.*;
 import confictura.content.*;
 import confictura.graphics.g3d.*;
 import confictura.graphics.g3d.CMeshBuilder.*;
@@ -11,22 +13,52 @@ import mindustry.graphics.*;
 import mindustry.graphics.g3d.*;
 import mindustry.type.*;
 
+import static mindustry.Vars.*;
+
 /**
- * The {@link CPlanets#outpost outpost} celestial object. Composed of floating islands, 9 sectors arranged on the
- * surface, and an artificial gravity force field.
+ * The {@link CPlanets#portal portal} celestial object. Composed of floating islands, 9 sectors arranged on the surface,
+ * and an artificial gravity forcefield.
  * @author GlennFolker
  */
-public class OutpostPlanet extends Planet{
+public class PortalPlanet extends Planet{
     private static final Mat3D mat1 = new Mat3D(), mat2 = new Mat3D();
     private static final Quat quat = new Quat();
     private static final Vec3 v1 = new Vec3();
 
     public Island[] islands = {};
+    public float forcefieldRadius;
 
-    public OutpostPlanet(String name, Planet parent, float radius){
+    public @Nullable Mesh atmosphereMesh;
+    public Color atmosphereOutlineColor = new Color();
+
+    public PortalPlanet(String name, Planet parent, float radius){
         super(name, parent, radius, 0);
 
-        meshLoader = OutpostMesh::new;
+        meshLoader = PortalMesh::new;
+        forcefieldRadius = radius;
+    }
+
+    @Override
+    public void load(){
+        super.load();
+        if(!headless) atmosphereMesh = CMeshBuilder.gridDistance(PlanetGrid.create(3), atmosphereOutlineColor, 1f);
+    }
+
+    @Override
+    public void drawAtmosphere(Mesh atmosphere, Camera3D cam){
+        Gl.depthMask(false);
+        Blending.additive.apply();
+
+        var shader = CShaders.portalForcefield;
+        shader.cam = cam;
+        shader.planet = this;
+
+        shader.bind();
+        shader.apply();
+        atmosphereMesh.render(shader, Gl.triangles);
+
+        Blending.normal.apply();
+        Gl.depthMask(true);
     }
 
     public static class Island{
@@ -49,10 +81,10 @@ public class OutpostPlanet extends Planet{
         }
     }
 
-    public class OutpostMesh implements GenericMesh{
+    public class PortalMesh implements GenericMesh{
         public Mesh[] islandMeshes;
 
-        public OutpostMesh(){
+        public PortalMesh(){
             islandMeshes = new Mesh[islands.length];
             for(int i = 0; i < islands.length; i++){
                 var island = islands[i];
@@ -63,7 +95,7 @@ public class OutpostPlanet extends Planet{
         @Override
         public void render(PlanetParams params, Mat3D projection, Mat3D transform){
             var shader = Shaders.planet;
-            shader.planet = OutpostPlanet.this;
+            shader.planet = PortalPlanet.this;
             shader.lightDir.set(solarSystem.position).sub(position).rotate(Vec3.Y, getRotation()).nor();
             shader.ambientColor.set(solarSystem.lightColor);
 

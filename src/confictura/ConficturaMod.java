@@ -1,21 +1,31 @@
 package confictura;
 
+import arc.*;
+import arc.struct.*;
 import arc.util.*;
+import arc.util.serialization.*;
+import confictura.assets.*;
 import confictura.content.*;
 import confictura.gen.*;
-import mindustry.*;
+import confictura.util.*;
+import mindustry.game.EventType.*;
 import mindustry.mod.*;
 
+import java.io.*;
+
+import static arc.Core.*;
 import static mindustry.Vars.*;
 
 /**
- * Main entry point of the mod. Handles startup things like content loading, entity registering, other utility
- * attaching, and more. Stores static references to modules defined by this mod, similar to what {@link Vars} does.
+ * Main entry point of the mod. Handles startup things like content loading, entity registering, and utility bindings.
  * @author GlennFolker
  */
 @SuppressWarnings("unchecked")
 public class ConficturaMod extends Mod{
     public static DevBuild dev;
+
+    public static Seq<String> packages;
+    public static Seq<Class<?>> classes;
 
     public ConficturaMod(){
         try{
@@ -29,6 +39,33 @@ public class ConficturaMod extends Mod{
         }catch(Throwable e){
             Log.err("[Confictura] Failed instantiating developer build", Strings.getFinalCause(e));
         }
+
+        Events.on(FileTreeInitEvent.class, e -> {
+            try(var reader = tree.get("meta/confictura-classes.json").reader()){
+                var meta = Jval.read(reader);
+                packages = meta.get("packages").asArray().map(Jval::asString);
+                classes = meta.get("classes").asArray().map(val -> {
+                    var name = val.asString();
+                    var type = ReflectUtils.findClass(name);
+                    if(type == null) Log.warn("Class '@' not found.", name);
+                    return type;
+                });
+            }catch(IOException ex){
+                throw new RuntimeException(ex);
+            }
+
+            if(!headless) app.post(CShaders::load);
+        });
+
+        app.post(() -> {
+            ScriptUtils.init();
+            ScriptUtils.importDefaults(ScriptUtils.modScope);
+        });
+    }
+
+    @Override
+    public void init(){
+        dev.init();
     }
 
     @Override

@@ -5,6 +5,7 @@ import arc.math.*;
 import arc.math.geom.*;
 import arc.struct.*;
 import confictura.graphics.g3d.CMeshBuilder.IslandShaper.*;
+import mindustry.graphics.g3d.*;
 
 /**
  * Utilities for composing specialized OpenGL {@link Mesh meshes}.
@@ -13,7 +14,8 @@ import confictura.graphics.g3d.CMeshBuilder.IslandShaper.*;
 public final class CMeshBuilder{
     private static Mesh mesh;
     private static final float[] vert = new float[3 + 3 + 1];
-    private static final Vec3 v1 = new Vec3(), v2 = new Vec3(), nor = new Vec3();
+    private static final Vec3 v1 = new Vec3(), v2 = new Vec3(), v3 = new Vec3(), nor = new Vec3();
+    private static final Color c1 = new Color(), c2 = new Color(), c3 = new Color();
 
     private static final Point2[] hexNeighbors = {
         new Point2(1, -1),
@@ -66,10 +68,10 @@ public final class CMeshBuilder{
                 if(hex == null) continue;
 
                 var tile = new Tile(hex);
-                for(int i = 0; i < hexNeighbors.length; i++){
+                for(int i = 0, len = hexNeighbors.length; i < len; i++){
                     int p1x, p1y, p2x, p2y;
                     {
-                        Point2 p1 = hexNeighbors[i], p2 = hexNeighbors[(i + 1) % hexNeighbors.length];
+                        Point2 p1 = hexNeighbors[i], p2 = hexNeighbors[(i + 1) % len];
                         p1x = p1.x;
                         p1y = p1.y;
 
@@ -135,6 +137,58 @@ public final class CMeshBuilder{
             nor.set(v1).add(v2).nor();
             yz(v1.set(tile.hex.x, tile.hex.y, tile.hex.high));
             for(int i = 0, len = h.length; i < len; i++) verts(v1, h[(i + 1) % len], h[i], nor, tile.hex.highColor);
+        }
+
+        return end();
+    }
+
+    public static Mesh gridDistance(PlanetGrid grid, Color color, float radius){
+        return gridDistance(grid, new HexMesher(){
+            @Override
+            public float getHeight(Vec3 position){
+                return 0f;
+            }
+
+            @Override
+            public Color getColor(Vec3 position){
+                return color;
+            }
+        }, radius, 0f);
+    }
+
+    public static Mesh gridDistance(PlanetGrid grid, HexMesher mesher, float radius, float intensity){
+        int totalVerts = 0;
+        for(var tile : grid.tiles){
+            if(mesher.skip(tile.v)) continue;
+            totalVerts += tile.corners.length * 3;
+        }
+
+        begin(totalVerts);
+        for(var tile : grid.tiles){
+            if(mesher.skip(tile.v)) continue;
+            v1.setZero();
+
+            var c = tile.corners;
+            for(var corner : c){
+                corner.v.setLength((1f + mesher.getHeight(v2.set(corner.v)) * intensity) * radius);
+                v1.add(corner.v);
+            }
+
+            v1.scl(1f / c.length);
+            c1.set(mesher.getColor(tile.v)).a(1f);
+
+            normal(c[0].v, c[2].v, c[4].v);
+            for(int i = 0, len = c.length; i < len; i++){
+                Vec3 a = c[i].v, b = c[(i + 1) % len].v;
+                c2.set(mesher.getColor(v2.set(a).nor())).a(0f);
+                c3.set(mesher.getColor(v3.set(b).nor())).a(0f);
+
+                vert(v1, nor, c1);
+                vert(a, nor, c2);
+                vert(b, nor, c3);
+            }
+
+            for(var corner : c) corner.v.nor();
         }
 
         return end();

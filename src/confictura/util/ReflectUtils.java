@@ -14,6 +14,12 @@ public final class ReflectUtils{
         throw new AssertionError();
     }
 
+    /**
+     * Finds and casts a class with the specified name using Mindustry's mod class loader.
+     * @param name The class' binary name, as per {@link Class#getName()}.
+     * @param <T>  The arbitrary type parameter to cast the class into.
+     * @return     The casted class, or {@code null} if not found.
+     */
     public static <T> @Nullable Class<T> findClass(String name){
         try{
             return (Class<T>)Class.forName(name, true, mods.mainLoader());

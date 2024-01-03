@@ -2,6 +2,7 @@ import arc.files.*
 import arc.struct.*
 import arc.util.*
 import arc.util.io.*
+import arc.util.serialization.*
 
 import java.nio.charset.*
 import java.util.regex.*
@@ -126,13 +127,56 @@ configure(rootProject){
         compileOnly "${arc(':arc-core')}"
     }
 
+    tasks.register('list'){
+        inputs.files tasks.compileJava, configurations.runtimeClasspath
+
+        def output = file("$temporaryDir/confictura-classes.json")
+        outputs.file output
+
+        doFirst{
+            def packages = Jval.newArray()
+            def classes = Jval.newArray()
+
+            def forbid = Pattern.compile('\\$\\d+|.+Impl')
+            def proc = {def proc, String path, File dir ->
+                for(def child : dir.listFiles()){
+                    if(child.directory){
+                        def name = child.name
+                        if(!path.startsWith('confictura') && name != 'confictura') continue
+
+                        def visited = path.empty ? name : "$path.$name"
+                        if(visited == modFetch || visited == modGenSrc) continue
+
+                        packages.add(visited)
+                        proc(proc, visited, child)
+                    }else{
+                        def dot = child.name.lastIndexOf('.')
+                        if(dot == -1) continue
+
+                        def name = child.name.substring(0, dot)
+                        def ext = child.name.substring(dot + 1)
+
+                        if(ext == 'class' && !forbid.matcher(name).find()) classes.add("$path.$name")
+                    }
+                }
+            }
+
+            sourceSets.main.runtimeClasspath.forEach{proc(proc, '', it)}
+
+            def compacted = Jval.newObject().put('packages', packages).put('classes', classes)
+            output.withWriter{compacted.writeTo(it, Jval.Jformat.formatted)}
+        }
+    }
+
     jar{
+        inputs.files tasks.list
         archiveFileName = "${modArtifact}Desktop.jar"
 
         from files(sourceSets.main.output.classesDirs)
         from files(sourceSets.main.output.resourcesDir)
         from configurations.runtimeClasspath.collect{it.isDirectory() ? it : zipTree(it)}
 
+        from(tasks.list){into 'meta'}
         from files(layout.projectDirectory.dir('assets'))
         from(layout.projectDirectory){
             include 'mod.json'
@@ -143,7 +187,7 @@ configure(rootProject){
             from layout.projectDirectory.file('LICENSE')
         }
 
-        if(!isDev) exclude 'confictura/DevBuildImpl*'
+        if(!isDev) exclude '**/**Impl*'
 
         doFirst{
             logger.log(LogLevel.LIFECYCLE, "Building ${isDev ? 'developer' : 'user'} artifact.")

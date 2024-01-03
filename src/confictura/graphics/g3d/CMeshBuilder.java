@@ -5,6 +5,7 @@ import arc.math.*;
 import arc.math.geom.*;
 import arc.struct.*;
 import confictura.graphics.g3d.CMeshBuilder.IslandShaper.*;
+import confictura.util.*;
 import mindustry.graphics.g3d.*;
 import mindustry.graphics.g3d.PlanetGrid.*;
 
@@ -158,12 +159,7 @@ public final class CMeshBuilder{
     }
 
     public static Mesh gridDistance(PlanetGrid grid, HexMesher mesher, float radius, float intensity){
-        int totalVerts = 0;
-        for(var tile : grid.tiles){
-            if(mesher.skip(tile.v)) continue;
-            totalVerts += tile.corners.length * 3;
-        }
-
+        int totalVerts = StructUtils.sumi(grid.tiles, tile -> mesher.skip(tile.v) ? 0 : tile.corners.length) * 3;
         float[] progress = new float[grid.tiles.length];
 
         int accum = 0;
@@ -184,9 +180,7 @@ public final class CMeshBuilder{
             accum++;
         }
 
-        for(int i = 0; i < progress.length; i++){
-            progress[i] /= accum;
-        }
+        for(int i = 0; i < progress.length; i++) progress[i] /= accum;
 
         begin(totalVerts);
         for(var tile : grid.tiles){
@@ -203,13 +197,13 @@ public final class CMeshBuilder{
             c1.set(mesher.getColor(tile.v)).a(1f);
 
             for(int i = 0, len = c.length; i < len; i++){
-                Vec3 a = c[i].v, b = c[(i + 1) % len].v;
-                c2.set(mesher.getColor(v2.set(a).nor())).a(0f);
-                c3.set(mesher.getColor(v3.set(b).nor())).a(0f);
+                Corner a = c[i], b = c[(i + 1) % len];
+                c2.set(mesher.getColor(v2.set(a.v).nor())).a(0f);
+                c3.set(mesher.getColor(v3.set(b.v).nor())).a(0f);
 
                 vert(v1, nor.set(progress[tile.id], 0f, 0f), c1);
-                vert(a, nor.set(progress[tile.id], 0f, 0f), c2);
-                vert(b, nor.set(progress[tile.id], 0f, 0f), c3);
+                vert(a.v, nor.set(StructUtils.average(a.tiles, t -> progress[t.id]), 0f, 0f), c2);
+                vert(b.v, nor.set(StructUtils.average(b.tiles, t -> progress[t.id]), 0f, 0f), c3);
             }
 
             for(var corner : c) corner.v.nor();

@@ -203,9 +203,9 @@ void main(){
     base *= 0.1 + light * 0.5;
     vec3 baseColor = u_baseColor.xyz * u_baseColor.a * base;
 
-    float outline = 0.33 + pow(sin(u_time * 8.0 + v_progress * 24.0) / 2.0 + 1.0, 3.0) * 0.33;
-    outline *= medium * 0.67 * (0.1 + light * 0.5);
+    float outline = 0.1 + pow(sin(u_time * 2.0 + v_progress * 16.0) / 2.0 + 0.5, 7.0) * 0.9;
+    outline *= medium * light;
 
-    vec3 outlineColor = v_color.xyz * pow(max(1.0 - v_color.a - 0.5, 0.0) * 2.0, 3.0) * outline;
+    vec3 outlineColor = v_color.xyz * pow(max(1.0 - v_color.a - 0.5, 0.0) * 2.0, 4.0) * outline;
     gl_FragColor = vec4(baseColor + outlineColor, 1.0);
 }

@@ -16,7 +16,7 @@ import static confictura.assets.CShaders.*;
  */
 public class PortalForcefieldShader extends Shader{
     private static final Mat3D mat = new Mat3D();
-    private static final Vec3 axis = new Vec3(0f, 1f, 0f).crs(PlanetGrid.create(3).tiles[0].v);
+    private static final Vec3 axis = new Vec3(Vec3.Y).crs(PlanetGrid.create(3).tiles[0].v);
 
     public Camera3D cam;
     public PortalPlanet planet;
@@ -28,7 +28,7 @@ public class PortalForcefieldShader extends Shader{
     @Override
     public void apply(){
         setUniformMatrix4("u_projection", cam.combined.val);
-        setUniformMatrix4("u_model", planet.getTransform(mat).rotate(axis, 90f).val);
+        setUniformMatrix4("u_model", planet.getTransform(mat).rotate(axis, Vec3.Y.angle(axis)).val);
         setUniformf("u_radius", planet.forcefieldRadius);
 
         setUniformf("u_camPos", cam.position);

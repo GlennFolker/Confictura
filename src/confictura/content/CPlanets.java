@@ -29,8 +29,8 @@ public final class CPlanets{
             atmosphereColor.set(0.3f, 0.6f, 1.0f, 1f);
             atmosphereOutlineColor.set(0.2f, 0.45f, 1f, 1f);
 
-            camRadius = 0.35f;
-            minZoom = 0f;
+            camRadius = -0.067f;
+            minZoom = 0.75f;
 
             islands = new Island[]{
                 new Island(0.4f, island(0, 0.35f, -0.55f, 0.45f, monolithMid)){{

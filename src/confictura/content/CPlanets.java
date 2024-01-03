@@ -29,7 +29,7 @@ public final class CPlanets{
             atmosphereColor.set(0.3f, 0.6f, 1.0f, 1f);
             atmosphereOutlineColor.set(0.2f, 0.45f, 1f, 1f);
 
-            camRadius = 0.5f;
+            camRadius = 0.35f;
             minZoom = 0f;
 
             islands = new Island[]{

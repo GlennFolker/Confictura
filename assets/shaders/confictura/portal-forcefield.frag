@@ -26,6 +26,7 @@ therefore here is the required copyright notice.
 #define HIGHP
 
 varying vec3 v_position;
+varying float v_progress;
 varying vec4 v_color;
 
 uniform float u_radius;
@@ -190,7 +191,9 @@ void main(){
     float inner = 0.83;
     float bound = dst + noise * 0.33;
 
-    float base = pow(bound, 2.4) * 0.33;
+    float medium = pow(bound, 2.4);
+
+    float base = medium * 0.33;
     if(bound < outer){
         base += pow(smoothstep(0.0, 1.0, bound / outer), 3.0);
     }else if(bound < inner){
@@ -200,8 +203,9 @@ void main(){
     base *= 0.1 + light * 0.5;
     vec3 baseColor = u_baseColor.xyz * u_baseColor.a * base;
 
-    float outline = 0.5 + pow(sin(u_time * 8.0) / 2.0 + 1.0, 2.0) * 0.5;
-    vec3 outlineColor = v_color.xyz * pow(max(1.0 - v_color.a - 0.5, 0.0) * 2.0, 3.0) * base * outline;
+    float outline = 0.33 + pow(sin(u_time * 8.0 + v_progress * 24.0) / 2.0 + 1.0, 3.0) * 0.33;
+    outline *= medium * 0.67 * (0.1 + light * 0.5);
 
+    vec3 outlineColor = v_color.xyz * pow(max(1.0 - v_color.a - 0.5, 0.0) * 2.0, 3.0) * outline;
     gl_FragColor = vec4(baseColor + outlineColor, 1.0);
 }

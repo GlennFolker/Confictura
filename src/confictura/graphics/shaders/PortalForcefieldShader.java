@@ -6,6 +6,7 @@ import arc.math.geom.*;
 import arc.util.*;
 import confictura.content.*;
 import confictura.world.planets.*;
+import mindustry.graphics.g3d.*;
 
 import static confictura.assets.CShaders.*;
 
@@ -14,7 +15,8 @@ import static confictura.assets.CShaders.*;
  * @author GlennFolker
  */
 public class PortalForcefieldShader extends Shader{
-    private final Mat3D mat = new Mat3D();
+    private static final Mat3D mat = new Mat3D();
+    private static final Vec3 axis = new Vec3(0f, 1f, 0f).crs(PlanetGrid.create(3).tiles[0].v);
 
     public Camera3D cam;
     public PortalPlanet planet;
@@ -26,7 +28,7 @@ public class PortalForcefieldShader extends Shader{
     @Override
     public void apply(){
         setUniformMatrix4("u_projection", cam.combined.val);
-        setUniformMatrix4("u_model", planet.getTransform(mat).val);
+        setUniformMatrix4("u_model", planet.getTransform(mat).rotate(axis, 90f).val);
         setUniformf("u_radius", planet.forcefieldRadius);
 
         setUniformf("u_camPos", cam.position);

@@ -6,6 +6,7 @@ import arc.math.geom.*;
 import arc.struct.*;
 import confictura.graphics.g3d.CMeshBuilder.IslandShaper.*;
 import mindustry.graphics.g3d.*;
+import mindustry.graphics.g3d.PlanetGrid.*;
 
 /**
  * Utilities for composing specialized OpenGL {@link Mesh meshes}.
@@ -163,6 +164,30 @@ public final class CMeshBuilder{
             totalVerts += tile.corners.length * 3;
         }
 
+        float[] progress = new float[grid.tiles.length];
+
+        int accum = 0;
+        Seq<Ptile> queue = new Seq<>(), process = new Seq<>();
+        var processed = new IntSet();
+
+        queue.add(grid.tiles[0]);
+        processed.add(0);
+
+        while(!queue.isEmpty()){
+            for(var tile : queue){
+                for(var n : tile.tiles) if(processed.add(n.id)) process.add(n);
+                progress[tile.id] = accum;
+            }
+
+            queue.set(process);
+            process.clear();
+            accum++;
+        }
+
+        for(int i = 0; i < progress.length; i++){
+            progress[i] /= accum;
+        }
+
         begin(totalVerts);
         for(var tile : grid.tiles){
             if(mesher.skip(tile.v)) continue;
@@ -177,15 +202,14 @@ public final class CMeshBuilder{
             v1.scl(1f / c.length);
             c1.set(mesher.getColor(tile.v)).a(1f);
 
-            normal(c[0].v, c[2].v, c[4].v);
             for(int i = 0, len = c.length; i < len; i++){
                 Vec3 a = c[i].v, b = c[(i + 1) % len].v;
                 c2.set(mesher.getColor(v2.set(a).nor())).a(0f);
                 c3.set(mesher.getColor(v3.set(b).nor())).a(0f);
 
-                vert(v1, nor, c1);
-                vert(a, nor, c2);
-                vert(b, nor, c3);
+                vert(v1, nor.set(progress[tile.id], 0f, 0f), c1);
+                vert(a, nor.set(progress[tile.id], 0f, 0f), c2);
+                vert(b, nor.set(progress[tile.id], 0f, 0f), c3);
             }
 
             for(var corner : c) corner.v.nor();

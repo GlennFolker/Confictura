@@ -26,8 +26,8 @@ public final class CPlanets{
     /** Instantiates all contents. Called in the main thread in {@link ConficturaMod#loadContent()}. */
     public static void load(){
         portal = new PortalPlanet("portal", Planets.sun, 0.6f){{
-            atmosphereColor.set(0.3f, 0.6f, 1.0f, 1f);
-            atmosphereOutlineColor.set(0.2f, 0.45f, 1f, 1f);
+            atmosphereColor.set(0x3366e5ff);
+            atmosphereOutlineColor.set(0x1966ffff);
 
             camRadius = -0.067f;
             minZoom = 0.75f;

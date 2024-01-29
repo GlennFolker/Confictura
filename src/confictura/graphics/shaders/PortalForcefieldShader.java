@@ -8,7 +8,8 @@ import confictura.content.*;
 import confictura.world.planets.*;
 import mindustry.graphics.g3d.*;
 
-import static confictura.assets.CShaders.*;
+import static arc.Core.*;
+import static confictura.graphics.CShaders.*;
 
 /**
  * Specialized atmosphere shader to render {@link CPlanets#portal}'s artificial gravity forcefield.
@@ -27,8 +28,8 @@ public class PortalForcefieldShader extends Shader{
 
     @Override
     public void apply(){
-        setUniformMatrix4("u_projection", cam.combined.val);
-        setUniformMatrix4("u_model", planet.getTransform(mat).rotate(axis, Vec3.Y.angle(axis)).val);
+        setUniformMatrix4("u_proj", cam.combined.val);
+        setUniformMatrix4("u_trans", planet.getTransform(mat).rotate(axis, Vec3.Y.angle(axis)).val);
         setUniformf("u_radius", planet.forcefieldRadius);
 
         setUniformf("u_camPos", cam.position);
@@ -38,5 +39,9 @@ public class PortalForcefieldShader extends Shader{
 
         setUniformf("u_time", Time.globalTime / 60f);
         setUniformf("u_baseColor", planet.atmosphereColor);
+
+        planet.depthBuffer.getTexture().bind(0);
+        setUniformi("u_topology", 0);
+        setUniformf("u_viewport", graphics.getWidth(), graphics.getHeight());
     }
 }

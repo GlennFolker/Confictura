@@ -1,4 +1,4 @@
-package confictura.assets;
+package confictura.graphics;
 
 import arc.files.*;
 import arc.graphics.gl.*;
@@ -12,6 +12,7 @@ import static mindustry.Vars.*;
  * @author GlennFolker
  */
 public final class CShaders{
+    public static DepthShader depth;
     public static PortalForcefieldShader portalForcefield;
 
     private CShaders(){
@@ -20,6 +21,7 @@ public final class CShaders{
 
     /** Loads the shaders. Client-side and main thread only! */
     public static void load(){
+        depth = new DepthShader();
         portalForcefield = new PortalForcefieldShader();
     }
 

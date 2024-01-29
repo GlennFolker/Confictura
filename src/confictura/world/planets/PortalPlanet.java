@@ -1,18 +1,23 @@
 package confictura.world.planets;
 
+import arc.func.*;
 import arc.graphics.*;
+import arc.graphics.Texture.*;
 import arc.graphics.g3d.*;
+import arc.graphics.gl.*;
 import arc.math.*;
 import arc.math.geom.*;
 import arc.util.*;
-import confictura.assets.*;
 import confictura.content.*;
+import confictura.graphics.*;
 import confictura.graphics.g3d.*;
 import confictura.graphics.g3d.CMeshBuilder.*;
+import confictura.util.*;
 import mindustry.graphics.*;
 import mindustry.graphics.g3d.*;
 import mindustry.type.*;
 
+import static arc.Core.*;
 import static mindustry.Vars.*;
 
 /**
@@ -31,6 +36,8 @@ public class PortalPlanet extends Planet{
     public @Nullable Mesh atmosphereMesh;
     public Color atmosphereOutlineColor = new Color();
 
+    public @Nullable FrameBuffer depthBuffer;
+
     public PortalPlanet(String name, Planet parent, float radius){
         super(name, parent, radius, 0);
 
@@ -41,7 +48,11 @@ public class PortalPlanet extends Planet{
     @Override
     public void load(){
         super.load();
-        if(!headless) atmosphereMesh = CMeshBuilder.gridDistance(PlanetGrid.create(3), atmosphereOutlineColor, 1f);
+        if(!headless){
+            atmosphereMesh = CMeshBuilder.gridDistance(PlanetGrid.create(3), atmosphereOutlineColor, 1f);
+            depthBuffer = new FrameBuffer(graphics.getWidth(), graphics.getHeight(), true);
+            depthBuffer.getTexture().setFilter(TextureFilter.nearest);
+        }
     }
 
     @Override
@@ -94,11 +105,32 @@ public class PortalPlanet extends Planet{
 
         @Override
         public void render(PlanetParams params, Mat3D projection, Mat3D transform){
-            var shader = Shaders.planet;
-            shader.planet = PortalPlanet.this;
-            shader.lightDir.set(solarSystem.position).sub(position).rotate(Vec3.Y, getRotation()).nor();
-            shader.ambientColor.set(solarSystem.lightColor);
+            if(params.alwaysDrawAtmosphere || settings.getBool("atmosphere")){
+                depthBuffer.resize(graphics.getWidth(), graphics.getHeight());
+                depthBuffer.begin(MathUtils.packedMax);
+                Blending.disabled.apply();
 
+                render(() -> {
+                    var shader = CShaders.depth;
+                    shader.camPos.set(renderer.planets.cam.position);
+                    return shader;
+                }, projection, transform);
+
+                Blending.normal.apply();
+                depthBuffer.end();
+            }
+
+            render(() -> {
+                var shader = Shaders.planet;
+                shader.planet = PortalPlanet.this;
+                shader.lightDir.set(solarSystem.position).sub(position).rotate(Vec3.Y, getRotation()).nor();
+                shader.ambientColor.set(solarSystem.lightColor);
+                return shader;
+            }, projection, transform);
+        }
+
+        protected void render(Prov<? extends Shader> shaderProv, Mat3D projection, Mat3D transform){
+            var shader = shaderProv.get();
             shader.bind();
             shader.setUniformMatrix4("u_proj", projection.val);
             shader.apply();

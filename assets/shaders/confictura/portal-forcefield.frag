@@ -39,6 +39,9 @@ uniform vec3 u_light;
 uniform float u_time;
 uniform vec4 u_baseColor;
 
+uniform sampler2D u_topology;
+uniform vec2 u_viewport;
+
 vec4 mod289(vec4 x){
     return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
@@ -176,12 +179,22 @@ vec2 intersect(vec3 ray_origin, vec3 ray_dir, float radius){
     return vec2(near, far);
 }
 
+float unpack(vec4 packed){
+    float exp = floor(packed.w * 256.0 - 127.0);
+    float value = dot(packed.xyz, 1.0 / vec3(1.0, 256.0, 256.0 * 256.0));
+
+    value = value * (2.0 * 256.0 * 256.0 * 256.0) / (256.0 * 256.0 * 256.0 - 1.0) - 1.0;
+    return value * exp2(exp);
+}
+
 void main(){
     vec3 eye = u_relCamPos;
     vec3 ray = normalize(v_position - u_camPos);
     vec3 normal = normalize(v_position - u_center);
 
     vec2 intersect = intersect(eye, ray, u_radius - 0.01);
+    float topo = unpack(texture2D(u_topology, gl_FragCoord.xy / u_viewport));
+
     float dst = (intersect.y - intersect.x) / ((u_radius - 0.01) * 2.0);
     float noise = octave_noise(vec3(eye + ray * intersect.x), 4, 1.8, 1.8, 0.67);
     noise = pow(noise - 1.0, 3.0) + 1.0;
@@ -200,7 +213,12 @@ void main(){
         base += pow(smoothstep(0.0, 1.0, 1.0 - (bound - outer) / (inner - outer)), 1.6);
     }
 
-    base *= 0.1 + light * 0.5;
+    base *= 0.2 + light * 0.4;
+    if(topo >= intersect.x && topo <= intersect.y){
+        float hit = 1.0 - clamp(min(topo - intersect.x, intersect.y - topo) / 0.16, 0.0, 1.0);
+        base += (max(base, 1.0) - base) * pow(hit, 3.2);
+    }
+
     vec3 baseColor = u_baseColor.xyz * u_baseColor.a * base;
 
     float outline = 0.1 + pow(sin(u_time * 2.0 + v_progress * 16.0) / 2.0 + 0.5, 7.0) * 0.9;

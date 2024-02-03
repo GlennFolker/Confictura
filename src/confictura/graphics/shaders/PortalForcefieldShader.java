@@ -19,7 +19,7 @@ public class PortalForcefieldShader extends Shader{
     private static final Mat3D mat = new Mat3D();
     private static final Vec3 axis = new Vec3(Vec3.Y).crs(PlanetGrid.create(3).tiles[0].v);
 
-    public Camera3D cam;
+    public Camera3D camera;
     public PortalPlanet planet;
 
     public PortalForcefieldShader(){
@@ -28,12 +28,12 @@ public class PortalForcefieldShader extends Shader{
 
     @Override
     public void apply(){
-        setUniformMatrix4("u_proj", cam.combined.val);
+        setUniformMatrix4("u_proj", camera.combined.val);
         setUniformMatrix4("u_trans", planet.getTransform(mat).rotate(axis, Vec3.Y.angle(axis)).val);
         setUniformf("u_radius", planet.forcefieldRadius);
 
-        setUniformf("u_camPos", cam.position);
-        setUniformf("u_relCamPos", Tmp.v31.set(cam.position).sub(planet.position));
+        setUniformf("u_camPos", camera.position);
+        setUniformf("u_relCamPos", Tmp.v31.set(camera.position).sub(planet.position));
         setUniformf("u_center", planet.position);
         setUniformf("u_light", Tmp.v31.set(planet.position).sub(planet.solarSystem.position).nor());
 

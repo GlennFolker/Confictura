@@ -61,7 +61,7 @@ public class PortalPlanet extends Planet{
         Blending.additive.apply();
 
         var shader = CShaders.portalForcefield;
-        shader.cam = cam;
+        shader.camera = cam;
         shader.planet = this;
 
         shader.bind();
@@ -112,7 +112,7 @@ public class PortalPlanet extends Planet{
 
                 render(() -> {
                     var shader = CShaders.depth;
-                    shader.camPos.set(renderer.planets.cam.position);
+                    shader.camera = renderer.planets.cam;
                     return shader;
                 }, projection, transform);
 

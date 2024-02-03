@@ -13,6 +13,7 @@ import static mindustry.Vars.*;
  */
 public final class CShaders{
     public static DepthShader depth;
+    public static DepthAtmosphereShader depthAtmosphere;
     public static PortalForcefieldShader portalForcefield;
 
     private CShaders(){
@@ -22,6 +23,7 @@ public final class CShaders{
     /** Loads the shaders. Client-side and main thread only! */
     public static void load(){
         depth = new DepthShader();
+        depthAtmosphere = new DepthAtmosphereShader();
         portalForcefield = new PortalForcefieldShader();
     }
 

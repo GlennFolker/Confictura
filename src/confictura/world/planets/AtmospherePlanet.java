@@ -42,18 +42,22 @@ public class AtmospherePlanet extends Planet{
 
     @Override
     public void drawAtmosphere(Mesh atmosphere, Camera3D cam){
-        Gl.depthMask(false);
-        Blending.additive.apply();
+        if(renderer.planets.cam.position.dst(position) < 16f){
+            Gl.depthMask(false);
+            Blending.additive.apply();
 
-        var shader = CShaders.depthAtmosphere;
-        shader.camera = cam;
-        shader.planet = this;
-        shader.bind();
-        shader.apply();
-        atmosphere.render(shader, Gl.triangles);
+            var shader = CShaders.depthAtmosphere;
+            shader.camera = cam;
+            shader.planet = this;
+            shader.bind();
+            shader.apply();
+            atmosphere.render(shader, Gl.triangles);
 
-        Blending.normal.apply();
-        Gl.depthMask(true);
+            Blending.normal.apply();
+            Gl.depthMask(true);
+        }else{
+            super.drawAtmosphere(atmosphere, cam);
+        }
     }
 
     public class AtmosphereHexMesh implements GenericMesh{
@@ -69,9 +73,10 @@ public class AtmospherePlanet extends Planet{
 
         @Override
         public void render(PlanetParams params, Mat3D projection, Mat3D transform){
-            if(params.alwaysDrawAtmosphere || settings.getBool("atmosphere")){
-                // check if dst > 16
-
+            if(
+                (params.alwaysDrawAtmosphere || settings.getBool("atmosphere")) &&
+                renderer.planets.cam.position.dst(position) < 16f
+            ){
                 var depth = CShaders.depth;
                 depthBuffer.resize(graphics.getWidth(), graphics.getHeight());
                 depthBuffer.begin(MathUtils.packedMax);

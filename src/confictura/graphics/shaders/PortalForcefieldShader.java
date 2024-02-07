@@ -1,6 +1,7 @@
 package confictura.graphics.shaders;
 
 import arc.graphics.g3d.*;
+import arc.graphics.gl.*;
 import arc.math.geom.*;
 import arc.util.*;
 import confictura.content.*;
@@ -14,7 +15,7 @@ import static confictura.graphics.CShaders.*;
  * Specialized atmosphere shader to render {@link CPlanets#portal}'s artificial gravity forcefield.
  * @author GlennFolker
  */
-public class PortalForcefieldShader extends HighpShader{
+public class PortalForcefieldShader extends Shader{
     private static final Mat3D mat = new Mat3D();
     private static final Vec3 axis = new Vec3(Vec3.Y).crs(PlanetGrid.create(3).tiles[0].v);
 

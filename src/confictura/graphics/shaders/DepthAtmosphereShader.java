@@ -1,6 +1,7 @@
 package confictura.graphics.shaders;
 
 import arc.graphics.g3d.*;
+import arc.graphics.gl.*;
 import arc.math.geom.*;
 import arc.util.*;
 import confictura.world.planets.*;
@@ -13,7 +14,7 @@ import static confictura.graphics.CShaders.*;
  * cost of performance.
  * @author GlennFolker
  */
-public class DepthAtmosphereShader extends HighpShader{
+public class DepthAtmosphereShader extends Shader{
     private static final Mat3D mat = new Mat3D();
 
     public Camera3D camera;

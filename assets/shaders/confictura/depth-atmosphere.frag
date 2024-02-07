@@ -96,12 +96,7 @@ vec3 inScatter(vec3 eye, vec3 ray, vec2 bound, vec3 light){
 }
 
 float unpack(vec4 pack){
-    return dot(pack, 1./vec4(1.,255.,65025.,16581375.)) * 150.0;
-    /*float exp = floor(pack.w * 256.0 - 127.0);
-    float value = dot(pack.xyz, 1.0 / vec3(1.0, 256.0, 256.0 * 256.0));
-
-    value = value * (2.0 * 256.0 * 256.0 * 256.0) / (256.0 * 256.0 * 256.0 - 1.0) - 1.0;
-    return value * exp2(exp);*/
+    return dot(pack, 1.0 / vec4(1.0, 255.0, 65025.0, 16581375.0)) * 150.0;
 }
 
 void main(){

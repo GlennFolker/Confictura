@@ -1,7 +1,6 @@
 package confictura;
 
 import arc.*;
-import arc.graphics.*;
 import arc.struct.*;
 import arc.util.*;
 import arc.util.serialization.*;
@@ -13,7 +12,6 @@ import mindustry.game.EventType.*;
 import mindustry.mod.*;
 
 import java.io.*;
-import java.util.regex.*;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -28,8 +26,6 @@ public class ConficturaMod extends Mod{
 
     public static Seq<String> packages;
     public static Seq<Class<?>> classes;
-
-    public static boolean glsl33;
 
     public ConficturaMod(){
         try{
@@ -64,31 +60,6 @@ public class ConficturaMod extends Mod{
         app.post(() -> {
             ScriptUtils.init();
             ScriptUtils.importDefaults(ScriptUtils.modScope);
-
-            if(!headless && app.isDesktop()){
-                var gl = Gl.getString(Gl.version);
-                var glsl = Gl.getString(Gl.shadingLanguageVersion);
-
-                Log.info("[Confictura] GLSL version: @", glsl);
-                if(!gl.toLowerCase().contains("opengl es")){
-                    try{
-                        var pattern = Pattern.compile("(\\d)\\.(\\d{2})");
-                        for(var version : glsl.split("\\s+")){
-                            var matcher = pattern.matcher(version);
-                            if(matcher.find()){
-                                int major = Integer.parseInt(matcher.group(1)),
-                                    minor = Integer.parseInt(matcher.group(2));
-
-                                glsl33 = major > 3 || major == 3 && minor >= 30;
-                                break;
-                            }
-                        }
-                    }catch(Throwable t){
-                        Log.err("Couldn't parse GLSL version", t);
-                    }
-                }
-                Log.info("[Confictura] IEEE 754 standard in desktop GLSL: @.", glsl33 ? "Yes" : "No");
-            }
         });
     }
 

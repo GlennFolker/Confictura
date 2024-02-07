@@ -31,6 +31,7 @@ public class DepthAtmosphereShader extends Shader{
 
         setUniformf("u_camPos", camera.position);
         setUniformf("u_relCamPos", Tmp.v31.set(camera.position).sub(planet.position));
+        setUniformf("u_camRange", camera.near, camera.far - camera.near);
         setUniformf("u_center", planet.position);
         setUniformf("u_light", planet.getLightNormal());
         setUniformf("u_color", planet.atmosphereColor.r, planet.atmosphereColor.g, planet.atmosphereColor.b);

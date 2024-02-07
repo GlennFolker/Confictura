@@ -12,7 +12,6 @@ import confictura.content.*;
 import confictura.graphics.*;
 import confictura.graphics.g3d.*;
 import confictura.graphics.g3d.CMeshBuilder.*;
-import confictura.util.*;
 import mindustry.graphics.*;
 import mindustry.graphics.g3d.*;
 import mindustry.type.*;
@@ -118,7 +117,7 @@ public class PortalPlanet extends Planet{
         public void render(PlanetParams params, Mat3D projection, Mat3D transform){
             if(params.alwaysDrawAtmosphere || settings.getBool("atmosphere")){
                 depthBuffer.resize(graphics.getWidth(), graphics.getHeight());
-                depthBuffer.begin(MathUtils.packedMax);
+                depthBuffer.begin(Tmp.c1.set(0xffffff00));
                 Blending.disabled.apply();
 
                 render(() -> {

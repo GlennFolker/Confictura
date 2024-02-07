@@ -52,10 +52,10 @@ public class CelestialVertex extends Vertex{
 
             float hw = width / 2f, hh = height / 2f;
             return new CelestialVertex[]{
-                new CelestialVertex(rot.transform(new Vec3(0f, -hh, -hw)), nor, color),
                 new CelestialVertex(rot.transform(new Vec3(0f, -hh, hw)), nor, color),
-                new CelestialVertex(rot.transform(new Vec3(0f, hh, hw)), nor, color),
-                new CelestialVertex(rot.transform(new Vec3(0f, hh, -hw)), nor, color)
+                new CelestialVertex(rot.transform(new Vec3(0f, -hh, -hw)), nor, color),
+                new CelestialVertex(rot.transform(new Vec3(0f, hh, -hw)), nor, color),
+                new CelestialVertex(rot.transform(new Vec3(0f, hh, hw)), nor, color)
             };
         }
 

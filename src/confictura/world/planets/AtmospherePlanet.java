@@ -7,7 +7,6 @@ import arc.graphics.gl.*;
 import arc.math.geom.*;
 import arc.util.*;
 import confictura.graphics.*;
-import confictura.util.*;
 import mindustry.graphics.*;
 import mindustry.graphics.g3d.*;
 import mindustry.type.*;
@@ -71,7 +70,7 @@ public class AtmospherePlanet extends Planet{
             if(params.alwaysDrawAtmosphere || settings.getBool("atmosphere")){
                 var depth = CShaders.depth;
                 depthBuffer.resize(graphics.getWidth(), graphics.getHeight());
-                depthBuffer.begin(MathUtils.packedMax);
+                depthBuffer.begin(Tmp.c1.set(0xffffff00));
                 Blending.disabled.apply();
 
                 depth.camera = renderer.planets.cam;

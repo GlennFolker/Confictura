@@ -19,5 +19,6 @@ public class DepthShader extends Shader{
     @Override
     public void apply(){
         setUniformf("u_camPos", camera.position);
+        setUniformf("u_camRange", camera.near, camera.far - camera.near);
     }
 }

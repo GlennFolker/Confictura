@@ -33,6 +33,7 @@ uniform float u_radius;
 
 uniform vec3 u_camPos;
 uniform vec3 u_relCamPos;
+uniform vec2 u_camRange;
 uniform vec3 u_center;
 uniform vec3 u_light;
 
@@ -180,7 +181,7 @@ vec2 intersect(vec3 ray_origin, vec3 ray_dir, float radius){
 }
 
 float unpack(vec4 pack){
-    return dot(pack, 1.0 / vec4(1.0, 255.0, 65025.0, 16581375.0)) * 150.0;
+    return dot(pack, 1.0 / vec4(1.0, 255.0, 65025.0, 16581375.0)) * u_camRange.y + u_camRange.x;
 }
 
 void main(){

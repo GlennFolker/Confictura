@@ -37,8 +37,8 @@ public class PortalPlanet extends Planet{
 
     public @Nullable FrameBuffer depthBuffer;
 
-    public @Nullable GenericMesh structureMesh;
-    public Prov<GenericMesh> structureMeshLoader = NoopMesh::new;
+    public @Nullable Mesh structureMesh;
+    public Prov<Mesh> structureMeshLoader = () -> new Mesh(true, 0, 0, VertexAttribute.position3, VertexAttribute.normal, VertexAttribute.color);
 
     public PortalPlanet(String name, Planet parent, float radius){
         super(name, parent, radius, 0);
@@ -74,12 +74,6 @@ public class PortalPlanet extends Planet{
 
         Blending.normal.apply();
         Gl.depthMask(true);
-    }
-
-    @Override
-    public void draw(PlanetParams params, Mat3D projection, Mat3D transform){
-        mesh.render(params, projection, transform);
-        structureMesh.render(params, projection, transform);
     }
 
     public static class Island{
@@ -144,6 +138,9 @@ public class PortalPlanet extends Planet{
             shader.bind();
             shader.setUniformMatrix4("u_proj", projection.val);
             shader.apply();
+
+            shader.setUniformMatrix4("u_trans", transform.val);
+            structureMesh.render(shader, Gl.triangles);
 
             for(int i = 0, len = islands.length; i < len; i++){
                 var island = islands[i];

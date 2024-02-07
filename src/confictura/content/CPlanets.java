@@ -2,7 +2,6 @@ package confictura.content;
 
 import arc.graphics.*;
 import arc.math.*;
-import arc.math.geom.*;
 import arc.util.noise.*;
 import confictura.*;
 import confictura.graphics.g3d.*;
@@ -72,16 +71,9 @@ public final class CPlanets{
             camRadius = -0.067f;
             minZoom = 0.75f;
 
-            structureMeshLoader = () -> new PlanetMesh(this, new MeshDrawer<CelestialVertex>(){{
+            structureMeshLoader = () -> new MeshDrawer<CelestialVertex>(){{
                 face(new CelestialRect(0f, 1f, 0f, 0f, 0f, 0f, 1f, 1f, monolithMid));
-            }}.build(), Shaders.planet){
-                @Override
-                public void preRender(PlanetParams params){
-                    Shaders.planet.planet = planet;
-                    Shaders.planet.lightDir.set(planet.solarSystem.position).sub(planet.position).rotate(Vec3.Y, planet.getRotation()).nor();
-                    Shaders.planet.ambientColor.set(planet.solarSystem.lightColor);
-                }
-            };
+            }}.build();
 
             islands = new Island[]{
                 new Island(0.4f, island(0, 0.35f, -0.55f, 0.45f, monolithMid)){{

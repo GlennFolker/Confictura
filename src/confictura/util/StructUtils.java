@@ -11,6 +11,16 @@ public final class StructUtils{
         throw new AssertionError();
     }
 
+    public static <T> boolean equals(T[] first, T[] second){
+        int len;
+        if((len = first.length) != second.length) return false;
+
+        for(int i = 0; i < len; i++){
+            if(!first[i].equals(second[i])) return false;
+        }
+        return true;
+    }
+
     public static <T> int reducei(T[] array, int initial, Reducei<T> reduce){
         for(var item : array) initial = reduce.get(item, initial);
         return initial;

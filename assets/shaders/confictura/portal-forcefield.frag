@@ -179,12 +179,13 @@ vec2 intersect(vec3 ray_origin, vec3 ray_dir, float radius){
     return vec2(near, far);
 }
 
-float unpack(vec4 packed){
-    float exp = floor(packed.w * 256.0 - 127.0);
-    float value = dot(packed.xyz, 1.0 / vec3(1.0, 256.0, 256.0 * 256.0));
+float unpack(vec4 pack){
+    return dot(pack, 1./vec4(1.,255.,65025.,16581375.)) * 150.0;
+    /*float exp = floor(pack.w * 256.0 - 127.0);
+    float value = dot(pack.xyz, 1.0 / vec3(1.0, 256.0, 256.0 * 256.0));
 
     value = value * (2.0 * 256.0 * 256.0 * 256.0) / (256.0 * 256.0 * 256.0 - 1.0) - 1.0;
-    return value * exp2(exp);
+    return value * exp2(exp);*/
 }
 
 void main(){

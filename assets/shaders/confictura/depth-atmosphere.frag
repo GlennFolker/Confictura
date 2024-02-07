@@ -95,12 +95,13 @@ vec3 inScatter(vec3 eye, vec3 ray, vec2 bound, vec3 light){
     return sum * (peak * u_color * rayleighPhase(cc) + flare * miePhase(gm, c, cc)) * intensity;
 }
 
-float unpack(vec4 packed){
-    float exp = floor(packed.w * 256.0 - 127.0);
-    float value = dot(packed.xyz, 1.0 / vec3(1.0, 256.0, 256.0 * 256.0));
+float unpack(vec4 pack){
+    return dot(pack, 1./vec4(1.,255.,65025.,16581375.)) * 150.0;
+    /*float exp = floor(pack.w * 256.0 - 127.0);
+    float value = dot(pack.xyz, 1.0 / vec3(1.0, 256.0, 256.0 * 256.0));
 
     value = value * (2.0 * 256.0 * 256.0 * 256.0) / (256.0 * 256.0 * 256.0 - 1.0) - 1.0;
-    return value * exp2(exp);
+    return value * exp2(exp);*/
 }
 
 void main(){

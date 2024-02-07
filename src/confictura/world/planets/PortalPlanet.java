@@ -38,6 +38,9 @@ public class PortalPlanet extends Planet{
 
     public @Nullable FrameBuffer depthBuffer;
 
+    public @Nullable GenericMesh structureMesh;
+    public Prov<GenericMesh> structureMeshLoader = NoopMesh::new;
+
     public PortalPlanet(String name, Planet parent, float radius){
         super(name, parent, radius, 0);
 
@@ -52,6 +55,8 @@ public class PortalPlanet extends Planet{
             atmosphereMesh = CMeshBuilder.gridDistance(PlanetGrid.create(3), atmosphereOutlineColor, 1f);
             depthBuffer = new FrameBuffer(graphics.getWidth(), graphics.getHeight(), true);
             depthBuffer.getTexture().setFilter(TextureFilter.nearest);
+
+            structureMesh = structureMeshLoader.get();
         }
     }
 
@@ -70,6 +75,12 @@ public class PortalPlanet extends Planet{
 
         Blending.normal.apply();
         Gl.depthMask(true);
+    }
+
+    @Override
+    public void draw(PlanetParams params, Mat3D projection, Mat3D transform){
+        mesh.render(params, projection, transform);
+        structureMesh.render(params, projection, transform);
     }
 
     public static class Island{

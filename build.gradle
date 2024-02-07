@@ -42,6 +42,7 @@ def localProps = {
 }()
 
 configure(allprojects){
+    apply plugin: 'java'
     sourceSets.main.java.srcDirs = [layout.projectDirectory.dir('src')]
 
     ext{

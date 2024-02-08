@@ -2,6 +2,7 @@ package confictura.content;
 
 import arc.graphics.*;
 import arc.math.*;
+import arc.util.*;
 import arc.util.noise.*;
 import confictura.*;
 import confictura.graphics.g3d.*;
@@ -72,7 +73,10 @@ public final class CPlanets{
             minZoom = 0.75f;
 
             structureMeshLoader = () -> new MeshDrawer<CelestialVertex>(){{
-                face(new CelestialRect(0f, 1f, 0f, 0f, 0f, 0f, 1f, 1f, monolithMid));
+                for(int i = 0; i < 6; i++){
+                    Tmp.v1.trns(i * 360f / 6f, 0.5f);
+                    face(new CelestialRect(0f, 1f, 0f, 0f, 0f, 0f, 1f, 1f, monolithMid));
+                }
             }}.build();
 
             islands = new Island[]{

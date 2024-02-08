@@ -7,6 +7,7 @@ import arc.util.serialization.*;
 import confictura.content.*;
 import confictura.gen.*;
 import confictura.graphics.*;
+import confictura.ui.*;
 import confictura.util.*;
 import mindustry.game.EventType.*;
 import mindustry.mod.*;
@@ -26,6 +27,8 @@ public class ConficturaMod extends Mod{
 
     public static Seq<String> packages;
     public static Seq<Class<?>> classes;
+
+    public static PlanetDebug planetDebug;
 
     public ConficturaMod(){
         try{
@@ -60,6 +63,10 @@ public class ConficturaMod extends Mod{
         app.post(() -> {
             ScriptUtils.init();
             ScriptUtils.importDefaults(ScriptUtils.modScope);
+
+            if(!headless){
+                planetDebug = new PlanetDebug();
+            }
         });
     }
 

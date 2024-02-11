@@ -39,6 +39,7 @@ public class PortalPlanet extends Planet{
     public @Nullable FrameBuffer depthBuffer;
 
     public Prov<MeshSet> structure = () -> null;
+    public float structureScale = 1f;
 
     public PortalPlanet(String name, Planet parent, float radius){
         super(name, parent, radius, 0);
@@ -139,7 +140,7 @@ public class PortalPlanet extends Planet{
 
             var struct = structure.get();
             for(var cont : struct.containers){
-                shader.setUniformMatrix4("u_trans", transform.val);
+                shader.setUniformMatrix4("u_trans", mat1.set(transform).scale(structureScale, structureScale, structureScale).val);
                 cont.render(shader);
             }
 

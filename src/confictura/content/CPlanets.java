@@ -49,6 +49,8 @@ public final class CPlanets{
             minZoom = 0.75f;
 
             structure = () -> CModels.portalStructure;
+            structureScale = 0.05f;
+
             islands = new Island[]{
                 new Island(0.4f, island(0, 0.35f, -0.55f, 0.45f, monolithMid)){{
                     offset.set(0f, -0.2f, 0f);

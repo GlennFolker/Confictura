@@ -23,8 +23,7 @@ public final class CModels{
     /** Loads the 3D models. Client-side and main thread only! */
     public static void load(){
         assets.load("scenes/confictura/portal.glb#foundation", MeshSet.class, new MeshSetParameter(new Scenes3DParameter(portal = new Scenes3D())
-            //.skip("foundation", VertexAttribute.texCoords.alias)
-            //.skip("foundation", VertexAttribute.color.alias)
+            .skip("foundation", VertexAttribute.texCoords.alias)
         )).loaded = mesh -> portalStructure = mesh;
     }
 }

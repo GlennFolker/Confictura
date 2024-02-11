@@ -11,6 +11,15 @@ public final class StructUtils{
         throw new AssertionError();
     }
 
+    public static byte[] bytesToInt(int input){
+        return new byte[]{
+            (byte)(input >> 24),
+            (byte)(input >> 16),
+            (byte)(input >> 8),
+            (byte)input,
+        };
+    }
+
     public static <T> boolean equals(T[] first, T[] second){
         int len;
         if((len = first.length) != second.length) return false;

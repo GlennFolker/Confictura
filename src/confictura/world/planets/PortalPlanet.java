@@ -12,6 +12,7 @@ import confictura.content.*;
 import confictura.graphics.*;
 import confictura.graphics.g3d.*;
 import confictura.graphics.g3d.CMeshBuilder.*;
+import gltfrenzy.model.*;
 import mindustry.graphics.*;
 import mindustry.graphics.g3d.*;
 import mindustry.type.*;
@@ -37,8 +38,7 @@ public class PortalPlanet extends Planet{
 
     public @Nullable FrameBuffer depthBuffer;
 
-    public @Nullable Mesh structureMesh;
-    public Prov<Mesh> structureMeshLoader = () -> new Mesh(true, 0, 0, VertexAttribute.position3, VertexAttribute.normal, VertexAttribute.color);
+    public Prov<MeshSet> structure = () -> null;
 
     public PortalPlanet(String name, Planet parent, float radius){
         super(name, parent, radius, 0);
@@ -54,8 +54,6 @@ public class PortalPlanet extends Planet{
             atmosphereMesh = CMeshBuilder.gridDistance(PlanetGrid.create(3), atmosphereOutlineColor, 1f);
             depthBuffer = new FrameBuffer(graphics.getWidth(), graphics.getHeight(), true);
             depthBuffer.getTexture().setFilter(TextureFilter.nearest);
-
-            structureMesh = structureMeshLoader.get();
         }
     }
 
@@ -139,8 +137,11 @@ public class PortalPlanet extends Planet{
             shader.setUniformMatrix4("u_proj", projection.val);
             shader.apply();
 
-            shader.setUniformMatrix4("u_trans", transform.val);
-            structureMesh.render(shader, Gl.triangles);
+            var struct = structure.get();
+            for(var cont : struct.containers){
+                shader.setUniformMatrix4("u_trans", transform.val);
+                cont.render(shader);
+            }
 
             for(int i = 0, len = islands.length; i < len; i++){
                 var island = islands[i];

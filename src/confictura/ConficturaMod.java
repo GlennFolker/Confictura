@@ -7,8 +7,9 @@ import arc.util.serialization.*;
 import confictura.content.*;
 import confictura.gen.*;
 import confictura.graphics.*;
-import confictura.ui.*;
 import confictura.util.*;
+import gltfrenzy.loader.*;
+import gltfrenzy.model.*;
 import mindustry.game.EventType.*;
 import mindustry.mod.*;
 
@@ -28,8 +29,6 @@ public class ConficturaMod extends Mod{
     public static Seq<String> packages;
     public static Seq<Class<?>> classes;
 
-    public static PlanetDebug planetDebug;
-
     public ConficturaMod(){
         try{
             Class<? extends DevBuild> devImpl = (Class<? extends DevBuild>)Class.forName("confictura.DevBuildImpl", true, mods.mainLoader());
@@ -41,6 +40,13 @@ public class ConficturaMod extends Mod{
             Log.info("[Confictura] Instantiated user build.");
         }catch(Throwable e){
             Log.err("[Confictura] Failed instantiating developer build", Strings.getFinalCause(e));
+        }
+
+        if(!headless){
+            assets.setLoader(Scenes3D.class, ".gltf", new Scenes3DLoader(tree, new GltfReader()));
+            assets.setLoader(Scenes3D.class, ".glb", new Scenes3DLoader(tree, new GlbReader()));
+
+            assets.setLoader(MeshSet.class, new MeshSetLoader(tree));
         }
 
         Events.on(FileTreeInitEvent.class, e -> {
@@ -57,16 +63,15 @@ public class ConficturaMod extends Mod{
                 throw new RuntimeException(ex);
             }
 
-            if(!headless) app.post(CShaders::load);
+            if(!headless) app.post(() -> {
+                CShaders.load();
+                CModels.load();
+            });
         });
 
         app.post(() -> {
             ScriptUtils.init();
             ScriptUtils.importDefaults(ScriptUtils.modScope);
-
-            if(!headless){
-                planetDebug = new PlanetDebug();
-            }
         });
     }
 

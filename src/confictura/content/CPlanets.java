@@ -2,16 +2,12 @@ package confictura.content;
 
 import arc.graphics.*;
 import arc.math.*;
-import arc.util.*;
 import arc.util.noise.*;
 import confictura.*;
-import confictura.graphics.g3d.*;
+import confictura.graphics.*;
 import confictura.graphics.g3d.CMeshBuilder.*;
-import confictura.graphics.g3d.mesh.*;
-import confictura.graphics.g3d.mesh.CelestialVertex.*;
 import confictura.world.planets.*;
 import mindustry.content.*;
-import mindustry.game.*;
 import mindustry.graphics.*;
 import mindustry.graphics.g3d.*;
 import mindustry.maps.planet.*;
@@ -40,29 +36,9 @@ public final class CPlanets{
                 new HexSkyMesh(this, 1, 0.6f, 0.16f, 5, Color.white.cpy().lerp(Pal.spore, 0.55f).a(0.75f), 2, 0.45f, 1f, 0.41f)
             );
 
-            launchCapacityMultiplier = 0.5f;
-            sectorSeed = 2;
-            allowWaves = true;
-            allowWaveSimulation = true;
-            allowSectorInvasion = true;
-            allowLaunchSchematics = true;
-            enemyCoreSpawnReplace = true;
-            allowLaunchLoadout = true;
-            //doesn't play well with configs
-            prebuildBase = false;
-            ruleSetter = r -> {
-                r.waveTeam = Team.crux;
-                r.placeRangeCheck = false;
-                r.showSpawns = false;
-            };
-            iconColor = Color.valueOf("7d4dff");
             atmosphereColor = Color.valueOf("3c1b8f");
             atmosphereRadIn = 0.02f;
             atmosphereRadOut = 0.3f;
-            startSector = 15;
-            alwaysUnlocked = true;
-            landCloudColor = Pal.spore.cpy().a(0.5f);
-            hiddenItems.addAll(Items.erekirItems).removeAll(Items.serpuloItems);
         }};
 
         portal = new PortalPlanet("portal", Planets.sun, 0.6f){{
@@ -72,13 +48,7 @@ public final class CPlanets{
             camRadius = -0.067f;
             minZoom = 0.75f;
 
-            structureMeshLoader = () -> new MeshDrawer<CelestialVertex>(){{
-                for(int i = 0; i < 6; i++){
-                    Tmp.v1.trns(i * 360f / 6f, 0.5f);
-                    face(new CelestialRect(0f, 1f, 0f, 0f, 0f, 0f, 1f, 1f, monolithMid));
-                }
-            }}.build();
-
+            structure = () -> CModels.portalStructure;
             islands = new Island[]{
                 new Island(0.4f, island(0, 0.35f, -0.55f, 0.45f, monolithMid)){{
                     offset.set(0f, -0.2f, 0f);

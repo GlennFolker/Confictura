@@ -5,4 +5,5 @@ package confictura;
  * @author GlennFolker
  */
 public interface DevBuild{
+    default void init(){}
 }

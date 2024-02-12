@@ -2,6 +2,7 @@ import arc.files.*
 import arc.struct.*
 import arc.util.*
 import arc.util.io.*
+import arc.util.serialization.*
 
 import java.nio.charset.*
 import java.util.regex.*
@@ -41,6 +42,7 @@ def localProps = {
 }()
 
 configure(allprojects){
+    apply plugin: 'java'
     sourceSets.main.java.srcDirs = [layout.projectDirectory.dir('src')]
 
     ext{
@@ -53,12 +55,20 @@ configure(allprojects){
 
         isDev = project.hasProperty('modDev') && Boolean.valueOf(project.property('modDev') as String)
 
+        localGltfrenzy = {
+            new File(rootDir.parent, 'glTFrenzy').exists()
+        }
+
         arc = {String module ->
-            return "com.github.Anuken.Arc$module:$arcVersion"
+            "com.github.Anuken.Arc$module:$arcVersion"
         }
 
         mindustry = {String module ->
-            return "com.github.Anuken.Mindustry$module:$mindustryVersion"
+            "com.github.Anuken.Mindustry$module:$mindustryVersion"
+        }
+
+        gltfrenzy = {
+            "com.github.GlennFolker:glTFrenzy:$glTFrenzyVersion"
         }
     }
 
@@ -94,7 +104,7 @@ configure(allprojects){
     tasks.withType(JavaCompile).configureEach{
         // Use Java 17+ syntax, but target Java 8 bytecode version.
         sourceCompatibility = compilerVersion
-        options.release.set 8
+        options.release = 8
         options.compilerArgs << '-Xlint:-options'
 
         options.incremental = true
@@ -102,105 +112,149 @@ configure(allprojects){
     }
 }
 
-configure(rootProject){
-    // Apply `EntityAnno` plugin to integrate the annotation processors.
-    apply plugin: 'com.github.GlennFolker.EntityAnno'
+// Apply `EntityAnno` plugin to integrate the annotation processors.
+apply plugin: 'com.github.GlennFolker.EntityAnno'
 
-    entityAnno{
-        modName = property('modName')
-        mindustryVersion = property(useJitpack ? 'mindustryBEVersion' : 'mindustryVersion')
-        isJitpack = useJitpack
-        revisionDir = layout.projectDirectory.dir('revisions').asFile
-        fetchPackage = modFetch
-        genSrcPackage = modGenSrc
-        genPackage = modGen
+entityAnno{
+    modName = property('modName')
+    mindustryVersion = property(useJitpack ? 'mindustryBEVersion' : 'mindustryVersion')
+    isJitpack = useJitpack
+    revisionDir = layout.projectDirectory.dir('revisions').asFile
+    fetchPackage = modFetch
+    genSrcPackage = modGenSrc
+    genPackage = modGen
+}
+
+dependencies{
+    // Use the entity generation annotation processor.
+    compileOnly "com.github.GlennFolker.EntityAnno:entity:$entVersion"
+    kapt "com.github.GlennFolker.EntityAnno:entity:$entVersion"
+
+    // Depend on Mindustry/Arc classpath.
+    compileOnly "${mindustry(':core')}"
+    compileOnly "${arc(':arc-core')}"
+
+    // Depend on glTFrenzy.
+    implementation "${gltfrenzy()}"
+}
+
+tasks.register('list'){
+    inputs.files tasks.compileJava, configurations.runtimeClasspath
+
+    def output = file("$temporaryDir/confictura-classes.json")
+    outputs.file output
+
+    doFirst{
+        def packages = Jval.newArray()
+        def classes = Jval.newArray()
+
+        def forbid = Pattern.compile('\\$\\d+|.+Impl')
+        def proc = {def proc, String path, File dir ->
+            for(def child : dir.listFiles()){
+                if(child.directory){
+                    def name = child.name
+                    if(!path.startsWith('confictura') && name != 'confictura') continue
+
+                    def visited = path.empty ? name : "$path.$name"
+                    if(visited == modFetch || visited == modGenSrc) continue
+
+                    packages.add(visited)
+                    proc(proc, visited, child)
+                }else{
+                    def dot = child.name.lastIndexOf('.')
+                    if(dot == -1) continue
+
+                    def name = child.name.substring(0, dot)
+                    def ext = child.name.substring(dot + 1)
+
+                    if(ext == 'class' && !forbid.matcher(name).find()) classes.add("$path.$name")
+                }
+            }
+        }
+
+        sourceSets.main.runtimeClasspath.forEach{proc(proc, '', it)}
+
+        def compacted = Jval.newObject().put('packages', packages).put('classes', classes)
+        output.withWriter{compacted.writeTo(it, Jval.Jformat.formatted)}
+    }
+}
+
+jar{
+    inputs.files tasks.list
+    archiveFileName = "${modArtifact}Desktop.jar"
+
+    from files(sourceSets.main.output.classesDirs)
+    from files(sourceSets.main.output.resourcesDir)
+    from configurations.runtimeClasspath.collect{it.isDirectory() ? it : zipTree(it)}
+
+    from(tasks.list){into 'meta'}
+    from files(layout.projectDirectory.dir('assets'))
+    from(layout.projectDirectory){
+        include 'mod.json'
+        include 'icon.png'
     }
 
-    dependencies{
-        // Use the entity generation annotation processor.
-        compileOnly "com.github.GlennFolker.EntityAnno:entity:$entVersion"
-        kapt "com.github.GlennFolker.EntityAnno:entity:$entVersion"
-
-        // Depend on Mindustry/Arc classpath.
-        compileOnly "${mindustry(':core')}"
-        compileOnly "${arc(':arc-core')}"
+    metaInf{
+        from layout.projectDirectory.file('LICENSE')
     }
 
-    jar{
-        archiveFileName = "${modArtifact}Desktop.jar"
+    if(!isDev) exclude '**/**Impl*'
 
-        from files(sourceSets.main.output.classesDirs)
-        from files(sourceSets.main.output.resourcesDir)
-        from configurations.runtimeClasspath.collect{it.isDirectory() ? it : zipTree(it)}
+    doFirst{
+        logger.log(LogLevel.LIFECYCLE, "Building ${isDev ? 'developer' : 'user'} artifact.")
 
-        from files(layout.projectDirectory.dir('assets'))
-        from(layout.projectDirectory){
-            include 'mod.json'
-            include 'icon.png'
-        }
+        def name = Pattern
+            .compile('"name": "(.*)"')
+            .matcher(layout.projectDirectory.file('mod.json').asFile.text)
 
-        metaInf{
-            from layout.projectDirectory.file('LICENSE')
-        }
-
-        if(!isDev) exclude 'confictura/DevBuildImpl*'
-
-        doFirst{
-            logger.log(LogLevel.LIFECYCLE, "Building ${isDev ? 'developer' : 'user'} artifact.")
-
-            def name = Pattern
-                .compile('"name": "(.*)"')
-                .matcher(layout.projectDirectory.file('mod.json').asFile.text)
-
-            if(name.find() && name.group(1) != modName){
-                throw new GradleException("Mod name mismatch: '${name.group(1)}' (mod.json) != '$modName' (gradle.properties).")
-            }
+        if(name.find() && name.group(1) != modName){
+            throw new GradleException("Mod name mismatch: '${name.group(1)}' (mod.json) != '$modName' (gradle.properties).")
         }
     }
+}
 
-    tasks.register('dex', Jar){
-        inputs.files tasks.jar
-        archiveFileName = "${modArtifact}.jar"
+tasks.register('dex', Jar){
+    inputs.files tasks.jar
+    archiveFileName = "${modArtifact}.jar"
 
-        final def desktopJar = tasks.jar.archiveFile
-        final def dexJar = file("$temporaryDir/Dexed.jar")
+    final def desktopJar = tasks.jar.archiveFile
+    final def dexJar = file("$temporaryDir/Dexed.jar")
 
-        from zipTree(desktopJar), zipTree(dexJar)
-        doFirst{
-            // Find Android SDK root.
-            def sdkRoot = file(
-                System.getenv('ANDROID_SDK_ROOT') ?: System.getenv('ANDROID_HOME') ?:
-                { throw new GradleException('Neither `ANDROID_SDK_ROOT` nor `ANDROID_HOME` is set') }
-            )
+    from zipTree(desktopJar), zipTree(dexJar)
+    doFirst{
+        // Find Android SDK root.
+        def sdkRoot = file(
+            System.getenv('ANDROID_SDK_ROOT') ?: System.getenv('ANDROID_HOME') ?:
+            { throw new GradleException('Neither `ANDROID_SDK_ROOT` nor `ANDROID_HOME` is set') }
+        )
 
-            // Find `d8`.
-            def d8 = file("$sdkRoot/build-tools/$androidBuildVersion/d8")
-            if(!d8.exists()){
-                throw new GradleException("Android SDK `build-tools;$androidBuildVersion` isn't installed or is corrupted")
-            }
-
-            // Initialize a release build.
-            def input = desktopJar.get().asFile
-            def command = "$d8 --release --min-api $androidMinVersion --output $dexJar $input"
-
-            // Include all compile and runtime classpath.
-            (configurations.compileClasspath.asList() + configurations.runtimeClasspath.asList()).forEach{
-                if(it.exists()) command = "$command --classpath $it"
-            }
-
-            // Include Android platform as library.
-            def androidJar = file("$sdkRoot/platforms/android-$androidSdkVersion/android.jar")
-            if(!androidJar.exists()){
-                throw new GradleException("Android SDK `platforms;android-$androidSdkVersion` isn't installed or is corrupted")
-            }
-
-            command = "$command --lib $androidJar"
-            if(OS.isWindows) command = "cmd /c $command"
-
-            // Run `d8`.
-            logger.log(LogLevel.LIFECYCLE, 'Running `d8`.')
-            command.execute(null, layout.projectDirectory.asFile).waitForProcessOutput(System.out, System.err)
+        // Find `d8`.
+        def d8 = file("$sdkRoot/build-tools/$androidBuildVersion/d8")
+        if(!d8.exists()){
+            throw new GradleException("Android SDK `build-tools;$androidBuildVersion` isn't installed or is corrupted")
         }
+
+        // Initialize a release build.
+        def input = desktopJar.get().asFile
+        def command = "$d8 --release --min-api $androidMinVersion --output $dexJar $input"
+
+        // Include all compile and runtime classpath.
+        (configurations.compileClasspath.asList() + configurations.runtimeClasspath.asList()).forEach{
+            if(it.exists()) command = "$command --classpath $it"
+        }
+
+        // Include Android platform as library.
+        def androidJar = file("$sdkRoot/platforms/android-$androidSdkVersion/android.jar")
+        if(!androidJar.exists()){
+            throw new GradleException("Android SDK `platforms;android-$androidSdkVersion` isn't installed or is corrupted")
+        }
+
+        command = "$command --lib $androidJar"
+        if(OS.isWindows) command = "cmd /c $command"
+
+        // Run `d8`.
+        logger.log(LogLevel.LIFECYCLE, 'Running `d8`.')
+        command.execute(null, layout.projectDirectory.asFile).waitForProcessOutput(System.out, System.err)
     }
 }
 

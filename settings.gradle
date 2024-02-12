@@ -9,4 +9,9 @@ if(JavaVersion.current().ordinal() < JavaVersion.VERSION_17.ordinal()){
     throw new GradleException("JDK 17 is a required minimum version. Yours: ${System.getProperty('java.version')}")
 }
 
-rootProject.name = modName
+rootProject.name = modArtifact
+
+if(new File(rootDir.parent, 'glTFrenzy').exists()){
+    logger.log(LogLevel.LIFECYCLE, 'Compiling with local `glTFrenzy`.')
+    includeBuild '../glTFrenzy'
+}

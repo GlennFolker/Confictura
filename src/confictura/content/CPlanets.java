@@ -9,8 +9,6 @@ import confictura.graphics.g3d.CMeshBuilder.*;
 import confictura.world.planets.*;
 import mindustry.content.*;
 import mindustry.graphics.*;
-import mindustry.graphics.g3d.*;
-import mindustry.maps.planet.*;
 import mindustry.type.*;
 
 import static confictura.graphics.CPal.*;
@@ -28,22 +26,11 @@ public final class CPlanets{
 
     /** Instantiates all contents. Called in the main thread in {@link ConficturaMod#loadContent()}. */
     public static void load(){
-        new AtmospherePlanet("serpulo", Planets.sun, 1f, 3){{
-            generator = new SerpuloPlanetGenerator();
-            meshLoader = () -> new AtmosphereHexMesh(6);
-            cloudMeshLoader = () -> new MultiMesh(
-                new HexSkyMesh(this, 11, 0.15f, 0.13f, 5, new Color().set(Pal.spore).mul(0.9f).a(0.75f), 2, 0.45f, 0.9f, 0.38f),
-                new HexSkyMesh(this, 1, 0.6f, 0.16f, 5, Color.white.cpy().lerp(Pal.spore, 0.55f).a(0.75f), 2, 0.45f, 1f, 0.41f)
-            );
-
-            atmosphereColor = Color.valueOf("3c1b8f");
-            atmosphereRadIn = 0.02f;
-            atmosphereRadOut = 0.3f;
-        }};
-
         portal = new PortalPlanet("portal", Planets.sun, 0.6f){{
             atmosphereColor.set(0x3366e5ff);
             atmosphereOutlineColor.set(0x1966ffff);
+            icon = "host";
+            iconColor.set(monolithLighter);
 
             camRadius = -0.067f;
             minZoom = 0.75f;

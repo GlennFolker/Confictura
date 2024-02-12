@@ -34,7 +34,7 @@ This project's source codes *(files located under `src/**`)* and assets *(files 
 
 > ```
 > Confictura: A Mindustry Java mod.
-> Copyright (C) 2023 GlennFolker
+> Copyright (C) 2024 GlennFolker
 > 
 > This program is free software: you can redistribute it and/or modify
 > it under the terms of the GNU General Public License as published by

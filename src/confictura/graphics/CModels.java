@@ -1,7 +1,7 @@
 package confictura.graphics;
 
-import arc.graphics.*;
-import gltfrenzy.loader.MeshSetLoader.*;
+import arc.assets.*;
+import gltfrenzy.loader.NodeLoader.*;
 import gltfrenzy.loader.Scenes3DLoader.*;
 import gltfrenzy.model.*;
 
@@ -14,7 +14,7 @@ import static arc.Core.*;
 public final class CModels{
     public static Scenes3D portal;
 
-    public static MeshSet portalStructure;
+    public static AssetDescriptor<Node> portalStructure;
 
     private CModels(){
         throw new AssertionError();
@@ -22,8 +22,6 @@ public final class CModels{
 
     /** Loads the 3D models. Client-side and main thread only! */
     public static void load(){
-        assets.load("scenes/confictura/portal.glb#foundation", MeshSet.class, new MeshSetParameter(new Scenes3DParameter(portal = new Scenes3D())
-            .skip("foundation", VertexAttribute.texCoords.alias)
-        )).loaded = mesh -> portalStructure = mesh;
+        portalStructure = assets.load("scenes/confictura/portal.glb#structure", Node.class, new NodeParameter(new Scenes3DParameter(portal = new Scenes3D())));
     }
 }

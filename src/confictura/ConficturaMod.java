@@ -47,6 +47,7 @@ public class ConficturaMod extends Mod{
             assets.setLoader(Scenes3D.class, ".glb", new Scenes3DLoader(tree, new GlbReader()));
 
             assets.setLoader(MeshSet.class, new MeshSetLoader(tree));
+            assets.setLoader(Node.class, new NodeLoader(tree));
         }
 
         Events.on(FileTreeInitEvent.class, e -> {
@@ -68,15 +69,13 @@ public class ConficturaMod extends Mod{
                 CModels.load();
             });
         });
-
-        app.post(() -> {
-            ScriptUtils.init();
-            ScriptUtils.importDefaults(ScriptUtils.modScope);
-        });
     }
 
     @Override
     public void init(){
+        ScriptUtils.init();
+        ScriptUtils.importDefaults(ScriptUtils.modScope);
+
         dev.init();
     }
 

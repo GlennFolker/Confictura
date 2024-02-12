@@ -48,12 +48,13 @@ public final class CPlanets{
             camRadius = -0.067f;
             minZoom = 0.75f;
 
-            structure = () -> CModels.portalStructure;
+            structure = CModels.portalStructure;
+            structureOffset = -0.2125f;
             structureScale = 0.05f;
 
             islands = new Island[]{
                 new Island(0.4f, island(0, 0.35f, -0.55f, 0.45f, monolithMid)){{
-                    offset.set(0f, -0.2f, 0f);
+                    offset.set(0f, -0.23f, 0f);
                 }},
                 new Island(0.4f, island(1, 0.18f, -0.2f, 0.56f, monolithDarker)){{
                     offset.set(0.32f, -0.35f, 0.2f);
@@ -94,7 +95,7 @@ public final class CPlanets{
         return (x, y, hex) -> {
             float dst = Mathf.len(x, y) / dstScale;
             hex.low = depth + dst * depthScale + Simplex.noise2d(seeded, 3f, 0.5f, 4.5f, x + 31.41f, y + 59.26f) * (0.3f + Interp.pow2In.apply(dst) * 0.7f) * 0.1f;
-            hex.high = -Interp.pow3In.apply(dst) * 0.067f + Simplex.noise2d(seeded + 1, 3f, 0.5f, 4f, x + 53.58f, y + 97.93f) * (0.4f + Interp.pow2In.apply(dst) * 0.6f) * 0.096f;
+            hex.high = -Interp.pow3In.apply(dst) * 0.067f + Simplex.noise2d(seeded + 1, 3f, 0.5f, 4f, x + 53.58f, y + 97.93f) * (0.4f + Interp.pow2In.apply(dst) * 0.6f) * 0.08f;
 
             hex.lowColor.set(Pal.darkerGray)
                 .lerp(Pal.stoneGray, Interp.pow4In.apply(Simplex.noise3d(seeded + 2, 3f, 0.3f, 5f, x + 31.41f, y + 59.26f, hex.low) / 2f + 0.5f))

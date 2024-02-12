@@ -1,5 +1,6 @@
 package confictura.world.planets;
 
+import arc.assets.*;
 import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.Texture.*;
@@ -38,8 +39,8 @@ public class PortalPlanet extends Planet{
 
     public @Nullable FrameBuffer depthBuffer;
 
-    public Prov<MeshSet> structure = () -> null;
-    public float structureScale = 1f;
+    public @Nullable AssetDescriptor<Node> structure;
+    public float structureOffset, structureScale;
 
     public PortalPlanet(String name, Planet parent, float radius){
         super(name, parent, radius, 0);
@@ -73,6 +74,20 @@ public class PortalPlanet extends Planet{
 
         Blending.normal.apply();
         Gl.depthMask(true);
+    }
+
+    public void drawStructure(Shader shader, Mat3D transform){
+        if(structure == null) return;
+        var node = assets.get(structure);
+        node.localTrns.translation.set(0f, structureOffset, 0f);
+        node.localTrns.rotation.idt();
+        node.localTrns.scale.set(structureScale, structureScale, structureScale);
+        node.update();
+
+        for(var mesh : node.mesh.containers){
+            shader.setUniformMatrix4("u_trans", mat1.set(transform).mul(node.globalTrns).val);
+            mesh.render(shader);
+        }
     }
 
     public static class Island{
@@ -135,14 +150,10 @@ public class PortalPlanet extends Planet{
         protected void render(Prov<? extends Shader> shaderProv, Mat3D projection, Mat3D transform){
             var shader = shaderProv.get();
             shader.bind();
-            shader.setUniformMatrix4("u_proj", projection.val);
             shader.apply();
 
-            var struct = structure.get();
-            for(var cont : struct.containers){
-                shader.setUniformMatrix4("u_trans", mat1.set(transform).scale(structureScale, structureScale, structureScale).val);
-                cont.render(shader);
-            }
+            shader.setUniformMatrix4("u_proj", projection.val);
+            drawStructure(shader, transform);
 
             for(int i = 0, len = islands.length; i < len; i++){
                 var island = islands[i];

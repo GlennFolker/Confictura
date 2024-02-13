@@ -224,8 +224,4 @@ void main(){
 
     vec3 outlineColor = v_color.xyz * pow(max(1.0 - v_color.a - 0.5, 0.0) * 2.0, 4.0) * outline;
     gl_FragColor = vec4(baseColor + outlineColor, 1.0);
-
-    float far = gl_DepthRange.far, near = gl_DepthRange.near;
-    vec4 clip = u_proj * vec4(u_camPos + ray * intersect.x, 1.0);
-    gl_FragDepth = (((far - near) * (clip.z / clip.w)) + near + far) / 2.0;
 }

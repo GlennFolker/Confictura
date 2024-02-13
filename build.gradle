@@ -50,9 +50,7 @@ configure(allprojects){
             ext."$prop.key" = prop.value
         }
 
-        compilerVersion = JavaVersion.current().ordinal() - JavaVersion.VERSION_17.ordinal() + 17
         useJitpack = Boolean.valueOf(mindustryBE)
-
         isDev = project.hasProperty('modDev') && Boolean.valueOf(project.property('modDev') as String)
 
         localGltfrenzy = {
@@ -103,7 +101,7 @@ configure(allprojects){
 
     tasks.withType(JavaCompile).configureEach{
         // Use Java 17+ syntax, but target Java 8 bytecode version.
-        sourceCompatibility = compilerVersion
+        sourceCompatibility = 17
         options.release = 8
         options.compilerArgs << '-Xlint:-options'
 

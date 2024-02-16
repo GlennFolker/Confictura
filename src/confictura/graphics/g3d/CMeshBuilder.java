@@ -144,6 +144,16 @@ public final class CMeshBuilder{
         return end();
     }
 
+    public static Mesh gridLines(PlanetGrid grid, Color color){
+        begin(grid.edges.length * 2);
+        for(var edge : grid.edges){
+            vert(edge.corners[0].v, nor.setZero(), color);
+            vert(edge.corners[1].v, nor.setZero(), color);
+        }
+
+        return end();
+    }
+
     public static Mesh gridDistance(PlanetGrid grid, Color color, float radius){
         return gridDistance(grid, new HexMesher(){
             @Override
@@ -227,6 +237,7 @@ public final class CMeshBuilder{
         var last = mesh;
         var buffer = mesh.getVerticesBuffer();
         buffer.limit(buffer.position());
+        buffer.position(0);
 
         mesh = null;
         return last;

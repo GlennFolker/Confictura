@@ -39,6 +39,12 @@ public final class CPlanets{
             structureOffset = -0.2125f;
             structureScale = 0.05f;
 
+            sectorColor = monolithLighter;
+            sectorOffset = -0.15f;
+            sectorRadius = 0.08f;
+            sectorInnerRadius = 0.15f;
+            sectorDistance = 0.275f;
+
             islands = new Island[]{
                 new Island(0.4f, island(0, 0.35f, -0.55f, 0.45f, monolithMid)){{
                     offset.set(0f, -0.23f, 0f);
@@ -86,10 +92,10 @@ public final class CPlanets{
 
             hex.lowColor.set(Pal.darkerGray)
                 .lerp(Pal.stoneGray, Interp.pow4In.apply(Simplex.noise3d(seeded + 2, 3f, 0.3f, 5f, x + 31.41f, y + 59.26f, hex.low) / 2f + 0.5f))
-                .lerp(stroke, Interp.pow3In.apply(Ridged.noise3d(seeded + 3, x, y, hex.low, 1, 8f) / 2f + 0.5f));
+                .lerp(stroke.r, stroke.g, stroke.b, 0f, Interp.pow3In.apply(Ridged.noise3d(seeded + 3, x, y, hex.low, 1, 8f) / 2f + 0.5f));
             hex.highColor.set(Pal.darkerGray)
                 .lerp(Pal.stoneGray, Interp.pow4In.apply(Simplex.noise3d(seeded + 2, 3f, 0.3f, 5f, x + 31.41f, y + 59.26f, hex.high) / 2f + 0.5f))
-                .lerp(stroke, Interp.pow3In.apply(Ridged.noise3d(seeded + 3, x, y, hex.high, 1, 8f) / 2f + 0.5f));
+                .lerp(stroke.r, stroke.g, stroke.b, 0f, Interp.pow3In.apply(Ridged.noise3d(seeded + 3, x, y, hex.high, 1, 8f) / 2f + 0.5f));
         };
     }
 }

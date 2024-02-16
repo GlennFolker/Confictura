@@ -51,7 +51,7 @@ configure(allprojects){
         }
 
         useJitpack = Boolean.valueOf(mindustryBE)
-        isDev = project.hasProperty('modDev') && Boolean.valueOf(project.property('modDev') as String)
+        isDev = project.hasProperty('mod.dev') && Boolean.valueOf(project.property('mod.dev') as String)
 
         localGltfrenzy = {
             new File(rootDir.parent, 'glTFrenzy').exists()
@@ -197,7 +197,6 @@ jar{
     }
 
     if(!isDev) exclude '**/**Impl*'
-
     doFirst{
         logger.log(LogLevel.LIFECYCLE, "Building ${isDev ? 'developer' : 'user'} artifact.")
 
@@ -227,7 +226,7 @@ tasks.register('dex', Jar){
         )
 
         // Find `d8`.
-        def d8 = file("$sdkRoot/build-tools/$androidBuildVersion/d8")
+        def d8 = file("$sdkRoot/build-tools/$androidBuildVersion/${OS.isWindows ? 'd8.bat' : 'd8'}")
         if(!d8.exists()){
             throw new GradleException("Android SDK `build-tools;$androidBuildVersion` isn't installed or is corrupted")
         }

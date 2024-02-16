@@ -10,8 +10,13 @@ if(JavaVersion.current().ordinal() < JavaVersion.VERSION_17.ordinal()){
 }
 
 rootProject.name = modArtifact
-
-if(new File(rootDir.parent, 'glTFrenzy').exists()){
-    logger.log(LogLevel.LIFECYCLE, 'Compiling with local `glTFrenzy`.')
-    includeBuild '../glTFrenzy'
+for(def local : ['glTFrenzy', 'EntityAnno']){
+    def prop = "local.${local.toLowerCase()}"
+    if(!hasProperty(prop) || Boolean.valueOf(getProperty(prop) as String)){
+        def dir = new File(rootDir.parent, local)
+        if(dir.exists()){
+            logger.log(LogLevel.LIFECYCLE, "Compiling with local `$local`.")
+            includeBuild dir
+        }
+    }
 }

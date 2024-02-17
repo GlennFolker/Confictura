@@ -2,7 +2,7 @@
     "name": "confictura",
     "displayName": "Confictura",
     "description": "Dive into the past of a trauma-driven uprising.",
-    "version": "v0.1.0",
+    "version": "v0.2.0",
     "minGameVersion": "146",
     "author": "GlennFolker",
     "java": true,

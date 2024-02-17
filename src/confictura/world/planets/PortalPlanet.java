@@ -153,9 +153,9 @@ public class PortalPlanet extends Planet{
     @Override
     public @Nullable Sector getSector(Ray ray, float radius){
         var intersect = intersect(ray, radius);
-        if(intersect == null) return null;
+        if(intersect == null || intersect.intersected == null) return null;
 
-        return sectors.find(t -> t.tile == intersect.intersected);
+        return sectors.get(intersect.intersected.id);
     }
 
     @Override
@@ -175,7 +175,22 @@ public class PortalPlanet extends Planet{
                 return intersect;
             }
         }
-        return null;
+
+        for(int i = 0; i < sectorSides; i++){
+            intersect.set(grid.tiles[0].corners[i].v).rotate(Vec3.Y, -getRotation()).setLength(sectorDistance + sectorRadius).scl(1.25f).add(position);
+
+            int index = i * 3;
+            vertices[index] = intersect.x;
+            vertices[index + 1] = intersect.y;
+            vertices[index + 2] = intersect.z;
+        }
+
+        if(Intersector3D.intersectRayTriangles(ray, vertices, indices, 3, intersect)){
+            intersect.intersected = null;
+            return intersect;
+        }else{
+            return null;
+        }
     }
 
     @Override
@@ -224,14 +239,57 @@ public class PortalPlanet extends Planet{
             batch.vertex(v2);
         }
 
-        Blending.additive.apply();
+        Gl.depthMask(false);
         batch.flush(Gl.triangles);
-        Blending.normal.apply();
+        Gl.depthMask(true);
     }
 
     @Override
     public void drawSelection(VertexBatch3D batch, Sector sector, Color color, float stroke, float length){
+        stroke /= 2f;
 
+        var tile = sector.tile;
+        var corners = tile.corners;
+        for(int i = 0; i < corners.length; i++){
+            Corner curr = corners[i], next = corners[(i + 1) % corners.length];
+
+            v1.set(curr.v);
+            v2.set(next.v);
+            v3.set(curr.v).sub(tile.v);
+            v3.setLength(v3.len() - stroke).add(tile.v);
+            batch.tri2(v1, v2, v3, sectorColor);
+
+            v1.set(v3);
+            v2.set(next.v);
+            v3.set(next.v).sub(tile.v);
+            v3.setLength(v3.len() - stroke).add(tile.v);
+            batch.tri2(v1, v2, v3, sectorColor);
+        }
+    }
+
+    @Override
+    public void fill(VertexBatch3D batch, Sector sector, Color color, float offset){
+        var corners = sector.tile.corners;
+        for(int i = 0; i < sectorSides - 2; i++){
+            Corner a = corners[0], b = corners[i + 1], c = corners[i + 2];
+            batch.tri2(a.v, b.v, c.v, Tmp.c1.set(sectorColor).a(color.a * 0.5f));
+        }
+    }
+
+    @Override
+    public void renderSectors(VertexBatch3D batch, Camera3D cam, PlanetParams params){
+        batch.proj().mul(getTransform(mat1));
+        if(params.renderer != null) params.renderer.renderSectors(this);
+
+        var shader = Shaders.planetGrid;
+        var tile = intersect(cam.getMouseRay(), radius);
+        shader.mouse.lerp(tile == null ? Tmp.v31.set(0f, sectorOffset + 1f, 0f) : tile.sub(position).rotate(Vec3.Y, getRotation()), 0.2f);
+
+        shader.bind();
+        shader.setUniformMatrix4("u_proj", cam.combined.val);
+        shader.setUniformMatrix4("u_trans", getTransform(mat1).val);
+        shader.apply();
+        gridMesh.render(shader, Gl.lines);
     }
 
     @Override
@@ -271,6 +329,7 @@ public class PortalPlanet extends Planet{
 
         for(var mesh : node.mesh.containers){
             shader.setUniformMatrix4("u_trans", mat1.set(transform).mul(node.globalTrns).val);
+            shader.setUniformMatrix4("u_normal", mat2.set(transform).toNormalMatrix().val); // It should be `set(mat1)`, but somehow it breaks and I don't know why.
             mesh.render(shader);
         }
     }
@@ -324,10 +383,10 @@ public class PortalPlanet extends Planet{
             }
 
             render(() -> {
-                var shader = Shaders.planet;
-                shader.planet = PortalPlanet.this;
-                shader.lightDir.set(solarSystem.position).sub(position).rotate(Vec3.Y, getRotation()).nor();
+                var shader = CShaders.celestial;
+                shader.light.set(solarSystem.position);
                 shader.ambientColor.set(solarSystem.lightColor);
+                shader.camPos.set(renderer.planets.cam.position);
                 return shader;
             }, projection, transform);
         }
@@ -351,12 +410,13 @@ public class PortalPlanet extends Planet{
                 mat2.mul(mat1);
 
                 shader.setUniformMatrix4("u_trans", mat2.val);
+                shader.setUniformMatrix4("u_normal", mat1.set(mat2).toNormalMatrix().val);
                 mesh.render(shader, Gl.triangles);
             }
         }
     }
 
     public static class Intersect extends Vec3{
-        public Ptile intersected;
+        public @Nullable Ptile intersected;
     }
 }

@@ -39,7 +39,7 @@ public final class CPlanets{
             structureOffset = -0.2125f;
             structureScale = 0.05f;
 
-            sectorColor = monolithLighter;
+            sectorColor = monolithLight;
             sectorOffset = -0.15f;
             sectorRadius = 0.08f;
             sectorInnerRadius = 0.15f;

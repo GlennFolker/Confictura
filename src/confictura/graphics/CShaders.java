@@ -15,6 +15,7 @@ public final class CShaders{
     public static DepthShader depth;
     public static DepthAtmosphereShader depthAtmosphere;
     public static PortalForcefieldShader portalForcefield;
+    public static CelestialShader celestial;
 
     private CShaders(){
         throw new AssertionError();
@@ -25,6 +26,7 @@ public final class CShaders{
         depth = new DepthShader();
         depthAtmosphere = new DepthAtmosphereShader();
         portalForcefield = new PortalForcefieldShader();
+        celestial = new CelestialShader();
     }
 
     /**

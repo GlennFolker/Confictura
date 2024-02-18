@@ -26,7 +26,6 @@ public final class CShaders{
     /** Loads the shaders. Client-side and main thread only! */
     public static void load(){
         String prevVert = Shader.prependVertexCode, prevFrag = Shader.prependFragmentCode;
-
         if(graphics.getGLVersion().type == GlType.OpenGL){
             Shader.prependFragmentCode = "#define HAS_GL_FRAGDEPTH\n";
         }

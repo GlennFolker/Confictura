@@ -30,7 +30,7 @@ public final class CPlanets{
             atmosphereColor.set(0x3366e5ff);
             atmosphereOutlineColor.set(0x1966ffff);
             icon = "host";
-            iconColor.set(monolithLighter);
+            iconColor = monolithLighter;
 
             camRadius = -0.067f;
             minZoom = 0.75f;
@@ -39,7 +39,7 @@ public final class CPlanets{
             structureOffset = -0.2125f;
             structureScale = 0.05f;
 
-            sectorColor = monolithLight;
+            sectorColor = monolithLighter;
             sectorOffset = -0.15f;
             sectorRadius = 0.08f;
             sectorInnerRadius = 0.15f;

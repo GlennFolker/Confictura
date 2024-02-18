@@ -82,7 +82,7 @@ vec4 grad4(float j, vec4 ip){
 
 const float F4 = 0.309016994374947451;
 
-float simplex_noise(vec4 v){
+float simplexNoise(vec4 v){
     const vec4 C = vec4(
         0.138196601125011,
         0.276393202250021,
@@ -145,11 +145,11 @@ float simplex_noise(vec4 v){
     return clamp((value + 1.0) / 2.0, 0.0, 1.0);
 }
 
-float ridged_noise(vec4 v){
-    return abs(simplex_noise(v) - 0.5) * 2.0;
+float ridgedNoise(vec4 v){
+    return abs(simplexNoise(v) - 0.5) * 2.0;
 }
 
-float octave_noise(vec3 v, int octaves, float scale, float lacunarity, float persistence){
+float octNoise(vec3 v, int octaves, float scale, float lacunarity, float persistence){
     float total = 0.0;
 
     float frequency = scale;
@@ -158,7 +158,7 @@ float octave_noise(vec3 v, int octaves, float scale, float lacunarity, float per
 
     for(int i = 0; i < octaves; i++){
         highest += magnitude;
-        total += ridged_noise(vec4(v * frequency, u_time)) * magnitude;
+        total += ridgedNoise(vec4(v * frequency, u_time)) * magnitude;
 
         frequency *= lacunarity;
         magnitude *= persistence;
@@ -194,7 +194,7 @@ void main(){
     float topo = unpack(texture2D(u_topology, gl_FragCoord.xy / u_viewport));
 
     float dst = (intersect.y - intersect.x) / ((u_radius - 0.01) * 2.0);
-    float noise = octave_noise(vec3(eye + ray * intersect.x), 4, 1.8, 1.8, 0.67);
+    float noise = octNoise(vec3(eye + ray * intersect.x), 4, 1.8, 1.8, 0.67);
     noise = pow(noise - 1.0, 3.0) + 1.0;
     float light = (dot(normal, -u_light) + 1.0) / 2.0;
 

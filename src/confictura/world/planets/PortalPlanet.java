@@ -72,7 +72,21 @@ public class PortalPlanet extends Planet{
     public void init(){
         grid = createSectorGrid();
         sectors.ensureCapacity(grid.tiles.length);
-        for(var tile : grid.tiles) sectors.add(new Sector(this, tile));
+        for(var tile : grid.tiles) sectors.add(new Sector(this, tile){
+            @Override
+            protected SectorRect makeRect(){
+                plane.set(tile.v, Vec3.Y);
+
+                float offset = tile.id == 0 ? 0f : (-(tile.id - 1) * 360f / 8f);
+                return new SectorRect(
+                    sectorRadius,
+                    tile.v.cpy(),
+                    new Vec3(-1f, 0f, 0f).rotate(Vec3.Y, offset).setLength(sectorRadius),
+                    new Vec3(0f, 0f, -1f).rotate(Vec3.Y, offset).setLength(sectorRadius),
+                    0f
+                );
+            }
+        });
 
         sectorApproxRadius = sectors.first().tile.v.dst(sectors.first().tile.corners[0].v);
         gridMeshLoader = () -> CMeshBuilder.gridLines(grid, sectorColor);
@@ -199,6 +213,9 @@ public class PortalPlanet extends Planet{
 
     @Override
     public void drawBorders(VertexBatch3D batch, Sector sector, Color base, float alpha){
+        // I apologize for the performance loss...
+        batch.flush(Gl.triangles);
+
         var color = Tmp.c1.set(sectorColor).a((base.a + 0.3f + Mathf.absin(Time.globalTime, 5f, 0.3f)) * alpha);
         var fade = Tmp.c2.set(color).a(0f);
 
@@ -243,6 +260,7 @@ public class PortalPlanet extends Planet{
             batch.vertex(v2);
         }
 
+        // ... once again I apologize...
         Gl.depthMask(false);
         batch.flush(Gl.triangles);
         Gl.depthMask(true);
@@ -276,7 +294,7 @@ public class PortalPlanet extends Planet{
         var corners = sector.tile.corners;
         for(int i = 0; i < sectorSides - 2; i++){
             Corner a = corners[0], b = corners[i + 1], c = corners[i + 2];
-            batch.tri2(a.v, b.v, c.v, Tmp.c1.set(sectorColor).a(color.a * 0.5f));
+            batch.tri2(a.v, b.v, c.v, Tmp.c1.set(sectorColor).a(color.a));
         }
     }
 
@@ -322,6 +340,21 @@ public class PortalPlanet extends Planet{
         }
 
         return out;
+    }
+
+    @Override
+    public Vec3 project(Sector sector, Camera3D cam, Vec3 out){
+        return cam.project(out.set(sector.tile.v).rotate(Vec3.Y, -getRotation()).add(position));
+    }
+
+    @Override
+    public void setPlane(Sector sector, PlaneBatch3D projector){
+        float rot = -getRotation();
+        projector.setPlane(
+            Tmp.v31.set(sector.rect.center).add(0f, 0.02f, 0f).rotate(Vec3.Y, rot).add(position),
+            Tmp.v32.set(sector.rect.top).rotate(Vec3.Y, rot),
+            Tmp.v33.set(sector.rect.right).rotate(Vec3.Y, rot)
+        );
     }
 
     public void drawStructure(Shader shader, Mat3D transform){

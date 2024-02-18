@@ -79,6 +79,16 @@ public class PortalPlanet extends Planet{
         super.init();
     }
 
+    @Override
+    public void load(){
+        super.load();
+        if(!headless){
+            atmosphereMesh = CMeshBuilder.gridDistance(PlanetGrid.create(3), atmosphereOutlineColor, 1f);
+            depthBuffer = new FrameBuffer(graphics.getWidth(), graphics.getHeight(), true);
+            depthBuffer.getTexture().setFilter(TextureFilter.nearest);
+        }
+    }
+
     public PlanetGrid createSectorGrid(){
         var grid = new PlanetGrid(0){};
         grid.tiles = new Ptile[9];
@@ -142,12 +152,6 @@ public class PortalPlanet extends Planet{
     @Override
     public boolean hasGrid(){
         return true;
-    }
-
-    // TODO: This is just a workaround so the camera doesn't crash everytime.
-    @Override
-    public @Nullable Sector getLastSector(){
-        return null;
     }
 
     @Override
@@ -293,16 +297,6 @@ public class PortalPlanet extends Planet{
     }
 
     @Override
-    public void load(){
-        super.load();
-        if(!headless){
-            atmosphereMesh = CMeshBuilder.gridDistance(PlanetGrid.create(3), atmosphereOutlineColor, 1f);
-            depthBuffer = new FrameBuffer(graphics.getWidth(), graphics.getHeight(), true);
-            depthBuffer.getTexture().setFilter(TextureFilter.nearest);
-        }
-    }
-
-    @Override
     public void drawAtmosphere(Mesh atmosphere, Camera3D cam){
         Gl.depthMask(false);
         Blending.additive.apply();
@@ -317,6 +311,17 @@ public class PortalPlanet extends Planet{
 
         Blending.normal.apply();
         Gl.depthMask(true);
+    }
+
+    @Override
+    public Vec3 lookAt(Sector sector, Vec3 out){
+        if(sector.id == 0){
+            out.set(1f, -sectorOffset, 0f).nor().rotate(Vec3.Y, -getRotation());
+        }else{
+            out.set(sector.tile.v).add(0f, -sectorOffset, 0f).rotate(Vec3.Y, -getRotation());
+        }
+
+        return out;
     }
 
     public void drawStructure(Shader shader, Mat3D transform){

@@ -4,7 +4,7 @@ attribute vec4 a_color;
 
 uniform mat4 u_proj;
 uniform mat4 u_trans;
-uniform mat4 u_normal;
+uniform mat3 u_normal;
 
 uniform vec3 u_light;
 uniform vec3 u_ambientColor;
@@ -14,7 +14,7 @@ varying vec3 v_color;
 
 void main(){
     vec4 pos = u_trans * vec4(a_position, 1.0);
-    vec3 normal = (u_normal * vec4(a_normal, 1.0)).xyz;
+    vec3 normal = normalize(u_normal * a_normal);
     vec3 lightDir = normalize(u_light - pos.xyz);
 
     vec3 specular = vec3(0.0);

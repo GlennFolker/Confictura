@@ -13,6 +13,7 @@ import confictura.content.*;
 import confictura.graphics.*;
 import confictura.graphics.g3d.*;
 import confictura.graphics.g3d.CMeshBuilder.*;
+import confictura.util.*;
 import gltfrenzy.model.*;
 import mindustry.graphics.*;
 import mindustry.graphics.g3d.*;
@@ -367,7 +368,7 @@ public class PortalPlanet extends Planet{
 
         for(var mesh : node.mesh.containers){
             shader.setUniformMatrix4("u_trans", mat1.set(transform).mul(node.globalTrns).val);
-            shader.setUniformMatrix4("u_normal", mat2.set(transform).toNormalMatrix().val); // It should be `set(mat1)`, but somehow it breaks and I don't know why.
+            shader.setUniformMatrix("u_normal", MathUtils.copyMatrix(mat1, Tmp.m1).inv().transpose());
             mesh.render(shader);
         }
     }
@@ -448,7 +449,7 @@ public class PortalPlanet extends Planet{
                 mat2.mul(mat1);
 
                 shader.setUniformMatrix4("u_trans", mat2.val);
-                shader.setUniformMatrix4("u_normal", mat1.set(mat2).toNormalMatrix().val);
+                shader.setUniformMatrix("u_normal", MathUtils.copyMatrix(mat2, Tmp.m1).inv().transpose());
                 mesh.render(shader, Gl.triangles);
             }
         }

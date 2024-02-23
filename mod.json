@@ -6,5 +6,6 @@
     "minGameVersion": "146",
     "author": "GlennFolker",
     "java": true,
-    "main": "confictura.ConficturaMod"
+    "main": "confictura.ConficturaMod",
+    "repo": "GlennFolker/Confictura"
 }

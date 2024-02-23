@@ -25,4 +25,8 @@ public final class MathUtils{
         System.arraycopy(in, Mat3D.M02, out, Mat.M02, 3);
         return to;
     }
+
+    public static Vec3 normal(Vec3 out, Vec3 a, Vec3 b, Vec3 c){
+        return out.set(b).sub(a).crs(c.x - a.x, c.y - a.y, c.z - a.z).nor();
+    }
 }

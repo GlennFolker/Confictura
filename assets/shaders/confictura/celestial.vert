@@ -25,6 +25,6 @@ void main(){
     if(factor > 0.0) specular = vec3(pow(factor, 40.0)) * (1.0 - a_color.a);
 
     vec3 diffuse = (u_ambientColor + specular) * vec3(0.01 + clamp((dot(normal, lightDir) + 1.0) / 2.0, 0.0, 1.0));
-    v_color = vec4(a_color.rgb, 1.0) * vec4(diffuse, 1.0);
+    v_color = a_color.rgb * diffuse;
     gl_Position = u_proj * pos;
 }

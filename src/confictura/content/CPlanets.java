@@ -2,11 +2,15 @@ package confictura.content;
 
 import arc.graphics.*;
 import arc.math.*;
+import arc.math.geom.*;
+import arc.util.*;
 import arc.util.noise.*;
 import confictura.*;
 import confictura.graphics.*;
 import confictura.graphics.g3d.CMeshBuilder.*;
+import confictura.util.*;
 import confictura.world.planets.*;
+import gltfrenzy.model.*;
 import mindustry.content.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
@@ -27,6 +31,9 @@ public final class CPlanets{
     /** Instantiates all contents. Called in the main thread in {@link ConficturaMod#loadContent()}. */
     public static void load(){
         portal = new PortalPlanet("portal", Planets.sun, 0.6f){{
+            var mat = new Mat3D();
+            var nor = new Vec3();
+
             atmosphereColor.set(0x3366e5ff);
             atmosphereOutlineColor.set(0x1966ffff);
             icon = "host";
@@ -35,15 +42,89 @@ public final class CPlanets{
             camRadius = -0.067f;
             minZoom = 0.75f;
 
-            structure = CModels.portalStructure;
-            structureOffset = -0.2125f;
-            structureScale = 0.05f;
-
             sectorColor = monolithLighter;
             sectorOffset = -0.15f;
             sectorRadius = 0.08f;
             sectorInnerRadius = 0.15f;
             sectorDistance = 0.275f;
+
+            float structureOffset = -0.2125f, structureScale = 0.05f;
+
+            period = 240f;
+            drawStructure = (shader, transform) -> {
+                Node base = CModels.portalBase, cage = CModels.portalCage;
+                base.localTrns.translation.set(0f, structureOffset, 0f);
+                base.localTrns.rotation.idt();
+                base.localTrns.scale.set(structureScale, structureScale, structureScale);
+
+                cage.localTrns.translation.set(0f, 5f, 0f);
+                cage.localTrns.rotation.set(Vec3.Y, period(Interp.pow5) * 90f);
+                cage.localTrns.scale.set(1f, 1f, 1f);
+                base.update();
+
+                for(var mesh : base.mesh.containers){
+                    shader.setUniformMatrix4("u_trans", mat.set(transform).mul(base.globalTrns).val);
+                    shader.setUniformMatrix("u_normal", MathUtils.copyMatrix(mat, Tmp.m1).inv().transpose());
+                    mesh.render(shader);
+                }
+
+                for(var mesh : cage.mesh.containers){
+                    shader.setUniformMatrix4("u_trans", mat.set(transform).mul(cage.globalTrns).val);
+                    shader.setUniformMatrix("u_normal", MathUtils.copyMatrix(mat, Tmp.m1).inv().transpose());
+                    mesh.render(shader);
+                }
+            };
+
+            emissions = new Color[]{monolithDark};
+            drawEmissive = batch -> {
+                var light = emissiveRegions[0];
+
+                int seg = 12;
+                for(int i = 0; i < seg; i++){
+                    float stroke = (1f - period(0.5f, 0f, 0.5f, Interp.pow5In)) * 0.0125f;
+                    Tmp.v1.trns(i * 360f / seg, stroke);
+                    Tmp.v2.trns((i + 1) * 360f / seg, stroke);
+
+                    Tmp.v31.set(Tmp.v1.x, structureOffset, Tmp.v1.y);
+                    Tmp.v32.set(Tmp.v2.x, structureOffset, Tmp.v2.y);
+                    Tmp.v33.set(Tmp.v32.x, period(0.5f, 0f, 0.36f, Interp.pow3Out) * 14.25f * structureScale + structureOffset, Tmp.v32.z);
+                    Tmp.v34.set(Tmp.v31.x, Tmp.v33.y, Tmp.v31.z);
+
+                    MathUtils.normal(nor, Tmp.v33, Tmp.v32, Tmp.v31);
+                    Tmp.c1.set(monolithDarker).a(1f - period(0.5f, 0f, 0.5f, Interp.pow5In));
+                    Tmp.c2.set(Tmp.c1).a(0f);
+
+                    batch.color(Tmp.c2);
+                    batch.normal(nor);
+                    batch.texCoord(light.u, light.v);
+                    batch.vertex(Tmp.v34);
+
+                    batch.color(Tmp.c2);
+                    batch.normal(nor);
+                    batch.texCoord(light.u2, light.v);
+                    batch.vertex(Tmp.v33);
+
+                    batch.color(Tmp.c1);
+                    batch.normal(nor);
+                    batch.texCoord(light.u2, light.v2);
+                    batch.vertex(Tmp.v32);
+
+                    batch.color(Tmp.c1);
+                    batch.normal(nor);
+                    batch.texCoord(light.u2, light.v2);
+                    batch.vertex(Tmp.v32);
+
+                    batch.color(Tmp.c1);
+                    batch.normal(nor);
+                    batch.texCoord(light.u, light.v2);
+                    batch.vertex(Tmp.v31);
+
+                    batch.color(Tmp.c2);
+                    batch.normal(nor);
+                    batch.texCoord(light.u, light.v);
+                    batch.vertex(Tmp.v34);
+                }
+            };
 
             islands = new Island[]{
                 new Island(0.4f, island(0, 0.35f, -0.55f, 0.45f, monolithMid)){{

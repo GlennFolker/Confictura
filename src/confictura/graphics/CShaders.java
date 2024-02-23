@@ -17,6 +17,7 @@ public final class CShaders{
     public static DepthShader depth;
     public static DepthAtmosphereShader depthAtmosphere;
     public static PortalForcefieldShader portalForcefield;
+    public static PortalBatchShader portalBatch;
     public static CelestialShader celestial;
 
     private CShaders(){
@@ -26,6 +27,8 @@ public final class CShaders{
     /** Loads the shaders. Client-side and main thread only! */
     public static void load(){
         String prevVert = Shader.prependVertexCode, prevFrag = Shader.prependFragmentCode;
+        Shader.prependVertexCode = Shader.prependFragmentCode = "";
+
         if(graphics.getGLVersion().type == GlType.OpenGL){
             Shader.prependFragmentCode = "#define HAS_GL_FRAGDEPTH\n";
         }
@@ -33,6 +36,7 @@ public final class CShaders{
         depth = new DepthShader();
         depthAtmosphere = new DepthAtmosphereShader();
         portalForcefield = new PortalForcefieldShader();
+        portalBatch = new PortalBatchShader();
         celestial = new CelestialShader();
 
         Shader.prependVertexCode = prevVert;

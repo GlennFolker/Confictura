@@ -1,9 +1,9 @@
 package confictura.world.planets;
 
-import arc.assets.*;
 import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.Texture.*;
+import arc.graphics.g2d.*;
 import arc.graphics.g3d.*;
 import arc.graphics.gl.*;
 import arc.math.*;
@@ -14,11 +14,12 @@ import confictura.graphics.*;
 import confictura.graphics.g3d.*;
 import confictura.graphics.g3d.CMeshBuilder.*;
 import confictura.util.*;
-import gltfrenzy.model.*;
 import mindustry.graphics.*;
 import mindustry.graphics.g3d.*;
 import mindustry.graphics.g3d.PlanetGrid.*;
 import mindustry.type.*;
+
+import java.util.*;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -42,11 +43,18 @@ public class PortalPlanet extends Planet{
 
     public @Nullable FrameBuffer depthBuffer;
 
-    public @Nullable AssetDescriptor<Node> structure;
-    public float structureOffset = 0f, structureScale = 1f;
-
+    public Cons2<Shader, Mat3D> drawStructure = (shader, transform) -> {};
     public Color sectorColor = Color.white;
     public float sectorOffset = 0f, sectorRadius = 1f, sectorInnerRadius = 2f, sectorDistance = 1f, sectorFade = 0.05f;
+
+    public Cons<VertexBatch3D> drawEmissive = batch -> {};
+    public float period = 60f;
+
+    public @Nullable Texture emissiveTexture;
+    public @Nullable TextureRegion[] emissiveRegions;
+    public Color[] emissions = new Color[0];
+
+    protected @Nullable VertexBatch3D batch;
 
     public static final int sectorSides = 8;
 
@@ -56,6 +64,7 @@ public class PortalPlanet extends Planet{
     public PortalPlanet(String name, Planet parent, float radius){
         super(name, parent, radius, 0);
 
+        generateIcons = true;
         meshLoader = PortalMesh::new;
         forcefieldRadius = radius;
     }
@@ -101,6 +110,72 @@ public class PortalPlanet extends Planet{
             atmosphereMesh = CMeshBuilder.gridDistance(PlanetGrid.create(3), atmosphereOutlineColor, 1f);
             depthBuffer = new FrameBuffer(graphics.getWidth(), graphics.getHeight(), true);
             depthBuffer.getTexture().setFilter(TextureFilter.nearest);
+
+            // HACK Obviously this is a problem with Arc mishandling vertex attribute offsets.
+            batch = new VertexBatch3D(4096, true, true, 1, CShaders.portalBatch){
+                @Override
+                public void color(Color color){
+                    Reflect.<float[]>get(VertexBatch3D.class, this, "vertices")[Reflect.<Integer>get(VertexBatch3D.class, this, "vertexIdx") + 6] = color.toFloatBits();
+                }
+
+                @Override
+                public void color(float r, float g, float b, float a){
+                    Reflect.<float[]>get(VertexBatch3D.class, this, "vertices")[Reflect.<Integer>get(VertexBatch3D.class, this, "vertexIdx") + 6] = Color.toFloatBits(r, g, b, a);
+                }
+
+                @Override
+                public void color(float colorBits){
+                    Reflect.<float[]>get(VertexBatch3D.class, this, "vertices")[Reflect.<Integer>get(VertexBatch3D.class, this, "vertexIdx") + 6] = colorBits;
+                }
+
+                @Override
+                public void texCoord(float u, float v){
+                    int idx = Reflect.<Integer>get(VertexBatch3D.class, this, "vertexIdx") + 7,
+                        num = Reflect.<Integer>get(VertexBatch3D.class, this, "numSetTexCoords");
+
+                    float[] vertices = Reflect.get(VertexBatch3D.class, this, "vertices");
+                    vertices[idx + num] = u;
+                    vertices[idx + num + 1] = v;
+                    Reflect.set(VertexBatch3D.class, this, "numSetTexCoords", num + 2);
+                }
+            };
+
+            int columns = Mathf.round(Mathf.sqrt(emissions.length)),
+                rows = columns + Math.max(emissions.length - columns * columns, 0);
+
+            var emission = new Pixmap(columns * 8, rows * 8);
+            emission.pixels.limit(emission.pixels.capacity());
+
+            int[] data = new int[8];
+            for(int i = 0; i < emissions.length; i++){
+                Arrays.fill(data, emissions[i].rgba());
+                int x = (i % columns) * 8,
+                    y = (i / columns) * 8;
+
+                for(int ty = 0; ty < 8; ty++){
+                    emission.pixels.position((x + (y + ty) * emission.width) * 4);
+                    emission.pixels.asIntBuffer().put(data, 0, 8);
+                }
+            }
+
+            emission.pixels.position(0);
+            emissiveTexture = new Texture(emission);
+            emissiveRegions = new TextureRegion[emissions.length];
+
+            for(int i = 0; i < emissions.length; i++){
+                int x = i % columns,
+                    y = i / columns;
+
+                float
+                    u = (x * 8f + 4f) / emission.width,
+                    v = (y * 8f + 4f) / emission.height;
+
+                var region = emissiveRegions[i] = new TextureRegion();
+                region.texture = emissiveTexture;
+                region.width = region.height = 4;
+                region.u = region.u2 = u;
+                region.v = region.v2 = v;
+            }
         }
     }
 
@@ -196,7 +271,11 @@ public class PortalPlanet extends Planet{
         }
 
         for(int i = 0; i < sectorSides; i++){
-            intersect.set(grid.tiles[0].corners[i].v).rotate(Vec3.Y, -getRotation()).setLength(sectorDistance + sectorRadius).scl(1.25f).add(position);
+            intersect
+                .set(grid.tiles[0].corners[i].v).add(0f, -sectorOffset, 0f)
+                .rotate(Vec3.Y, -getRotation())
+                .setLength(sectorDistance + sectorRadius)
+                .add(position.x, position.y + sectorOffset, position.z);
 
             int index = i * 3;
             vertices[index] = intersect.x;
@@ -295,7 +374,13 @@ public class PortalPlanet extends Planet{
         var corners = sector.tile.corners;
         for(int i = 0; i < sectorSides - 2; i++){
             Corner a = corners[0], b = corners[i + 1], c = corners[i + 2];
-            batch.tri2(a.v, b.v, c.v, Tmp.c1.set(sectorColor).a(color.a));
+            batch.tri2(
+                Tmp.v31.set(a.v).add(0f, offset, 0f),
+                Tmp.v32.set(b.v).add(0f, offset, 0f),
+                Tmp.v33.set(c.v).add(0f, offset, 0f),
+                // HACK: Check if the color is equal to the locked color to see if the sector is locked.
+                color.equals(PlanetRenderer.shadowColor) ? color : Tmp.c1.set(sectorColor).mulA(color.a * 0.67f)
+            );
         }
     }
 
@@ -315,9 +400,28 @@ public class PortalPlanet extends Planet{
         gridMesh.render(shader, Gl.lines);
     }
 
+    public float period(Interp interpolation){
+        return period(0f, 0f, 1f, interpolation);
+    }
+
+    public float period(float offset, float from, float to, Interp interpolation){
+        float frac = (Time.globalTime + offset * period) / period;
+        return interpolation.apply(Mathf.curve(frac % 1f, from, to));
+    }
+
+    public void drawEmissive(){
+        CShaders.portalBatch.planet = this;
+
+        drawEmissive.get(batch);
+        batch.flush(Gl.triangles);
+    }
+
     @Override
     public void drawAtmosphere(Mesh atmosphere, Camera3D cam){
         Gl.depthMask(false);
+        batch.proj(cam.combined);
+        drawEmissive();
+
         Blending.additive.apply();
 
         var shader = CShaders.portalForcefield;
@@ -356,21 +460,6 @@ public class PortalPlanet extends Planet{
             Tmp.v32.set(sector.rect.top).rotate(Vec3.Y, rot),
             Tmp.v33.set(sector.rect.right).rotate(Vec3.Y, rot)
         );
-    }
-
-    public void drawStructure(Shader shader, Mat3D transform){
-        if(structure == null) return;
-        var node = assets.get(structure);
-        node.localTrns.translation.set(0f, structureOffset, 0f);
-        node.localTrns.rotation.idt();
-        node.localTrns.scale.set(structureScale, structureScale, structureScale);
-        node.update();
-
-        for(var mesh : node.mesh.containers){
-            shader.setUniformMatrix4("u_trans", mat1.set(transform).mul(node.globalTrns).val);
-            shader.setUniformMatrix("u_normal", MathUtils.copyMatrix(mat1, Tmp.m1).inv().transpose());
-            mesh.render(shader);
-        }
     }
 
     public static class Island{
@@ -436,7 +525,7 @@ public class PortalPlanet extends Planet{
             shader.apply();
 
             shader.setUniformMatrix4("u_proj", projection.val);
-            drawStructure(shader, transform);
+            drawStructure.get(shader, transform);
 
             for(int i = 0, len = islands.length; i < len; i++){
                 var island = islands[i];

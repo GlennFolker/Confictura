@@ -107,12 +107,14 @@ public class PortalPlanet extends Planet{
     public void load(){
         super.load();
         if(!headless){
-            atmosphereMesh = CMeshBuilder.gridDistance(PlanetGrid.create(3), atmosphereOutlineColor, 1f);
-            depthBuffer = new FrameBuffer(graphics.getWidth(), graphics.getHeight(), true);
-            depthBuffer.getTexture().setFilter(TextureFilter.nearest);
+            if(atmosphereMesh == null) atmosphereMesh = CMeshBuilder.gridDistance(PlanetGrid.create(3), atmosphereOutlineColor, 1f);
+            if(depthBuffer == null){
+                depthBuffer = new FrameBuffer(graphics.getWidth(), graphics.getHeight(), true);
+                depthBuffer.getTexture().setFilter(TextureFilter.nearest);
+            }
 
             // HACK Obviously this is a problem with Arc mishandling vertex attribute offsets.
-            batch = new VertexBatch3D(4096, true, true, 1, CShaders.portalBatch){
+            if(batch == null) batch = new VertexBatch3D(4096, true, true, 1, CShaders.portalBatch){
                 @Override
                 public void color(Color color){
                     Reflect.<float[]>get(VertexBatch3D.class, this, "vertices")[Reflect.<Integer>get(VertexBatch3D.class, this, "vertexIdx") + 6] = color.toFloatBits();
@@ -140,41 +142,43 @@ public class PortalPlanet extends Planet{
                 }
             };
 
-            int columns = Mathf.round(Mathf.sqrt(emissions.length)),
-                rows = columns + Math.max(emissions.length - columns * columns, 0);
+            if(emissiveTexture == null){
+                int columns = Mathf.round(Mathf.sqrt(emissions.length)),
+                    rows = columns + Math.max(emissions.length - columns * columns, 0);
 
-            var emission = new Pixmap(columns * 8, rows * 8);
-            emission.pixels.limit(emission.pixels.capacity());
+                var emission = new Pixmap(columns * 8, rows * 8);
+                emission.pixels.limit(emission.pixels.capacity());
 
-            int[] data = new int[8];
-            for(int i = 0; i < emissions.length; i++){
-                Arrays.fill(data, emissions[i].rgba());
-                int x = (i % columns) * 8,
-                    y = (i / columns) * 8;
+                int[] data = new int[8];
+                for(int i = 0; i < emissions.length; i++){
+                    Arrays.fill(data, emissions[i].rgba());
+                    int x = (i % columns) * 8,
+                        y = (i / columns) * 8;
 
-                for(int ty = 0; ty < 8; ty++){
-                    emission.pixels.position((x + (y + ty) * emission.width) * 4);
-                    emission.pixels.asIntBuffer().put(data, 0, 8);
+                    for(int ty = 0; ty < 8; ty++){
+                        emission.pixels.position((x + (y + ty) * emission.width) * 4);
+                        emission.pixels.asIntBuffer().put(data, 0, 8);
+                    }
                 }
-            }
 
-            emission.pixels.position(0);
-            emissiveTexture = new Texture(emission);
-            emissiveRegions = new TextureRegion[emissions.length];
+                emission.pixels.position(0);
+                emissiveTexture = new Texture(emission);
+                emissiveRegions = new TextureRegion[emissions.length];
 
-            for(int i = 0; i < emissions.length; i++){
-                int x = i % columns,
-                    y = i / columns;
+                for(int i = 0; i < emissions.length; i++){
+                    int x = i % columns,
+                        y = i / columns;
 
-                float
-                    u = (x * 8f + 4f) / emission.width,
-                    v = (y * 8f + 4f) / emission.height;
+                    float
+                        u = (x * 8f + 4f) / emission.width,
+                        v = (y * 8f + 4f) / emission.height;
 
-                var region = emissiveRegions[i] = new TextureRegion();
-                region.texture = emissiveTexture;
-                region.width = region.height = 4;
-                region.u = region.u2 = u;
-                region.v = region.v2 = v;
+                    var region = emissiveRegions[i] = new TextureRegion();
+                    region.texture = emissiveTexture;
+                    region.width = region.height = 4;
+                    region.u = region.u2 = u;
+                    region.v = region.v2 = v;
+                }
             }
         }
     }

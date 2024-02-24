@@ -1,12 +1,14 @@
 package confictura.content;
 
 import arc.graphics.*;
+import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
 import arc.util.*;
 import arc.util.noise.*;
 import confictura.*;
 import confictura.graphics.*;
+import confictura.graphics.g3d.*;
 import confictura.graphics.g3d.CMeshBuilder.*;
 import confictura.util.*;
 import confictura.world.planets.*;
@@ -75,54 +77,58 @@ public final class CPlanets{
                 }
             };
 
-            emissions = new Color[]{monolithDark};
+            emissions = new Color[]{monolithDark, monolithDarker};
             drawEmissive = batch -> {
-                var light = emissiveRegions[0];
+                TextureRegion beam = emissiveRegions[0], shade = emissiveRegions[1];
+                for(int i = 0; i < 8; i++){
+                    float stroke = period(0.5f, 0f, 0.5f, a -> Interp.pow3Out.apply(Mathf.slope(a))) * 0.0125f;
+                    float rise = period(0.5f, 0f, 0.36f, Interp.pow3Out);
 
-                int seg = 12;
-                for(int i = 0; i < seg; i++){
-                    float stroke = (1f - period(0.5f, 0f, 0.5f, Interp.pow5In)) * 0.0125f;
-                    Tmp.v1.trns(i * 360f / seg, stroke);
-                    Tmp.v2.trns((i + 1) * 360f / seg, stroke);
+                    Tmp.v1.trns(i * 45f, stroke);
+                    Tmp.v2.trns((i + 1f) * 45f, stroke);
 
                     Tmp.v31.set(Tmp.v1.x, structureOffset, Tmp.v1.y);
                     Tmp.v32.set(Tmp.v2.x, structureOffset, Tmp.v2.y);
-                    Tmp.v33.set(Tmp.v32.x, period(0.5f, 0f, 0.36f, Interp.pow3Out) * 14.25f * structureScale + structureOffset, Tmp.v32.z);
+                    Tmp.v33.set(Tmp.v32.x, rise * 14.25f * structureScale + structureOffset, Tmp.v32.z);
                     Tmp.v34.set(Tmp.v31.x, Tmp.v33.y, Tmp.v31.z);
 
                     MathUtils.normal(nor, Tmp.v33, Tmp.v32, Tmp.v31);
-                    Tmp.c1.set(monolithDarker).a(1f - period(0.5f, 0f, 0.5f, Interp.pow5In));
+                    Tmp.c1.set(monolithMid).a((1f - period(0.5f, 0f, 0.5f, Interp.pow5In)) * rise);
                     Tmp.c2.set(Tmp.c1).a(0f);
 
-                    batch.color(Tmp.c2);
-                    batch.normal(nor);
-                    batch.texCoord(light.u, light.v);
-                    batch.vertex(Tmp.v34);
+                    Draw3DUtils.quad2(
+                        batch,
+                        Tmp.v34, nor, Tmp.c2, beam.u, beam.v,
+                        Tmp.v33, nor, Tmp.c2, beam.u2, beam.v,
+                        Tmp.v32, nor, Tmp.c1, beam.u2, beam.v2,
+                        Tmp.v31, nor, Tmp.c1, beam.u, beam.v2
+                    );
+                }
 
-                    batch.color(Tmp.c2);
-                    batch.normal(nor);
-                    batch.texCoord(light.u2, light.v);
-                    batch.vertex(Tmp.v33);
+                for(int i = 0; i < 4; i++){
+                    float rad = 0.045f;
+                    float rise = 0.8f + Mathf.sin(period(Interp.linear), 1f / Mathf.PI2, 0.2f);
+                    float col = 0.25f + period(0.67f, 0f, 0.5f, a -> Interp.smoother.apply(Mathf.slope(a))) * 0.75f;
 
-                    batch.color(Tmp.c1);
-                    batch.normal(nor);
-                    batch.texCoord(light.u2, light.v2);
-                    batch.vertex(Tmp.v32);
+                    Tmp.v1.trns(45f + i * 90f, rad);
+                    Tmp.v2.trns(45f + (i + 1f) * 90f, rad);
 
-                    batch.color(Tmp.c1);
-                    batch.normal(nor);
-                    batch.texCoord(light.u2, light.v2);
-                    batch.vertex(Tmp.v32);
+                    Tmp.v31.set(Tmp.v1.x, structureOffset, Tmp.v1.y);
+                    Tmp.v32.set(Tmp.v2.x, structureOffset, Tmp.v2.y);
+                    Tmp.v33.set(Tmp.v32.x, rise * 5f * structureScale + structureOffset, Tmp.v32.z);
+                    Tmp.v34.set(Tmp.v31.x, Tmp.v33.y, Tmp.v31.z);
 
-                    batch.color(Tmp.c1);
-                    batch.normal(nor);
-                    batch.texCoord(light.u, light.v2);
-                    batch.vertex(Tmp.v31);
+                    MathUtils.normal(nor, Tmp.v33, Tmp.v32, Tmp.v31);
+                    Tmp.c1.set(monolithDark).a(col);
+                    Tmp.c2.set(Tmp.c1).a(0f);
 
-                    batch.color(Tmp.c2);
-                    batch.normal(nor);
-                    batch.texCoord(light.u, light.v);
-                    batch.vertex(Tmp.v34);
+                    Draw3DUtils.quad2(
+                        batch,
+                        Tmp.v34, nor, Tmp.c2, shade.u, shade.v,
+                        Tmp.v33, nor, Tmp.c2, shade.u2, shade.v,
+                        Tmp.v32, nor, Tmp.c1, shade.u2, shade.v2,
+                        Tmp.v31, nor, Tmp.c1, shade.u, shade.v2
+                    );
                 }
             };
 

@@ -270,7 +270,7 @@ public final class CMeshBuilder{
     }
 
     private static Vec3 normal(Vec3 a, Vec3 b, Vec3 c){
-        return nor.set(b).sub(a).crs(c.x - a.x, c.y - a.y, c.z - a.z).nor();
+        return MathUtils.normal(nor, a, b, c);
     }
 
     public interface IslandShaper{

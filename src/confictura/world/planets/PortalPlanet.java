@@ -419,10 +419,10 @@ public class PortalPlanet extends Planet{
     @Override
     public void drawAtmosphere(Mesh atmosphere, Camera3D cam){
         Gl.depthMask(false);
+        Blending.additive.apply();
+
         batch.proj(cam.combined);
         drawEmissive();
-
-        Blending.additive.apply();
 
         var shader = CShaders.portalForcefield;
         shader.camera = cam;

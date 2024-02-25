@@ -8,9 +8,12 @@ import confictura.content.*;
 import confictura.gen.*;
 import confictura.graphics.*;
 import confictura.util.*;
+import confictura.world.*;
 import gltfrenzy.loader.*;
 import gltfrenzy.model.*;
 import mindustry.game.EventType.*;
+import mindustry.io.*;
+import mindustry.io.SaveFileReader.*;
 import mindustry.mod.*;
 
 import java.io.*;
@@ -23,13 +26,17 @@ import static mindustry.Vars.*;
  * @author GlennFolker
  */
 @SuppressWarnings("unchecked")
-public class ConficturaMod extends Mod{
+public class ConficturaMod extends Mod implements CustomChunk{
     public static DevBuild dev;
 
     public static Seq<String> packages;
     public static Seq<Class<?>> classes;
 
+    protected final ObjectMap<Chunk, byte[]> buffer = new ObjectMap<>();
+    protected static ConficturaMod instance;
+
     public ConficturaMod(){
+        instance = this;
         try{
             Class<? extends DevBuild> devImpl = (Class<? extends DevBuild>)Class.forName("confictura.DevBuildImpl", true, mods.mainLoader());
             dev = devImpl.getConstructor().newInstance();
@@ -69,19 +76,70 @@ public class ConficturaMod extends Mod{
                 CModels.load();
             });
         });
+
+        app.post(ScriptUtils::init);
+        SaveVersion.addCustomChunk("confictura", this);
     }
 
     @Override
     public void init(){
-        ScriptUtils.init();
-        ScriptUtils.importDefaults(ScriptUtils.modScope);
-
         dev.init();
     }
 
     @Override
     public void loadContent(){
         EntityRegistry.register();
+        ScriptUtils.importDefaults(ScriptUtils.scope);
+
         CPlanets.load();
+        CSectorPresets.load();
+    }
+
+    @Override
+    public void write(DataOutput stream) throws IOException{
+        ObjectMap<Chunk, byte[]> chunks = new ObjectMap<>();
+        var bytes = new ByteArrayOutputStream(4096);
+        var out = new DataOutputStream(bytes);
+
+        if(ScriptedSector.current != null){
+            bytes.reset();
+            ScriptedSector.current.write(out);
+
+            chunks.put(Chunk.scriptedSector, bytes.toByteArray());
+        }
+
+        stream.writeShort(chunks.size);
+        for(var e : chunks){
+            stream.writeUTF(e.key.name());
+            stream.writeInt(e.value.length);
+            stream.write(e.value, 0, e.value.length);
+        }
+    }
+
+    @Override
+    public void read(DataInput stream) throws IOException{
+        buffer.clear();
+        for(int i = 0, len = stream.readUnsignedShort(); i < len; i++){
+            var key = stream.readUTF();
+            var value = new byte[stream.readInt()];
+            stream.readFully(value, 0, value.length);
+
+            try{
+                buffer.put(Chunk.valueOf(key), value);
+            }catch(IllegalArgumentException e){
+                Log.warn("No such chunk '" + key + "', skipping.");
+            }
+        }
+    }
+
+    public static void read(Chunk chunk, IORunner<DataInput> runner) throws IOException{
+        var bytes = instance.buffer.remove(chunk);
+        if(bytes == null) return;
+
+        runner.accept(new DataInputStream(new ByteArrayInputStream(bytes)));
+    }
+
+    public enum Chunk{
+        scriptedSector
     }
 }

@@ -53,10 +53,6 @@ configure(allprojects){
         useJitpack = Boolean.valueOf(mindustryBE)
         isDev = project.hasProperty('mod.dev') && Boolean.valueOf(project.property('mod.dev') as String)
 
-        localGltfrenzy = {
-            new File(rootDir.parent, 'glTFrenzy').exists()
-        }
-
         arc = {String module ->
             "com.github.Anuken.Arc$module:$arcVersion"
         }
@@ -74,7 +70,7 @@ configure(allprojects){
         // Resolve the correct Mindustry dependency, and force Arc version.
         resolutionStrategy.eachDependency{
             if(useJitpack && requested.group == 'com.github.Anuken.Mindustry'){
-                useTarget "com.github.Anuken.MindustryJitpack:$it.requested.name:$mindustryBEVersion"
+                useTarget "com.github.Anuken.MindustryJitpack:$requested.module.name:$mindustryBEVersion"
             }
 
             if(requested.group == 'com.github.Anuken.Arc'){

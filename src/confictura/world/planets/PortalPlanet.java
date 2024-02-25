@@ -17,11 +17,13 @@ import confictura.util.*;
 import mindustry.graphics.*;
 import mindustry.graphics.g3d.*;
 import mindustry.graphics.g3d.PlanetGrid.*;
+import mindustry.maps.generators.*;
 import mindustry.type.*;
 
 import java.util.*;
 
 import static arc.Core.*;
+import static confictura.graphics.CPal.*;
 import static mindustry.Vars.*;
 
 /**
@@ -35,6 +37,9 @@ public class PortalPlanet extends Planet{
     private static final Vec3 v1 = new Vec3(), v2 = new Vec3(), v3 = new Vec3();
     private static final Intersect intersect = new Intersect();
 
+    public static final Color sectorColor = monolithLighter;
+    public static final float sectorOffset = -0.15f, sectorRadius = 0.08f, sectorInnerRadius = 0.15f, sectorDistance = 0.275f, sectorFade = 0.05f;
+
     public Island[] islands = {};
     public float forcefieldRadius;
 
@@ -44,9 +49,6 @@ public class PortalPlanet extends Planet{
     public @Nullable FrameBuffer depthBuffer;
 
     public Cons2<Shader, Mat3D> drawStructure = (shader, transform) -> {};
-    public Color sectorColor = Color.white;
-    public float sectorOffset = 0f, sectorRadius = 1f, sectorInnerRadius = 2f, sectorDistance = 1f, sectorFade = 0.05f;
-
     public Cons<VertexBatch3D> drawEmissive = batch -> {};
     public float period = 60f;
 
@@ -67,19 +69,7 @@ public class PortalPlanet extends Planet{
         generateIcons = true;
         meshLoader = PortalMesh::new;
         forcefieldRadius = radius;
-    }
 
-    static{
-        for(int i = 0, len = sectorSides - 2; i < len; i++){
-            int index = i * 3;
-            indices[index] = 0;
-            indices[index + 1] = (short)(i + 1);
-            indices[index + 2] = (short)(i + 2);
-        }
-    }
-
-    @Override
-    public void init(){
         grid = createSectorGrid();
         sectors.ensureCapacity(grid.tiles.length);
         for(var tile : grid.tiles) sectors.add(new Sector(this, tile){
@@ -100,7 +90,30 @@ public class PortalPlanet extends Planet{
 
         sectorApproxRadius = sectors.first().tile.v.dst(sectors.first().tile.corners[0].v);
         gridMeshLoader = () -> CMeshBuilder.gridLines(grid, sectorColor);
-        super.init();
+
+        generator = new PlanetGenerator(){
+            @Override
+            public void generateSector(Sector sector){}
+
+            @Override
+            public float getHeight(Vec3 position){
+                return 0f;
+            }
+
+            @Override
+            public Color getColor(Vec3 position){
+                return null;
+            }
+        };
+    }
+
+    static{
+        for(int i = 0, len = sectorSides - 2; i < len; i++){
+            int index = i * 3;
+            indices[index] = 0;
+            indices[index + 1] = (short)(i + 1);
+            indices[index + 2] = (short)(i + 2);
+        }
     }
 
     @Override
@@ -113,35 +126,7 @@ public class PortalPlanet extends Planet{
                 depthBuffer.getTexture().setFilter(TextureFilter.nearest);
             }
 
-            // HACK Obviously this is a problem with Arc mishandling vertex attribute offsets.
-            if(batch == null) batch = new VertexBatch3D(4096, true, true, 1, CShaders.portalBatch){
-                @Override
-                public void color(Color color){
-                    Reflect.<float[]>get(VertexBatch3D.class, this, "vertices")[Reflect.<Integer>get(VertexBatch3D.class, this, "vertexIdx") + 6] = color.toFloatBits();
-                }
-
-                @Override
-                public void color(float r, float g, float b, float a){
-                    Reflect.<float[]>get(VertexBatch3D.class, this, "vertices")[Reflect.<Integer>get(VertexBatch3D.class, this, "vertexIdx") + 6] = Color.toFloatBits(r, g, b, a);
-                }
-
-                @Override
-                public void color(float colorBits){
-                    Reflect.<float[]>get(VertexBatch3D.class, this, "vertices")[Reflect.<Integer>get(VertexBatch3D.class, this, "vertexIdx") + 6] = colorBits;
-                }
-
-                @Override
-                public void texCoord(float u, float v){
-                    int idx = Reflect.<Integer>get(VertexBatch3D.class, this, "vertexIdx") + 7,
-                        num = Reflect.<Integer>get(VertexBatch3D.class, this, "numSetTexCoords");
-
-                    float[] vertices = Reflect.get(VertexBatch3D.class, this, "vertices");
-                    vertices[idx + num] = u;
-                    vertices[idx + num + 1] = v;
-                    Reflect.set(VertexBatch3D.class, this, "numSetTexCoords", num + 2);
-                }
-            };
-
+            if(batch == null) batch = new VertexBatch3D(4096, true, true, 1, CShaders.portalBatch);
             if(emissiveTexture == null){
                 int columns = Mathf.round(Mathf.sqrt(emissions.length)),
                     rows = columns + Math.max(emissions.length - columns * columns, 0);
@@ -241,11 +226,6 @@ public class PortalPlanet extends Planet{
         }
 
         return grid;
-    }
-
-    @Override
-    public boolean hasGrid(){
-        return true;
     }
 
     @Override

@@ -44,12 +44,6 @@ public final class CPlanets{
             camRadius = -0.067f;
             minZoom = 0.75f;
 
-            sectorColor = monolithLighter;
-            sectorOffset = -0.15f;
-            sectorRadius = 0.08f;
-            sectorInnerRadius = 0.15f;
-            sectorDistance = 0.275f;
-
             float structureOffset = -0.2125f, structureScale = 0.05f;
 
             period = 240f;

@@ -126,7 +126,6 @@ public class ConficturaMod extends Mod implements CustomChunk, Loadable{
         var exec = Threads.executor("Confictura-Antialias", OS.cores * 2);
         atlas.getRegions().each(reg -> {
             if(reg.texture != uiTexture && reg.name.startsWith("confictura-")){
-                // Don't call `atlas.getPixmap()`, instead throw an exception and disable antialiasing.
                 var pixmap = reg.pixmapRegion;
                 if(pixmap == null){
                     settings.put("confictura-antialias", false);
@@ -201,7 +200,7 @@ public class ConficturaMod extends Mod implements CustomChunk, Loadable{
                     });
 
                     src.dispose();
-                    return dst;
+                    return Pixmaps.bleed(dst);
                 }));
             }
         });
@@ -215,6 +214,7 @@ public class ConficturaMod extends Mod implements CustomChunk, Loadable{
                     var out = AsyncUtils.get(next.value);
 
                     reg.pixmap.draw(out, reg.x - 1, reg.y - 1, reg.width + 1, reg.height + 1, false);
+                    out.dispose();
                     it.remove();
                 }
             }

@@ -91,12 +91,12 @@ public class GenAtlas extends TextureAtlas implements Eachable<GenRegion>{
 
     @Override
     public void dispose(){
-        read(() -> {
+        write(() -> {
             for(var region : regions.values()){
                 if(region.found()) region.pixmap.dispose();
             }
+            regions.clear();
         });
-        write(() -> regions.clear());
     }
 
     @Override

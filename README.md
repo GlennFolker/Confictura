@@ -67,8 +67,9 @@ Confictura like any other proper Mindustry Java mods is cross-platform, supporti
 Desktop builds are convenient for testing, but will obviously **not** work on Android, so never include this in your releases. Here's how you can build the mod:
 1. Open your terminal, and `cd` to your local copy of the mod.
 2. Ensure your internet connection on first or clean builds, as the project will try to fetch prerequisites from the internet.
-3. Run `gradlew jar` *(replace `gradlew` with `./gradlew` on Mac/Linux)*. This should create a JAR inside `build/libs/` that you can copy over to the Mindustry mods folder to install it.
-4. You can also then run `gradlew install` to automatically install the mod JAR, or even `gradlew jar install` to do both compiling and installing at once.
+3. Run `gradlew deploy` *(replace `gradlew` with `./gradlew` on Mac/Linux)*. This should create a JAR inside `build/libs/` that you can copy over to the Mindustry mods folder to install it.
+4. You can also then run `gradlew install` to automatically install the mod JAR, or even `gradlew deploy install` to do both compiling and installing at once.
+5. Make sure you run `gradlew proc:run` when you modify sprites. Typically you'd chain the command like `gradlew proc:run deploy`, or even `gradlew proc:run install`.
 
 ### Android Build
 
@@ -85,4 +86,3 @@ Android builds are automated on the CI hosted by GitHub Actions, so you should b
 #### Building
 1. Open your terminal, and `cd` to your local copy of the mod.
 2. Run `gradlew dex`. This should create a cross-platform JAR inside `build/libs/` that isn't suffixed with `Desktop` that you can copy over to the Mindustry mods folder to install it.
-3. You can also then run `gradlew installDex` to automatically install the mod JAR, or even `gradlew dex installDex` to do both compiling and installing at once.

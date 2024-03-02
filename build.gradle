@@ -264,6 +264,8 @@ clean{
 }
 
 jar{
+    archiveFileName = 'base.jar'
+
     // Include generated asset into the temporary classpath.
     from(tasks.list){into 'meta/confictura'}
 }
@@ -350,22 +352,16 @@ task dex(type: Jar){
     }
 }
 
-for(def i = 0; i < 2; i++){
-    final def isDex = i == 1
-    final def name = isDex ? 'installDex' : 'install'
-    final def input = isDex ? tasks.dex : tasks.deploy
+task install{
+    inputs.files tasks.deploy
+    doLast{
+        def folder = Fi.get(OS.getAppDataDirectoryString('Mindustry')).child('mods')
+        folder.mkdirs()
 
-    tasks.create(name){
-        inputs.files input
-        doLast{
-            def folder = Fi.get(OS.getAppDataDirectoryString('Mindustry')).child('mods')
-            folder.mkdirs()
+        folder.child(tasks.deploy.archiveFileName.get()).delete()
+        folder.child(tasks.dex.archiveFileName.get()).delete()
 
-            folder.child(tasks.deploy.archiveFileName.get()).delete()
-            folder.child(tasks.dex.archiveFileName.get()).delete()
-
-            new Fi(input.archiveFile.get().asFile).copyTo(folder)
-            logger.log(LogLevel.LIFECYCLE, "Copied :${isDex ? 'dex' : 'deploy'} output to $folder.")
-        }
+        new Fi(tasks.deploy.archiveFile.get().asFile).copyTo(folder)
+        logger.log(LogLevel.LIFECYCLE, "Copied :deploy output to $folder.")
     }
 }

@@ -10,7 +10,7 @@ import mindustry.graphics.g3d.*;
 import mindustry.graphics.g3d.PlanetGrid.*;
 
 /**
- * Utilities for composing specialized OpenGL {@link Mesh meshes}.
+ * Utilities for composing specialized OpenGL {@linkplain Mesh meshes}.
  * @author GlennFolker
  */
 public final class CMeshBuilder{

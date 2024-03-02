@@ -10,7 +10,7 @@ import static arc.Core.*;
 import static mindustry.Vars.*;
 
 /**
- * Defines the {@link Shader shaders}s this mod offers.
+ * Defines the {@linkplain Shader shaders}s this mod offers.
  * @author GlennFolker
  */
 public final class CShaders{

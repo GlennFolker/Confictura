@@ -7,7 +7,7 @@ import gltfrenzy.model.*;
 import static arc.Core.*;
 
 /**
- * Defines the {@link Scenes3D 3D model}s this mod offers.
+ * Defines the {@linkplain Scenes3D 3D model}s this mod offers.
  * @author GlennFolker
  */
 public final class CModels{

@@ -27,7 +27,7 @@ import static confictura.graphics.CPal.*;
 import static mindustry.Vars.*;
 
 /**
- * The {@link CPlanets#portal portal} celestial object. Composed of floating islands, 9 sectors arranged on the surface,
+ * The {@linkplain CPlanets#portal portal} celestial object. Composed of floating islands, 9 sectors arranged on the surface,
  * and an artificial gravity forcefield.
  * @author GlennFolker
  */
@@ -35,6 +35,7 @@ public class PortalPlanet extends Planet{
     private static final Mat3D mat1 = new Mat3D(), mat2 = new Mat3D();
     private static final Quat quat = new Quat();
     private static final Vec3 v1 = new Vec3(), v2 = new Vec3(), v3 = new Vec3();
+    private static final Color c1 = new Color(), c2 = new Color();
     private static final Intersect intersect = new Intersect();
 
     public static final Color sectorColor = monolithLighter;
@@ -280,8 +281,8 @@ public class PortalPlanet extends Planet{
         // I apologize for the performance loss...
         batch.flush(Gl.triangles);
 
-        var color = Tmp.c1.set(sectorColor).a((base.a + 0.3f + Mathf.absin(Time.globalTime, 5f, 0.3f)) * alpha);
-        var fade = Tmp.c2.set(color).a(0f);
+        var color = c1.set(sectorColor).a((base.a + 0.3f + Mathf.absin(Time.globalTime, 5f, 0.3f)) * alpha);
+        var fade = c2.set(color).a(0f);
 
         var corners = sector.tile.corners;
         for(int i = 0; i < corners.length; i++){
@@ -332,6 +333,7 @@ public class PortalPlanet extends Planet{
 
     @Override
     public void drawSelection(VertexBatch3D batch, Sector sector, Color color, float stroke, float length){
+        c1.set(sectorColor).a(color.a);
         stroke /= 2f;
 
         var tile = sector.tile;
@@ -343,13 +345,13 @@ public class PortalPlanet extends Planet{
             v2.set(next.v);
             v3.set(curr.v).sub(tile.v);
             v3.setLength(v3.len() - stroke).add(tile.v);
-            batch.tri2(v1, v2, v3, sectorColor);
+            batch.tri(v1, v2, v3, c1);
 
             v1.set(v3);
             v2.set(next.v);
             v3.set(next.v).sub(tile.v);
             v3.setLength(v3.len() - stroke).add(tile.v);
-            batch.tri2(v1, v2, v3, sectorColor);
+            batch.tri(v1, v2, v3, c1);
         }
     }
 
@@ -363,7 +365,7 @@ public class PortalPlanet extends Planet{
                 Tmp.v32.set(b.v).add(0f, offset, 0f),
                 Tmp.v33.set(c.v).add(0f, offset, 0f),
                 // HACK: Check if the color is equal to the locked color to see if the sector is locked.
-                color.equals(PlanetRenderer.shadowColor) ? color : Tmp.c1.set(sectorColor).mulA(color.a * 0.67f)
+                color.equals(PlanetRenderer.shadowColor) ? color : c1.set(sectorColor).mulA(color.a * 0.67f)
             );
         }
     }
@@ -481,7 +483,7 @@ public class PortalPlanet extends Planet{
         public void render(PlanetParams params, Mat3D projection, Mat3D transform){
             if(params.alwaysDrawAtmosphere || settings.getBool("atmosphere")){
                 depthBuffer.resize(graphics.getWidth(), graphics.getHeight());
-                depthBuffer.begin(Tmp.c1.set(0xffffff00));
+                depthBuffer.begin(c1.set(0xffffff00));
                 Blending.disabled.apply();
 
                 render(() -> {

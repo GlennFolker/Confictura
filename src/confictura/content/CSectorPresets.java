@@ -5,7 +5,7 @@ import confictura.world.*;
 import mindustry.type.*;
 
 /**
- * Defines the {@link SectorPreset maps} this mod offers.
+ * Defines the {@linkplain SectorPreset maps} this mod offers.
  * @author GlennFolker
  */
 public final class CSectorPresets{

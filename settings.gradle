@@ -10,6 +10,8 @@ if(JavaVersion.current().ordinal() < JavaVersion.VERSION_17.ordinal()){
 }
 
 rootProject.name = modArtifact
+include ':proc'
+
 for(def local : ['glTFrenzy', 'EntityAnno']){
     def prop = "local.${local.toLowerCase()}"
     if(!hasProperty(prop) || Boolean.valueOf(getProperty(prop) as String)){

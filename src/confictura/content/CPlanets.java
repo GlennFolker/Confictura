@@ -20,7 +20,7 @@ import mindustry.type.*;
 import static confictura.graphics.CPal.*;
 
 /**
- * Defines the {@link Planet planets} and other celestial objects this mod offers.
+ * Defines the {@linkplain Planet planets} and other celestial objects this mod offers.
  * @author GlennFolker
  */
 public final class CPlanets{

@@ -23,7 +23,7 @@ buildscript{
 
 plugins{
     // Register `EntityAnno` plugin, but only apply on `rootProject`.
-    id 'java'
+    id 'java-library'
     id 'com.github.GlennFolker.EntityAnno' version "$entVersion" apply false
 }
 
@@ -42,7 +42,7 @@ def localProps = {
 }()
 
 configure(allprojects){
-    apply plugin: 'java'
+    apply plugin: 'java-library'
     sourceSets.main.java.srcDirs = [layout.projectDirectory.dir('src')]
 
     ext{
@@ -106,6 +106,92 @@ configure(allprojects){
     }
 }
 
+configure(project(':proc')){
+    dependencies{
+        implementation rootProject
+
+        implementation "${mindustry(':core')}"
+        implementation "${arc(':arc-core')}"
+        implementation "${arc(':natives-desktop')}"
+    }
+
+    task fetchFiles{
+        def out = layout.buildDirectory.dir('fetched')
+        def cache = out.map{it.file('cache.txt')}
+
+        outputs.dir out
+        outputs.upToDateWhen{
+            def c = cache.get().asFile
+            c.exists() && c.text == (useJitpack ? mindustryBEVersion : mindustryVersion)
+        }
+
+        doFirst{
+            def dir = out.get().asFile
+            dir.deleteDir()
+            dir.mkdirs()
+
+            def exec = Threads.executor('Confictura-Fetcher', OS.cores)
+            [
+                ['scripts/global.js', null]
+            ].forEach{file -> exec.submit{
+                def src = file[0]
+                def dst = file[1] ?: src
+                Http.get("https://raw.githubusercontent.com/Anuken/${useJitpack ? 'MindustryJitpack' : 'Mindustry'}/${useJitpack ? mindustryBEVersion : mindustryVersion}/core/assets/$src")
+                    .timeout(0)
+                    .error{Log.err(it)}
+                    .block{res ->
+                        def target = new File(dir, dst)
+                        target.parentFile.mkdirs()
+                        target.withOutputStream{Streams.copy(res.resultAsStream, it)}
+                    }
+            }}
+            Threads.await(exec)
+
+            def c = cache.get().asFile
+            c.text = useJitpack ? mindustryBEVersion : mindustryVersion
+        }
+    }
+
+    task run(type: JavaExec, dependsOn: configurations.runtimeClasspath){
+        def out = rootProject.layout.projectDirectory.dir('assets').dir('sprites')
+        def raw = rootProject.layout.projectDirectory.dir('assets').dir('sprites-raw')
+
+        inputs.files raw, tasks.fetchFiles
+        outputs.dir out
+
+        mainClass = 'confictura.proc.ConficturaProc'
+        classpath = sourceSets.main.runtimeClasspath
+        workingDir = temporaryDir
+        standardInput = System.in
+        args rootProject.layout.projectDirectory.dir('assets').asFile
+
+        doFirst{
+            def dir = out.asFile
+            dir.deleteDir()
+            dir.mkdirs()
+            args dir
+
+            copy{
+                from files(raw)
+                into new File(temporaryDir, 'sprites')
+            }
+
+            copy{
+                from files(tasks.fetchFiles)
+                into temporaryDir
+                exclude 'cache.txt'
+            }
+        }
+
+        doLast{
+            copy{
+                from files(new File(temporaryDir, 'sprites'))
+                into out.asFile
+            }
+        }
+    }
+}
+
 // Apply `EntityAnno` plugin to integrate the annotation processors.
 apply plugin: 'com.github.GlennFolker.EntityAnno'
 
@@ -129,13 +215,13 @@ dependencies{
     compileOnly "${arc(':arc-core')}"
 
     // Depend on glTFrenzy.
-    implementation "${gltfrenzy()}"
+    api "${gltfrenzy()}"
 }
 
-tasks.register('list'){
+task list{
     inputs.files tasks.compileJava, configurations.runtimeClasspath
 
-    def output = file("$temporaryDir/confictura-classes.json")
+    def output = new File(temporaryDir, 'classes.json')
     outputs.file output
 
     doFirst{
@@ -173,45 +259,58 @@ tasks.register('list'){
     }
 }
 
+clean{
+    delete layout.projectDirectory.dir('assets').dir('sprites')
+}
+
 jar{
+    // Include generated asset into the temporary classpath.
+    from(tasks.list){into 'meta/confictura'}
+}
+
+task deploy(type: Jar){
     inputs.files tasks.list
+    mustRunAfter project(':proc').tasks.run
+
+    if(!layout.projectDirectory.dir('assets').dir('sprites').asFile.exists()){
+        logger.log(LogLevel.LIFECYCLE, 'Sprites folder not found; automatically running `:proc:run`.')
+        inputs.files project(':proc').tasks.run
+    }
+
     archiveFileName = "${modArtifact}Desktop.jar"
 
     from files(sourceSets.main.output.classesDirs)
     from files(sourceSets.main.output.resourcesDir)
     from configurations.runtimeClasspath.collect{it.isDirectory() ? it : zipTree(it)}
 
-    from(tasks.list){into 'meta'}
-    from files(layout.projectDirectory.dir('assets'))
-    from(layout.projectDirectory){
-        include 'mod.json'
-        include 'icon.png'
-    }
+    from(tasks.list){into 'meta/confictura'}
+    from files(layout.projectDirectory.dir('assets')){exclude 'sprites-raw/**'}
+    from layout.projectDirectory.file('icon.png')
 
     metaInf{
         from layout.projectDirectory.file('LICENSE')
     }
 
+    def meta = new File(temporaryDir, 'mod.json')
+    from meta
+
     if(!isDev) exclude '**/**Impl*'
     doFirst{
         logger.log(LogLevel.LIFECYCLE, "Building ${isDev ? 'developer' : 'user'} artifact.")
 
-        def name = Pattern
-            .compile('"name": "(.*)"')
-            .matcher(layout.projectDirectory.file('mod.json').asFile.text)
-
-        if(name.find() && name.group(1) != modName){
-            throw new GradleException("Mod name mismatch: '${name.group(1)}' (mod.json) != '$modName' (gradle.properties).")
-        }
+        def map = layout.projectDirectory.file('mod.json').asFile
+            .withReader{Jval.read(it)}
+            .put('name', modName)
+        meta.withWriter{map.writeTo(it, Jval.Jformat.formatted)}
     }
 }
 
-tasks.register('dex', Jar){
-    inputs.files tasks.jar
+task dex(type: Jar){
+    inputs.files tasks.deploy
     archiveFileName = "${modArtifact}.jar"
 
-    final def desktopJar = tasks.jar.archiveFile
-    final def dexJar = file("$temporaryDir/Dexed.jar")
+    final def desktopJar = tasks.deploy.archiveFile
+    final def dexJar = new File(temporaryDir, 'Dex.jar')
 
     from zipTree(desktopJar), zipTree(dexJar)
     doFirst{
@@ -222,7 +321,7 @@ tasks.register('dex', Jar){
         )
 
         // Find `d8`.
-        def d8 = file("$sdkRoot/build-tools/$androidBuildVersion/${OS.isWindows ? 'd8.bat' : 'd8'}")
+        def d8 = new File(sdkRoot, "build-tools/$androidBuildVersion/${OS.isWindows ? 'd8.bat' : 'd8'}")
         if(!d8.exists()){
             throw new GradleException("Android SDK `build-tools;$androidBuildVersion` isn't installed or is corrupted")
         }
@@ -237,7 +336,7 @@ tasks.register('dex', Jar){
         }
 
         // Include Android platform as library.
-        def androidJar = file("$sdkRoot/platforms/android-$androidSdkVersion/android.jar")
+        def androidJar = new File(sdkRoot, "platforms/android-$androidSdkVersion/android.jar")
         if(!androidJar.exists()){
             throw new GradleException("Android SDK `platforms;android-$androidSdkVersion` isn't installed or is corrupted")
         }
@@ -254,19 +353,19 @@ tasks.register('dex', Jar){
 for(def i = 0; i < 2; i++){
     final def isDex = i == 1
     final def name = isDex ? 'installDex' : 'install'
-    final def input = isDex ? tasks.dex : tasks.jar
+    final def input = isDex ? tasks.dex : tasks.deploy
 
-    tasks.register(name){
+    tasks.create(name){
         inputs.files input
         doLast{
             def folder = Fi.get(OS.getAppDataDirectoryString('Mindustry')).child('mods')
             folder.mkdirs()
 
-            folder.child(tasks.jar.archiveFileName.get()).delete()
+            folder.child(tasks.deploy.archiveFileName.get()).delete()
             folder.child(tasks.dex.archiveFileName.get()).delete()
 
             new Fi(input.archiveFile.get().asFile).copyTo(folder)
-            logger.log(LogLevel.LIFECYCLE, "Copied :${isDex ? 'dex' : 'jar'} output to $folder.")
+            logger.log(LogLevel.LIFECYCLE, "Copied :${isDex ? 'dex' : 'deploy'} output to $folder.")
         }
     }
 }

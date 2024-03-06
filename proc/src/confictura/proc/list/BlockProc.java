@@ -2,6 +2,7 @@ package confictura.proc.list;
 
 import arc.func.*;
 import arc.graphics.*;
+import confictura.proc.*;
 import confictura.proc.GenAtlas.*;
 import mindustry.world.blocks.environment.*;
 
@@ -14,10 +15,13 @@ public final class BlockProc{
     }
 
     public static void init(Cons<Runnable> async){
+        var packer = new GenPacker();
         content.blocks().each(block -> block.minfo.mod == mod, block -> async.get(() -> {
             block.init();
+            block.loadIcon();
             block.load();
 
+            if(block.generateIcons) block.createIcons(packer);
             if(block instanceof Floor floor){
                 for(var variant : floor.variantRegions){
                     var reg = atlas.conv(variant);

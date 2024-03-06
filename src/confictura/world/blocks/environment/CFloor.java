@@ -55,6 +55,7 @@ public class CFloor extends Floor{
                 result.each((x, y) -> result.setRaw(x, y, Color.muli(edge.getRaw(x, y), image.getRaw(x % image.width, y % image.height))));
 
                 packer.add(PageType.environment, name + "-edge" + (i + 1), result);
+                result.dispose();
             }
         }
     }

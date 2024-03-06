@@ -54,11 +54,9 @@ public class GenAtlas extends TextureAtlas implements Eachable<GenRegion>{
         write.unlock();
     }
 
-    public GenRegion addRegion(GenRegion region){
+    public void addRegion(GenRegion region){
         var old = write(() -> regions.put(region.name, region));
-
-        if(old != null) old.pixmap.dispose();
-        return region;
+        if(old != null && old.found()) old.pixmap.dispose();
     }
 
     @Override
@@ -77,6 +75,12 @@ public class GenAtlas extends TextureAtlas implements Eachable<GenRegion>{
         return read(() -> regions.get(name, conv(def)));
     }
 
+    @Override
+    public PixmapRegion getPixmap(AtlasRegion region){
+        if(!(region instanceof GenRegion gen)) throw new IllegalArgumentException("Invalid region class.");
+        return new PixmapRegion(gen.pixmap());
+    }
+
     public GenRegion conv(TextureRegion region){
         if(!(region instanceof GenRegion gen)) throw new IllegalArgumentException("Invalid region class.");
         return gen;
@@ -85,7 +89,7 @@ public class GenAtlas extends TextureAtlas implements Eachable<GenRegion>{
     @Override
     public void each(Cons<? super GenRegion> cons){
         for(var reg : regions.values()){
-            if(reg.found()) cons.get(reg);
+            if(reg.found() && reg.file != null && !reg.file.path().contains("vanilla/")) cons.get(reg);
         }
     }
 
@@ -117,6 +121,13 @@ public class GenAtlas extends TextureAtlas implements Eachable<GenRegion>{
             this.name = name;
             this.file = file;
             this.pixmap = pixmap;
+
+            u = v = 0f;
+            u2 = v2 = 1f;
+            if(pixmap != null){
+                width = pixmap.width;
+                height = pixmap.height;
+            }
         }
 
         @Override
@@ -132,7 +143,7 @@ public class GenAtlas extends TextureAtlas implements Eachable<GenRegion>{
         public void save(boolean add){
             if(file == null) throw new IllegalStateException("Missing file for region '" + name + "'.");
 
-            file.writePng(atlas.conv(this).pixmap());
+            file.writePng(pixmap());
             if(add) atlas.addRegion(this);
         }
     }

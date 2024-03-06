@@ -1,26 +1,19 @@
-package confictura.world;
+package confictura.cinematic;
 
-import arc.*;
-import arc.util.*;
-import arc.util.io.*;
-import confictura.*;
-import confictura.ConficturaMod.*;
-import confictura.util.*;
-import mindustry.core.GameState.*;
-import mindustry.game.EventType.*;
 import mindustry.type.*;
-import rhino.*;
-
-import java.io.*;
-
-import static mindustry.Vars.*;
 
 /**
- * Sector presets that hooks a script when loaded.
+ * Sector presets that is attached with several story components such as scripts, objectives, and camera panning.
  * @author GlennFolker
  */
-public class ScriptedSector extends SectorPreset{
-    public Hook hook;
+public class CinematicSector extends SectorPreset{
+    public Cinematic cinematic = new Cinematic();
+
+    public CinematicSector(String name, Planet planet, int sector){
+        super(name, planet, sector);
+    }
+
+    /*public Hook hook;
     public static @Nullable Hook current;
 
     public ScriptedSector(String name, Planet planet, int sector){
@@ -126,5 +119,5 @@ public class ScriptedSector extends SectorPreset{
                 }
             }
         }
-    }
+    }*/
 }

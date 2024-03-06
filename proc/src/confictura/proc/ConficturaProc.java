@@ -87,7 +87,7 @@ public class ConficturaProc{
 
         wait(f -> Fi.get("sprites").walk(file -> {
             if(file.extEquals("png")) f.get(exec.submit(() -> {
-                var region = new GenRegion("confictura-" + file.nameWithoutExtension(), file, new Pixmap(file));
+                var region = new GenRegion((file.path().contains("vanilla/") ? "" : "confictura-") + file.nameWithoutExtension(), file, new Pixmap(file));
                 atlas.addRegion(region);
             }));
         }));

@@ -132,11 +132,12 @@ configure(project(':proc')){
 
             def exec = Threads.executor('Confictura-Fetcher', OS.cores)
             [
-                ['scripts/global.js', null]
+                ['assets/scripts/global.js', 'scripts/global.js'],
+                ['assets-raw/sprites/blocks/environment/edge-stencil.png', 'sprites/vanilla/edge-stencil.png']
             ].forEach{file -> exec.submit{
                 def src = file[0]
                 def dst = file[1] ?: src
-                Http.get("https://raw.githubusercontent.com/Anuken/${useJitpack ? 'MindustryJitpack' : 'Mindustry'}/${useJitpack ? mindustryBEVersion : mindustryVersion}/core/assets/$src")
+                Http.get("https://raw.githubusercontent.com/Anuken/${useJitpack ? 'MindustryJitpack' : 'Mindustry'}/${useJitpack ? mindustryBEVersion : mindustryVersion}/core/$src")
                     .timeout(0)
                     .error{Log.err(it)}
                     .block{res ->
@@ -171,6 +172,9 @@ configure(project(':proc')){
             dir.mkdirs()
             args dir
 
+            temporaryDir.deleteDir()
+            temporaryDir.mkdirs()
+
             copy{
                 from files(raw)
                 into new File(temporaryDir, 'sprites')
@@ -187,6 +191,7 @@ configure(project(':proc')){
             copy{
                 from files(new File(temporaryDir, 'sprites'))
                 into out.asFile
+                exclude 'vanilla/**'
             }
         }
     }

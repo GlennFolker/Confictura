@@ -1,7 +1,6 @@
 package confictura.content;
 
 import confictura.*;
-import confictura.cinematic.*;
 import mindustry.type.*;
 
 /**
@@ -15,6 +14,6 @@ public final class CSectorPresets{
 
     /** Instantiates all contents. Called in the main thread in {@link ConficturaMod#loadContent()}. */
     public static void load(){
-        new CinematicSector("test", CPlanets.portal, 0);
+        new SectorPreset("test", CPlanets.portal, 0);
     }
 }

@@ -1,18 +1,26 @@
 package confictura;
 
 import arc.*;
+import arc.assets.*;
+import arc.graphics.*;
+import arc.graphics.g2d.*;
+import arc.graphics.gl.*;
 import arc.struct.*;
 import arc.util.*;
 import arc.util.serialization.*;
+import confictura.cinematic.*;
 import confictura.content.*;
 import confictura.editor.*;
 import confictura.gen.*;
 import confictura.graphics.*;
 import confictura.util.*;
+import confictura.world.blocks.environment.*;
 import gltfrenzy.loader.*;
 import gltfrenzy.model.*;
 import mindustry.game.EventType.*;
+import mindustry.graphics.*;
 import mindustry.mod.*;
+import mindustry.mod.Mods.*;
 
 import java.io.*;
 
@@ -29,6 +37,8 @@ public class ConficturaMod extends Mod{
 
     public static Seq<String> packages = Seq.with("java.lang", "java.util");
     public static Seq<Class<?>> classes = new Seq<>();
+
+    public static Cinematic cinematic;
 
     public static CinematicEditor cinematicEditor;
 
@@ -48,6 +58,8 @@ public class ConficturaMod extends Mod{
             Log.err("[Confictura] Failed instantiating developer build", Strings.getFinalCause(e));
         }
 
+        cinematic = new Cinematic();
+
         if(!headless){
             assets.setLoader(Scenes3D.class, ".gltf", new Scenes3DLoader(tree, new GltfReader()));
             assets.setLoader(Scenes3D.class, ".glb", new Scenes3DLoader(tree, new GlbReader()));
@@ -56,6 +68,56 @@ public class ConficturaMod extends Mod{
             assets.setLoader(Node.class, new NodeLoader(tree));
 
             cinematicEditor = new CinematicEditor();
+
+            assets.load(new Loadable(){
+                Texture texture;
+                Pixmap page;
+
+                @Override
+                public void loadAsync(){
+                    page = AsyncUtils.postWait(() -> {
+                        texture = atlas.find("stone1").texture;
+
+                        var buffer = new FrameBuffer(texture.width, texture.height);
+                        buffer.begin();
+                        Draw.blit(texture, Shaders.screenspace);
+
+                        var pixels = ScreenUtils.getFrameBufferPixmap(0, 0, texture.width, texture.height);
+                        buffer.end();
+                        buffer.dispose();
+
+                        return pixels;
+                    });
+
+                    content.blocks().each(b -> b instanceof CFloor, (CFloor b) -> {
+                        for(var r : b.variantRegions){
+                            int x = r.getX(), y = r.getY(), w = r.width, h = r.height;
+                            page.draw(page, x, y + h - 1, w, 1, x, y - 1, w, 1, false);
+                            page.draw(page, x, y, 1, h, x + w, y, 1, h, false);
+                            page.draw(page, x, y, w, 1, x, y + h, w, 1, false);
+                            page.draw(page, x + w - 1, y, 1, h, x - 1, y, 1, h, false);
+
+                            page.setRaw(x - 1, y - 1, page.getRaw(x + w - 1, y + h - 1));
+                            page.setRaw(x + w, y - 1, page.getRaw(x, y + h - 1));
+                            page.setRaw(x + w, y + h, page.getRaw(x, y));
+                            page.setRaw(x - 1, y + h, page.getRaw(x + w - 1, y));
+                        }
+                    });
+                }
+
+                @Override
+                public void loadSync(){
+                    texture.bind();
+                    Gl.texImage2D(Gl.texture2d, 0, Gl.rgba, page.width, page.height, 0, Gl.rgba, Gl.unsignedByte, page.pixels);
+
+                    page.dispose();
+                }
+
+                @Override
+                public String getName(){
+                    return "confictura-floor-refine";
+                }
+            });
         }
 
         Events.on(FileTreeInitEvent.class, e -> {
@@ -94,5 +156,9 @@ public class ConficturaMod extends Mod{
         CBlocks.load();
         CPlanets.load();
         CSectorPresets.load();
+    }
+
+    public static boolean isConfictura(LoadedMod mod){
+        return mod != null && mod.main == instance;
     }
 }

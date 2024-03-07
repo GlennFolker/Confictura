@@ -1,62 +1,40 @@
 package confictura.editor;
 
-import arc.util.serialization.*;
-import confictura.cinematic.*;
+import mindustry.type.*;
 
 import java.io.*;
 
+import static confictura.ConficturaMod.*;
 import static mindustry.Vars.*;
 
 /**
- * Editor extension for {@link CinematicSector}s.
+ * Editor extension for custom {@link SectorPreset}s.
  * @author GlennFolker
  */
 public class CinematicEditor extends EditorListener{
-    protected CinematicSector sector;
-
     @Override
     public boolean shouldAttach(){
-        var c = content.sector("confictura-" + editor.tags.get("name"));
-        if(c instanceof CinematicSector sector){
-            this.sector = sector;
-            return true;
-        }else{
-            return false;
-        }
+        return content.sector("confictura-" + editor.tags.get("name")) != null;
     }
 
     @Override
     public void enter(){
-        String encoded;
-        if((encoded = editor.tags.get("confictura-cinematic")) != null){
-            try(var in = new DataInputStream(new ByteArrayInputStream(Base64Coder.decode(encoded)))){
-                sector.cinematic.read(in);
-            }catch(IOException e){
-                ui.showException("@dialog.confictura-cinematic-read-fail", e);
-            }
-        }else{
-            // Just in case.
-            sector.cinematic.clear();
+        try{
+            cinematic.readFrom(editor.tags);
+        }catch(IOException e){
+            cinematic.clear();
+            ui.showException("@dialog.confictura-cinematic-read-fail", e);
         }
     }
 
     @Override
     public void exit(){
-        try(var stream = new ByteArrayOutputStream();
-            var out = new DataOutputStream(stream)
-        ){
-            sector.cinematic.write(out);
-            editor.tags.put("confictura-cinematic", new String(Base64Coder.encode(stream.toByteArray())));
+        try{
+            cinematic.writeTo(editor.tags);
         }catch(IOException e){
-            sector.cinematic.clear();
             ui.showException("@dialog.confictura-cinematic-write-fail", e);
+        }finally{
+            cinematic.clear();
         }
-
-        sector = null;
-    }
-
-    public void clear(){
-        sector.cinematic.clear();
-        editor.tags.remove("confictura-cinematic");
     }
 }

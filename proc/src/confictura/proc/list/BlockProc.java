@@ -2,26 +2,35 @@ package confictura.proc.list;
 
 import arc.func.*;
 import arc.graphics.*;
+import arc.util.serialization.*;
+import arc.util.serialization.Jval.*;
 import confictura.proc.*;
 import confictura.proc.GenAtlas.*;
 import mindustry.world.blocks.environment.*;
+
+import java.io.*;
+import java.nio.charset.*;
 
 import static confictura.proc.ConficturaProc.*;
 import static mindustry.Vars.*;
 
 public final class BlockProc{
+    private static Jval blockColors;
+
     private BlockProc(){
         throw new AssertionError();
     }
 
     public static void init(Cons<Runnable> async){
+        blockColors = Jval.newObject();
+
         var packer = new GenPacker();
         content.blocks().each(block -> block.minfo.mod == mod, block -> async.get(() -> {
             block.init();
             block.loadIcon();
             block.load();
 
-            if(block.generateIcons) block.createIcons(packer);
+            block.createIcons(packer);
             if(block instanceof Floor floor){
                 for(var variant : floor.variantRegions){
                     var reg = atlas.conv(variant);
@@ -45,6 +54,47 @@ public final class BlockProc{
                     reg.file.delete();
                 }
             }
+
+            var icon = atlas.find("block-" + block.name + "-full").pixmap();
+
+            boolean hollow = false;
+            Color average = new Color(), col = new Color();
+
+            for(int x = 0, width = icon.width; x < width; x++){
+                for(int y = 0, height = icon.height; y < height; y++){
+                    col.set(icon.getRaw(x, y));
+                    average.r += col.r;
+                    average.g += col.g;
+                    average.b += col.b;
+                    average.a += col.a;
+                    if(col.a < 0.9f) hollow = true;
+                }
+            }
+
+            float a = average.a;
+            average.mul(1f / a);
+
+            if(block instanceof Floor floor && !floor.wallOre){
+                average.mul(0.77f);
+            }else{
+                average.mul(1.1f);
+            }
+
+            average.a = hollow ? 0f : 1f;
+            synchronized(BlockProc.class){
+                blockColors.put(block.name.substring("confictura-".length()), average.rgba());
+            }
         }));
+    }
+
+    public static void cleanup(){
+        var out = assetsDir.child("meta").child("confictura").child("block-colors.json");
+        try(var writer = new OutputStreamWriter(out.write(false, 4096), StandardCharsets.UTF_8)){
+            blockColors.writeTo(writer, Jformat.formatted);
+        }catch(IOException e){
+            throw new RuntimeException(e);
+        }
+
+        blockColors = null;
     }
 }

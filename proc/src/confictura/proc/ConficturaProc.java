@@ -33,12 +33,11 @@ public class ConficturaProc{
     public static ModMeta meta;
     public static LoadedMod mod;
 
-    protected static Fi assetsDir, outputDir;
+    public static Fi assetsDir;
 
     public static void main(String[] args){
         var exec = Threads.executor("Confictura-Executor", OS.cores * 2);
         assetsDir = Fi.get(args[0]);
-        outputDir = Fi.get(args[1]);
 
         Log.logger = new NoopLogHandler();
         try{
@@ -93,6 +92,7 @@ public class ConficturaProc{
         }));
 
         wait(f -> BlockProc.init(run -> f.get(exec.submit(run))));
+        BlockProc.cleanup();
 
         wait(f -> atlas.each(reg -> f.get(exec.submit(() -> {
             var pix = reg.pixmap;

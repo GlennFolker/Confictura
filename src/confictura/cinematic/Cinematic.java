@@ -46,10 +46,12 @@ public class Cinematic{
                     ?   content.sector("confictura-" + state.map.name())
                     :   null;
 
-            if(!attached && e.to == State.playing && sect != null){
-                sector = sect;
-                attached = true;
-            }else if(attached && (e.to == State.menu || sect == null)){
+            if(sect != null){
+                if(!attached || sector != sect){
+                    sector = sect;
+                    attached = true;
+                }
+            }else if(attached || e.to == State.menu){
                 attached = false;
             }
         });

@@ -154,23 +154,27 @@ configure(project(':proc')){
     }
 
     task run(type: JavaExec, dependsOn: configurations.runtimeClasspath){
-        def out = rootProject.layout.projectDirectory.dir('assets').dir('sprites')
-        def raw = rootProject.layout.projectDirectory.dir('assets').dir('sprites-raw')
+        def assets = rootProject.layout.projectDirectory.dir('assets')
+        def out = assets.dir('sprites')
+        def colors = assets.dir('meta').dir('confictura').file('block-colors.json')
+        def raw = assets.dir('sprites-raw')
 
         inputs.files raw, tasks.fetchFiles
         outputs.dir out
+        outputs.file colors
 
         mainClass = 'confictura.proc.ConficturaProc'
         classpath = sourceSets.main.runtimeClasspath
         workingDir = temporaryDir
         standardInput = System.in
-        args rootProject.layout.projectDirectory.dir('assets').asFile
+        args assets.asFile
 
         doFirst{
             def dir = out.asFile
             dir.deleteDir()
             dir.mkdirs()
-            args dir
+
+            colors.asFile.delete()
 
             temporaryDir.deleteDir()
             temporaryDir.mkdirs()
@@ -226,10 +230,11 @@ dependencies{
 task list{
     inputs.files tasks.compileJava, configurations.runtimeClasspath
 
-    def output = new File(temporaryDir, 'classes.json')
+    def output = layout.projectDirectory.dir('assets').dir('meta').dir('confictura').file('classes.json').asFile
     outputs.file output
 
     doFirst{
+        output.parentFile.mkdirs()
         def packages = Jval.newArray()
         def classes = Jval.newArray()
 
@@ -265,14 +270,14 @@ task list{
 }
 
 clean{
-    delete layout.projectDirectory.dir('assets').dir('sprites')
+    def assets = layout.projectDirectory.dir('assets')
+    delete assets.dir('meta')
+    delete assets.dir('sprites')
 }
 
 jar{
+    inputs.files tasks.list
     archiveFileName = 'base.jar'
-
-    // Include generated asset into the temporary classpath.
-    from(tasks.list){into 'meta/confictura'}
 }
 
 task deploy(type: Jar){
@@ -290,7 +295,6 @@ task deploy(type: Jar){
     from files(sourceSets.main.output.resourcesDir)
     from configurations.runtimeClasspath.collect{it.isDirectory() ? it : zipTree(it)}
 
-    from(tasks.list){into 'meta/confictura'}
     from files(layout.projectDirectory.dir('assets')){exclude 'sprites-raw/**'}
     from layout.projectDirectory.file('icon.png')
 

@@ -37,6 +37,7 @@ public class ConficturaMod extends Mod{
 
     public static Seq<String> packages = Seq.with("java.lang", "java.util");
     public static Seq<Class<?>> classes = new Seq<>();
+    public static ObjectIntMap<String> blockColors = new ObjectIntMap<>();
 
     public static Cinematic cinematic;
 
@@ -134,6 +135,18 @@ public class ConficturaMod extends Mod{
                 throw new RuntimeException(ex);
             }
 
+            var colors = tree.get("meta/confictura/block-colors.json");
+            if(colors.exists()){
+                try(var reader = colors.reader()){
+                    var meta = Jval.read(reader);
+                    for(var child : meta.asObject()){
+                        blockColors.put(child.key, child.value.asInt());
+                    }
+                }catch(IOException ex){
+                    throw new RuntimeException(ex);
+                }
+            }
+
             if(!headless) app.post(() -> {
                 CShaders.load();
                 CModels.load();
@@ -156,6 +169,16 @@ public class ConficturaMod extends Mod{
         CBlocks.load();
         CPlanets.load();
         CSectorPresets.load();
+
+        for(var e : blockColors){
+            var block = content.block("confictura-" + e.key);
+            if(block == null) throw new IllegalStateException("Block 'confictura-" + e.key + "' not found; try re-running `proc:run`.");
+
+            block.mapColor.set(e.value);
+            block.squareSprite = block.mapColor.a > 0.5f;
+            block.mapColor.a = 1f;
+            block.hasColor = true;
+        }
     }
 
     public static boolean isConfictura(LoadedMod mod){

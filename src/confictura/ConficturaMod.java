@@ -2,6 +2,8 @@ package confictura;
 
 import arc.*;
 import arc.assets.*;
+import arc.files.*;
+import arc.freetype.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.graphics.gl.*;
@@ -13,6 +15,8 @@ import confictura.content.*;
 import confictura.editor.*;
 import confictura.gen.*;
 import confictura.graphics.*;
+import confictura.ui.*;
+import confictura.ui.dialogs.*;
 import confictura.util.*;
 import confictura.world.blocks.environment.*;
 import gltfrenzy.loader.*;
@@ -43,6 +47,9 @@ public class ConficturaMod extends Mod{
 
     public static CinematicEditor cinematicEditor;
 
+    public static CinematicEditorDialog cinematicDialog;
+    public static ScriptDialog scriptDialog;
+
     protected static ConficturaMod instance;
 
     public ConficturaMod(){
@@ -62,6 +69,30 @@ public class ConficturaMod extends Mod{
         cinematic = new Cinematic();
 
         if(!headless){
+            var fontSuffix = ".confictura.gen";
+            assets.setLoader(FreeTypeFontGenerator.class, ".confictura.gen", new FreeTypeFontGeneratorLoader(tree){
+                @Override
+                public FreeTypeFontGenerator load(AssetManager assetManager, String fileName, Fi file, FreeTypeFontGeneratorParameters parameter){
+                    return new FreeTypeFontGenerator(resolve(fileName.substring(0, fileName.length() - fontSuffix.length())));
+                }
+            });
+
+            assets.setLoader(Font.class, "-confictura", new FreetypeFontLoader(tree){
+                @Override
+                public Font loadSync(AssetManager manager, String fileName, Fi file, FreeTypeFontLoaderParameter parameter){
+                    if(parameter == null) throw new IllegalArgumentException("FreetypeFontParameter must be set in AssetManager#load to point at a TTF file!");
+                    return manager
+                        .get(parameter.fontFileName + fontSuffix, FreeTypeFontGenerator.class)
+                        .generateFont(parameter.fontParameters);
+                }
+
+                @Override
+                @SuppressWarnings("rawtypes")
+                public Seq<AssetDescriptor> getDependencies(String fileName, Fi file, FreeTypeFontLoaderParameter parameter){
+                    return Seq.with(new AssetDescriptor<>(parameter.fontFileName + fontSuffix, FreeTypeFontGenerator.class));
+                }
+            });
+
             assets.setLoader(Scenes3D.class, ".gltf", new Scenes3DLoader(tree, new GltfReader()));
             assets.setLoader(Scenes3D.class, ".glb", new Scenes3DLoader(tree, new GlbReader()));
 
@@ -147,10 +178,9 @@ public class ConficturaMod extends Mod{
                 }
             }
 
-            if(!headless) app.post(() -> {
-                CShaders.load();
-                CModels.load();
-            });
+            CFonts.load();
+            CModels.load();
+            if(!headless) app.post(CShaders::load);
         });
 
         app.post(ScriptUtils::init);
@@ -159,12 +189,17 @@ public class ConficturaMod extends Mod{
     @Override
     public void init(){
         dev.init();
+        if(!headless){
+            CStyles.load();
+
+            cinematicDialog = new CinematicEditorDialog();
+            scriptDialog = new ScriptDialog();
+        }
     }
 
     @Override
     public void loadContent(){
         EntityRegistry.register();
-        ScriptUtils.importDefaults(ScriptUtils.scope);
 
         CBlocks.load();
         CPlanets.load();

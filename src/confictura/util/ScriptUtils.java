@@ -1,11 +1,6 @@
 package confictura.util;
 
 import rhino.*;
-import rhino.module.*;
-import rhino.module.provider.*;
-
-import java.io.*;
-import java.net.*;
 
 import static arc.Core.*;
 import static confictura.ConficturaMod.*;
@@ -17,7 +12,7 @@ import static mindustry.Vars.*;
  */
 public final class ScriptUtils{
     public static Context context;
-    public static ImporterTopLevel vanillaScope, scope;
+    public static ImporterTopLevel vanillaScope;
 
     private ScriptUtils(){
         throw new AssertionError();
@@ -29,18 +24,18 @@ public final class ScriptUtils{
 
         context = scripts.context;
         vanillaScope = (ImporterTopLevel)scripts.scope;
+    }
 
-        scope = new ImporterTopLevel(context);
+    public static ImporterTopLevel newScope(){
+        var scope = new ImporterTopLevel(context);
         context.evaluateString(scope, files.internal("scripts/global.js").readString(), "global.js", 1);
-        new RequireBuilder()
-            .setModuleScriptProvider(new SoftCachingModuleScriptProvider(new SectorScriptsProvider()))
-            .setSandboxed(false).createRequire(context, scope).install(scope);
+        return scope;
     }
 
     /**
      * Imports packages defined by this mod into the script scope.
      * @param scope {@link #vanillaScope} for the base game's script scope (mod scripts folder and console), or
-     *              {@link #scope} for scope specifically used by this mod.
+     *              another custom scope.
      */
     public static void importDefaults(ImporterTopLevel scope){
         for(var name : packages) importPackage(scope, name);
@@ -56,20 +51,5 @@ public final class ScriptUtils{
         p.setParentScope(scope);
 
         scope.importPackage(p);
-    }
-
-    public static class SectorScriptsProvider extends UrlModuleSourceProvider{
-        public SectorScriptsProvider(){
-            super(null, null);
-        }
-
-        @Override
-        public ModuleSource loadSource(String moduleId, Scriptable paths, Object validator) throws IOException, URISyntaxException{
-            String base = "sector-scripts/confictura", path = base + "/" + moduleId;
-            var file = tree.get(path);
-            if(!file.exists()) throw new IOException("Script `" + path + "` doesn't exist.");
-
-            return new ModuleSource(file.reader(), new URI(path), tree.get(base).file().toURI(), validator);
-        }
     }
 }

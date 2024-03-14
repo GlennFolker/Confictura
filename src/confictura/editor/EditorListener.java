@@ -29,6 +29,10 @@ public abstract class EditorListener{
         });
     }
 
+    public boolean isAttached(){
+        return attached;
+    }
+
     public abstract boolean shouldAttach();
 
     public void enter(){}

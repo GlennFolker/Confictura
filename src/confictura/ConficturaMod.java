@@ -178,9 +178,11 @@ public class ConficturaMod extends Mod{
                 }
             }
 
-            CFonts.load();
-            CModels.load();
-            if(!headless) app.post(CShaders::load);
+            if(!headless){
+                CFonts.load();
+                CModels.load();
+                app.post(CShaders::load);
+            }
         });
 
         app.post(ScriptUtils::init);

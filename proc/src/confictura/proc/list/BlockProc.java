@@ -12,16 +12,14 @@ import java.io.*;
 import java.nio.charset.*;
 
 import static confictura.proc.ConficturaProc.*;
+import static confictura.util.StructUtils.*;
 import static mindustry.Vars.*;
 
-public final class BlockProc{
-    private static Jval blockColors;
+public class BlockProc implements Proc{
+    private Jval blockColors;
 
-    private BlockProc(){
-        throw new AssertionError();
-    }
-
-    public static void init(Cons<Runnable> async){
+    @Override
+    public void init(Cons<Runnable> async){
         blockColors = Jval.newObject();
 
         var packer = new GenPacker();
@@ -31,8 +29,10 @@ public final class BlockProc{
             block.load();
 
             block.createIcons(packer);
+            block.load();
+
             if(block instanceof Floor floor){
-                for(var variant : floor.variantRegions){
+                for(var variant : chain(iter(floor.variantRegions), iter(floor.editorVariantRegions()))){
                     var reg = atlas.conv(variant);
                     var pix = reg.pixmap();
 
@@ -55,7 +55,8 @@ public final class BlockProc{
                 }
             }
 
-            var icon = atlas.find("block-" + block.name + "-full").pixmap();
+            block.load();
+            var icon = atlas.conv(block.fullIcon).pixmap();
 
             boolean hollow = false;
             Color average = new Color(), col = new Color();
@@ -87,7 +88,8 @@ public final class BlockProc{
         }));
     }
 
-    public static void cleanup(){
+    @Override
+    public void finish(){
         var out = assetsDir.child("meta").child("confictura").child("block-colors.json");
         try(var writer = new OutputStreamWriter(out.write(false, 4096), StandardCharsets.UTF_8)){
             blockColors.writeTo(writer, Jformat.formatted);

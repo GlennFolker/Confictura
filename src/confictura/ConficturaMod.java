@@ -29,6 +29,7 @@ import mindustry.mod.Mods.*;
 import java.io.*;
 
 import static arc.Core.*;
+import static confictura.util.StructUtils.*;
 import static mindustry.Vars.*;
 
 /**
@@ -102,47 +103,66 @@ public class ConficturaMod extends Mod{
             cinematicEditor = new CinematicEditor();
 
             assets.load(new Loadable(){
-                Texture texture;
-                Pixmap page;
+                ObjectMap<Texture, Pixmap> pixmaps;
 
                 @Override
                 public void loadAsync(){
-                    page = AsyncUtils.postWait(() -> {
-                        texture = atlas.find("stone1").texture;
-
-                        var buffer = new FrameBuffer(texture.width, texture.height);
-                        buffer.begin();
-                        Draw.blit(texture, Shaders.screenspace);
-
-                        var pixels = ScreenUtils.getFrameBufferPixmap(0, 0, texture.width, texture.height);
-                        buffer.end();
-                        buffer.dispose();
-
-                        return pixels;
+                    pixmaps = new ObjectMap<>();
+                    var regions = content.blocks().flatMap(b -> {
+                        if(b instanceof CFloor floor){
+                            return chain(iter(b.variantRegions), iter(b.editorVariantRegions()));
+                        }else{
+                            return empty();
+                        }
                     });
 
-                    content.blocks().each(b -> b instanceof CFloor, (CFloor b) -> {
-                        for(var r : b.variantRegions){
-                            int x = r.getX(), y = r.getY(), w = r.width, h = r.height;
-                            page.draw(page, x, y + h - 1, w, 1, x, y - 1, w, 1, false);
-                            page.draw(page, x, y, 1, h, x + w, y, 1, h, false);
-                            page.draw(page, x, y, w, 1, x, y + h, w, 1, false);
-                            page.draw(page, x + w - 1, y, 1, h, x - 1, y, 1, h, false);
+                    regions.each(r -> pixmaps.put(r.texture, null));
+                    AsyncUtils.postWait(() -> {
+                        var buffer = new FrameBuffer(2, 2);
+                        for(var texture : pixmaps.keys()){
+                            buffer.resize(texture.width, texture.height);
+                            buffer.begin();
+                            Draw.blit(texture, Shaders.screenspace);
 
-                            page.setRaw(x - 1, y - 1, page.getRaw(x + w - 1, y + h - 1));
-                            page.setRaw(x + w, y - 1, page.getRaw(x, y + h - 1));
-                            page.setRaw(x + w, y + h, page.getRaw(x, y));
-                            page.setRaw(x - 1, y + h, page.getRaw(x + w - 1, y));
+                            var pixels = ScreenUtils.getFrameBufferPixmap(0, 0, texture.width, texture.height);
+                            buffer.end();
+
+                            // Generally it's a bad idea to modify a collection while iterating over it.
+                            // However in this case, the map's inner hash tables are structurally unchanged, so it should be fine.
+                            pixmaps.put(texture, pixels);
                         }
+                        buffer.dispose();
+                    });
+
+                    regions.each(r -> {
+                        var page = pixmaps.get(r.texture);
+                        int x = r.getX(), y = r.getY(), w = r.width, h = r.height;
+
+                        page.draw(page, x, y + h - 1, w, 1, x, y - 1, w, 1, false);
+                        page.draw(page, x, y, 1, h, x + w, y, 1, h, false);
+                        page.draw(page, x, y, w, 1, x, y + h, w, 1, false);
+                        page.draw(page, x + w - 1, y, 1, h, x - 1, y, 1, h, false);
+
+                        page.setRaw(x - 1, y - 1, page.getRaw(x + w - 1, y + h - 1));
+                        page.setRaw(x + w, y - 1, page.getRaw(x, y + h - 1));
+                        page.setRaw(x + w, y + h, page.getRaw(x, y));
+                        page.setRaw(x - 1, y + h, page.getRaw(x + w - 1, y));
                     });
                 }
 
                 @Override
                 public void loadSync(){
-                    texture.bind();
-                    Gl.texImage2D(Gl.texture2d, 0, Gl.rgba, page.width, page.height, 0, Gl.rgba, Gl.unsignedByte, page.pixels);
+                    for(var e : pixmaps){
+                        var texture = e.key;
+                        var page = e.value;
 
-                    page.dispose();
+                        texture.bind();
+                        Gl.texImage2D(Gl.texture2d, 0, Gl.rgba, page.width, page.height, 0, Gl.rgba, Gl.unsignedByte, page.pixels);
+                        page.dispose();
+                    }
+
+                    pixmaps.clear();
+                    pixmaps = null;
                 }
 
                 @Override

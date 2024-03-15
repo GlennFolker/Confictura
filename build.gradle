@@ -163,6 +163,8 @@ configure(project(':proc')){
         outputs.dir out
         outputs.file colors
 
+        outputs.upToDateWhen{false}
+
         mainClass = 'confictura.proc.ConficturaProc'
         classpath = sourceSets.main.runtimeClasspath
         workingDir = temporaryDir

@@ -3,6 +3,7 @@ package confictura.util;
 import arc.func.*;
 
 import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
 
 import static arc.Core.*;
 
@@ -54,5 +55,35 @@ public final class AsyncUtils{
         }
 
         return (T)out[0];
+    }
+
+    public static <T> T lock(Lock lock, Prov<T> prov){
+        lock.lock();
+        var out = prov.get();
+
+        lock.unlock();
+        return out;
+    }
+
+    public static void lock(Lock lock, Runnable run){
+        lock.lock();
+        run.run();
+        lock.unlock();
+    }
+
+    public static <T> T read(ReadWriteLock lock, Prov<T> prov){
+        return lock(lock.readLock(), prov);
+    }
+
+    public static void read(ReadWriteLock lock, Runnable run){
+        lock(lock.readLock(), run);
+    }
+
+    public static <T> T write(ReadWriteLock lock, Prov<T> prov){
+        return lock(lock.writeLock(), prov);
+    }
+
+    public static void write(ReadWriteLock lock, Runnable run){
+        lock(lock.writeLock(), run);
     }
 }

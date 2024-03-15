@@ -7,6 +7,7 @@ import arc.graphics.g2d.*;
 import arc.struct.*;
 import arc.util.*;
 import confictura.proc.GenAtlas.*;
+import confictura.util.*;
 
 import java.util.concurrent.locks.*;
 
@@ -18,53 +19,17 @@ public class GenAtlas extends TextureAtlas implements Eachable<GenRegion>{
 
     public GenAtlas(){}
 
-    private <T> T read(Prov<T> prov){
-        var read = lock.readLock();
-        read.lock();
-
-        var out = prov.get();
-
-        read.unlock();
-        return out;
-    }
-
-    private void read(Runnable run){
-        var read = lock.readLock();
-        read.lock();
-
-        run.run();
-        read.unlock();
-    }
-
-    private <T> T write(Prov<T> prov){
-        var write = lock.writeLock();
-        write.lock();
-
-        var out = prov.get();
-
-        write.unlock();
-        return out;
-    }
-
-    private void write(Runnable run){
-        var write = lock.writeLock();
-        write.lock();
-
-        run.run();
-        write.unlock();
-    }
-
     public void addRegion(GenRegion region){
-        var old = write(() -> regions.put(region.name, region));
+        var old = AsyncUtils.write(lock, () -> regions.put(region.name, region));
         if(old != null && old.found()) old.pixmap.dispose();
     }
 
     @Override
     public GenRegion find(String name){
-        var reg = read(() -> regions.get(name));
+        var reg = AsyncUtils.read(lock, () -> regions.get(name));
         if(reg == null){
             var err = new GenRegion(name, null, null);
-            write(() -> regions.put(name, err));
+            AsyncUtils.write(lock, () -> regions.put(name, err));
             return err;
         }
         return reg;
@@ -72,7 +37,7 @@ public class GenAtlas extends TextureAtlas implements Eachable<GenRegion>{
 
     @Override
     public GenRegion find(String name, TextureRegion def){
-        return read(() -> regions.get(name, conv(def)));
+        return AsyncUtils.read(lock, () -> regions.get(name, conv(def)));
     }
 
     @Override
@@ -88,14 +53,16 @@ public class GenAtlas extends TextureAtlas implements Eachable<GenRegion>{
 
     @Override
     public void each(Cons<? super GenRegion> cons){
-        for(var reg : regions.values()){
-            if(reg.found() && reg.file != null && !reg.file.path().contains("vanilla/")) cons.get(reg);
-        }
+        AsyncUtils.read(lock, () -> {
+            for(var reg : regions.values()){
+                if(reg.found() && reg.file != null && !reg.file.path().contains("vanilla/")) cons.get(reg);
+            }
+        });
     }
 
     @Override
     public void dispose(){
-        write(() -> {
+        AsyncUtils.write(lock, () -> {
             for(var region : regions.values()){
                 if(region.found()) region.pixmap.dispose();
             }

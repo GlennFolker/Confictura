@@ -49,14 +49,14 @@ public class CFloor extends Floor{
 
             // Instead, create individual edges for each variant.
             var edge = atlas.getPixmap(atlas.find(name + "-edge-stencil", "edge-stencil"));
+            var result = new Pixmap(edge.width, edge.height);
             for(int i = 0; i < variantRegions.length; i++){
                 var image = atlas.getPixmap(variantRegions[i]);
-                var result = new Pixmap(edge.width, edge.height);
                 result.each((x, y) -> result.setRaw(x, y, Color.muli(edge.getRaw(x, y), image.getRaw(x % image.width, y % image.height))));
 
                 packer.add(PageType.environment, name + "-edge" + (i + 1), result);
-                result.dispose();
             }
+            result.dispose();
         }
     }
 

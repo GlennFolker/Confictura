@@ -21,12 +21,15 @@ import mindustry.mod.Mods.*;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
 
 public class ConficturaProc{
-    protected static TaskQueue runs = new TaskQueue();
+    protected static final TaskQueue runs = new TaskQueue();
+    protected static final Proc[] procs = {new BlockProc()};
+
     public static GenAtlas atlas;
 
     public static ConficturaMod main;
@@ -91,9 +94,24 @@ public class ConficturaProc{
             }));
         }));
 
-        wait(f -> BlockProc.init(run -> f.get(exec.submit(run))));
-        BlockProc.cleanup();
+        wait(f -> {
+            for(var proc : procs){
+                long started = Time.millis();
 
+                Seq<Runnable> runs = new Seq<>();
+                proc.init(runs::add);
+
+                var remaining = new AtomicInteger(runs.size);
+                runs.each(run -> f.get(exec.submit(() -> {
+                    run.run();
+                    if(remaining.addAndGet(-1) == 0){
+                        Log.info("[Confictura-Proc] Total time taken for '@': @ms", proc.getClass().getSimpleName(), Time.timeSinceMillis(started));
+                    }
+                })));
+            }
+        });
+
+        for(var proc : procs) proc.finish();
         wait(f -> atlas.each(reg -> f.get(exec.submit(() -> {
             var pix = reg.pixmap;
             Pixmaps.bleed(pix);
@@ -158,6 +176,8 @@ public class ConficturaProc{
                 }
             }
 
+            prev.dispose();
+
             var name = reg.file.name();
             if(name.endsWith(".floor.png")){
                 new GenRegion(
@@ -175,10 +195,10 @@ public class ConficturaProc{
         Threads.await(exec);
     }
 
-    protected static <T> Seq<T> wait(Cons<Cons<Future<? extends T>>> futures){
+    protected static <T> void wait(Cons<Cons<Future<? extends T>>> futures){
         Seq<Future<? extends T>> array = new Seq<>();
         futures.get(array::add);
 
-        return array.map(AsyncUtils::get);
+        array.each(AsyncUtils::get);
     }
 }

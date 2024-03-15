@@ -9,6 +9,8 @@ import confictura.util.*;
 import mindustry.graphics.g3d.*;
 import mindustry.graphics.g3d.PlanetGrid.*;
 
+import static confictura.util.StructUtils.*;
+
 /**
  * Utilities for composing specialized OpenGL {@linkplain Mesh meshes}.
  * @author GlennFolker
@@ -169,7 +171,7 @@ public final class CMeshBuilder{
     }
 
     public static Mesh gridDistance(PlanetGrid grid, HexMesher mesher, float radius, float intensity){
-        int totalVerts = StructUtils.sumi(grid.tiles, tile -> mesher.skip(tile.v) ? 0 : tile.corners.length) * 3;
+        int totalVerts = sumi(grid.tiles, tile -> mesher.skip(tile.v) ? 0 : tile.corners.length) * 3;
         float[] progress = new float[grid.tiles.length];
 
         int accum = 0;
@@ -212,8 +214,8 @@ public final class CMeshBuilder{
                 c3.set(mesher.getColor(v3.set(b.v).nor())).a(0f);
 
                 vert(v1, nor.set(progress[tile.id], 0f, 0f), c1);
-                vert(a.v, nor.set(StructUtils.average(a.tiles, t -> progress[t.id]), 0f, 0f), c2);
-                vert(b.v, nor.set(StructUtils.average(b.tiles, t -> progress[t.id]), 0f, 0f), c3);
+                vert(a.v, nor.set(average(a.tiles, t -> progress[t.id]), 0f, 0f), c2);
+                vert(b.v, nor.set(average(b.tiles, t -> progress[t.id]), 0f, 0f), c3);
             }
 
             for(var corner : c) corner.v.nor();

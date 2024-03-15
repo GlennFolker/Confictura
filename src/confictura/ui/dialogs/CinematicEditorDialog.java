@@ -15,7 +15,10 @@ public class CinematicEditorDialog extends BaseDialog{
         cont.clear();
         if(!mobile){
             cont.defaults().width(320f).height(55).pad(5f);
-            cont.button("@dialog.confictura-cinematic-editor.scripts", Icon.pencil, () -> scriptDialog.show()).row();
+            cont.button("@dialog.confictura-cinematic-editor.scripts", Icon.pencil, () -> {
+                scriptDialog.show(cinematic.script.getSource(), cinematic.script::compile, null);
+                hide();
+            }).row();
             cont.button("@quit", Icon.exit, this::hide);
 
             ui.hudGroup.fill(cont -> cont.bottom().left().button("@dialog.confictura-cinematic-editor", Icon.pencil, new TextButtonStyle(){{

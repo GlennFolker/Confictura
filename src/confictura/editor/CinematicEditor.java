@@ -1,5 +1,6 @@
 package confictura.editor;
 
+import arc.util.*;
 import mindustry.type.*;
 
 import java.io.*;
@@ -14,7 +15,7 @@ import static mindustry.Vars.*;
 public class CinematicEditor extends EditorListener{
     @Override
     public boolean shouldAttach(){
-        return content.sector("confictura-" + editor.tags.get("name")) != null;
+        return isConfictura(content.sector(editor.tags.get("name")));
     }
 
     @Override
@@ -23,7 +24,7 @@ public class CinematicEditor extends EditorListener{
             cinematic.readFrom(editor.tags);
         }catch(IOException e){
             cinematic.clear();
-            ui.showException("@dialog.confictura-cinematic-read-fail", e);
+            ui.showException("@dialog.confictura-cinematic.read-fail", e);
         }
     }
 
@@ -32,7 +33,7 @@ public class CinematicEditor extends EditorListener{
         try{
             cinematic.writeTo(editor.tags);
         }catch(IOException e){
-            ui.showException("@dialog.confictura-cinematic-write-fail", e);
+            ui.showException("@dialog.confictura-cinematic.write-fail", e);
         }finally{
             cinematic.clear();
         }

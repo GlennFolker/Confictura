@@ -21,6 +21,7 @@ import confictura.util.*;
 import confictura.world.blocks.environment.*;
 import gltfrenzy.loader.*;
 import gltfrenzy.model.*;
+import mindustry.ctype.*;
 import mindustry.game.EventType.*;
 import mindustry.graphics.*;
 import mindustry.mod.*;
@@ -51,10 +52,9 @@ public class ConficturaMod extends Mod{
     public static CinematicEditorDialog cinematicDialog;
     public static ScriptDialog scriptDialog;
 
-    protected static ConficturaMod instance;
+    protected static LoadedMod mod;
 
     public ConficturaMod(){
-        instance = this;
         try{
             var devImpl = (Class<? extends DevBuild>)Class.forName("confictura.DevBuildImpl", true, mods.mainLoader());
             dev = devImpl.getConstructor().newInstance();
@@ -66,8 +66,6 @@ public class ConficturaMod extends Mod{
         }catch(Throwable e){
             Log.err("[Confictura] Failed instantiating developer build", Strings.getFinalCause(e));
         }
-
-        cinematic = new Cinematic();
 
         if(!headless){
             var fontSuffix = ".confictura.gen";
@@ -205,7 +203,12 @@ public class ConficturaMod extends Mod{
             }
         });
 
-        app.post(ScriptUtils::init);
+        app.post(() -> {
+            mod = mods.getMod(ConficturaMod.class);
+
+            ScriptUtils.init();
+            cinematic = new Cinematic();
+        });
     }
 
     @Override
@@ -238,7 +241,15 @@ public class ConficturaMod extends Mod{
         }
     }
 
+    public static boolean isConfictura(Content content){
+        return content != null && isConfictura(content.minfo.mod);
+    }
+
     public static boolean isConfictura(LoadedMod mod){
-        return mod != null && mod.main == instance;
+        return mod != null && mod == mod();
+    }
+
+    public static LoadedMod mod(){
+        return mod;
     }
 }

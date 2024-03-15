@@ -20,6 +20,8 @@ public class Cinematic{
     private boolean attached;
     private SectorPreset sector;
 
+    public Script script = new Script();
+
     public Cinematic(){
         Events.on(SaveWriteEvent.class, e -> {
             if(attached){
@@ -43,7 +45,7 @@ public class Cinematic{
             var sect = state.hasSector()
                 ?   state.getSector().preset
                 :   (state.map != null && isConfictura(state.map.mod))
-                    ?   content.sector("confictura-" + state.map.name())
+                    ?   content.sector(state.map.name())
                     :   null;
 
             if(sect != null){
@@ -62,7 +64,7 @@ public class Cinematic{
     }
 
     public void clear(){
-
+        script.clear();
     }
 
     public void writeTo(StringMap tags) throws IOException{
@@ -85,10 +87,16 @@ public class Cinematic{
     }
 
     public void write(DataOutput stream) throws IOException{
-        stream.writeShort(0);
+        stream.writeShort(1);
+        script.write(stream);
     }
 
     public void read(DataInput stream) throws IOException{
-        stream.readShort();
+        short version = stream.readShort();
+        switch(version){
+            case 0 -> script.clear();
+            case 1 -> script.read(stream);
+            default -> throw new IOException("Unknown revision " + version + ".");
+        }
     }
 }

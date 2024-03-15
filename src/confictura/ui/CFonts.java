@@ -16,7 +16,7 @@ public final class CFonts{
 
     public static void load(){
         assets.load("script-confictura", Font.class, new FreeTypeFontLoaderParameter("fonts/script.ttf", new FreeTypeFontParameter(){{
-            size = 16;
+            size = 20;
             incremental = true;
             renderCount = 1;
             characters = FreeTypeFontGenerator.DEFAULT_CHARS;

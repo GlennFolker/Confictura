@@ -22,11 +22,13 @@ public class ScriptArea extends TextArea{
                     int line = cursorLine * 2 >= linesBreak.size ? text.length() : linesBreak.items[cursorLine * 2];
                     if(decrease){
                         int indent = indentCount(cursorLine);
-                        int sub = indent - Mathf.floor(indent / 4f) * 4;
-                        if(sub == 0) sub = 4;
+                        if(indent > 0){
+                            int sub = indent - Mathf.floor(indent / 4f) * 4;
+                            if(sub == 0) sub = 4;
 
-                        setText(text.substring(0, line) + text.substring(line + sub));
-                        cursor = oldCursor - sub;
+                            setText(text.substring(0, line) + text.substring(line + sub));
+                            cursor = oldCursor - sub;
+                        }
                     }else{
                         int add = 4 - (cursor - line) % 4;
 
@@ -83,6 +85,17 @@ public class ScriptArea extends TextArea{
         public boolean scrolled(InputEvent event, float x, float y, float amountX, float amountY){
             moveCursorLine(Mathf.round(amountY));
             return false;
+        }
+
+        @Override
+        protected void goHome(boolean jump){
+            if(jump){
+                cursor = 0;
+            }else if(cursorLine * 2 < linesBreak.size){
+                int begin = linesBreak.items[cursorLine * 2];
+                int start = begin + indentCount(cursorLine);
+                cursor = cursor == begin || cursor > start ? start : begin;
+            }
         }
     }
 }

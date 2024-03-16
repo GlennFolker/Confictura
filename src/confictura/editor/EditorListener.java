@@ -19,6 +19,8 @@ public abstract class EditorListener{
         Events.on(StateChangeEvent.class, e -> {
             if(e.from == State.menu && e.to == State.playing && state.isEditor()){
                 if(shouldAttach()){
+                    state.map.tags.put("name", editor.tags.get("name"));
+
                     attached = true;
                     enter();
                 }

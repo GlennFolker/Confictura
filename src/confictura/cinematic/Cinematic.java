@@ -11,91 +11,149 @@ import mindustry.type.*;
 import java.io.*;
 
 import static confictura.ConficturaMod.*;
+import static confictura.util.IOUtils.*;
 import static mindustry.Vars.*;
 
 public class Cinematic{
     protected final ReusableByteOutStream out = new ReusableByteOutStream();
     protected final ReusableByteInStream in = new ReusableByteInStream();
 
-    private boolean attached;
     private SectorPreset sector;
 
     public Script script = new Script();
 
     public Cinematic(){
-        Events.on(SaveWriteEvent.class, e -> {
-            if(attached){
-                try{
-                    writeTo(state.rules.tags);
-                }catch(IOException ex){
-                    throw new RuntimeException(ex);
-                }
-            }
-        });
+        Events.run(Trigger.update, () -> attached(this::update));
+        Events.run(Trigger.drawOver, () -> attached(this::draw));
 
-        Events.on(SaveLoadEvent.class, e -> {
-            try{
-                readFrom(state.rules.tags);
-            }catch(IOException ex){
-                throw new RuntimeException(ex);
+        Events.on(SaveWriteEvent.class, e -> attached(() -> ioUnchecked(() -> writeStateTo(state.rules.tags))));
+        Events.on(SaveLoadEvent.class, e -> ioUnchecked(() -> {
+            if(readMapFrom(state.map.tags)){
+                readStateFrom(state.rules.tags);
+            }else{
+                clear();
             }
-        });
+        }));
 
         Events.on(StateChangeEvent.class, e -> {
-            var sect = state.hasSector()
+            var target = state.hasSector()
                 ?   state.getSector().preset
                 :   (state.map != null && isConfictura(state.map.mod))
                     ?   content.sector(state.map.name())
                     :   null;
 
-            if(sect != null){
-                if(!attached || sector != sect){
-                    sector = sect;
-                    attached = true;
+            if(target != null){
+                if(sector != target){
+                    if(sector != null) exit();
+                    sector = target;
+                    enter();
                 }
-            }else if(attached || e.to == State.menu){
-                attached = false;
+            }else if(sector != null || e.to == State.menu){
+                if(sector != null) exit();
+                sector = null;
             }
         });
+    }
+
+    public boolean isAttached(){
+        return sector != null;
+    }
+
+    public void attached(Runnable run){
+        if(isAttached()) run.run();
     }
 
     public SectorPreset sector(){
         return sector;
     }
 
+    public void enter(){
+        script.enter();
+    }
+
+    public void exit(){
+        script.exit();
+    }
+
+    public void update(){
+        script.update();
+    }
+
+    public void draw(){
+        script.draw();
+    }
+
     public void clear(){
         script.clear();
     }
 
-    public void writeTo(StringMap tags) throws IOException{
+    protected DataOutput output(){
         out.reset();
-
-        var stream = new DataOutputStream(out);
-        write(stream);
-
-        tags.put("confictura-cinematic", new String(Base64Coder.encode(out.getBytes(), out.size())));
+        return new DataOutputStream(out);
     }
 
-    public void readFrom(StringMap tags) throws IOException{
-        clear();
+    protected DataInput input(String input){
+        in.setBytes(Base64Coder.decode(input));
+        return new DataInputStream(in);
+    }
 
-        String buf;
-        if((buf = tags.get("confictura-cinematic")) != null){
-            in.setBytes(Base64Coder.decode(buf));
-            read(new DataInputStream(in));
+    protected String asString(){
+        return new String(Base64Coder.encode(out.getBytes(), out.size()));
+    }
+
+    public void writeMapTo(StringMap tags) throws IOException{
+        writeMap(output());
+        tags.put("confictura-cinematic", asString());
+    }
+
+    public boolean readMapFrom(StringMap tags) throws IOException{
+        String in;
+        if((in = tags.get("confictura-cinematic")) != null){
+            readMap(input(in));
+            return true;
+        }else{
+            return false;
         }
     }
 
-    public void write(DataOutput stream) throws IOException{
-        stream.writeShort(1);
-        script.write(stream);
+    public void writeStateTo(StringMap tags) throws IOException{
+        writeState(output());
+        tags.put("confictura-cinematic", asString());
     }
 
-    public void read(DataInput stream) throws IOException{
+    public boolean readStateFrom(StringMap tags) throws IOException{
+        String in;
+        if((in = tags.get("confictura-cinematic")) != null){
+            readState(input(in));
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    public void writeMap(DataOutput stream) throws IOException{
+        stream.writeShort(1);
+        script.writeMap(stream);
+    }
+
+    public void readMap(DataInput stream) throws IOException{
         short version = stream.readShort();
         switch(version){
             case 0 -> script.clear();
-            case 1 -> script.read(stream);
+            case 1 -> script.readMap(stream);
+            default -> throw new IOException("Unknown revision " + version + ".");
+        }
+    }
+
+    public void writeState(DataOutput stream) throws IOException{
+        stream.writeShort(0);
+        script.writeState(stream);
+    }
+
+    public void readState(DataInput stream) throws IOException{
+        short version = stream.readShort();
+        switch(version){
+            case 0 -> script.readState(stream);
             default -> throw new IOException("Unknown revision " + version + ".");
         }
     }

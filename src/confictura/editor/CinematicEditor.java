@@ -1,6 +1,5 @@
 package confictura.editor;
 
-import arc.util.*;
 import mindustry.type.*;
 
 import java.io.*;
@@ -21,7 +20,7 @@ public class CinematicEditor extends EditorListener{
     @Override
     public void enter(){
         try{
-            cinematic.readFrom(editor.tags);
+            cinematic.readMapFrom(editor.tags);
         }catch(IOException e){
             cinematic.clear();
             ui.showException("@dialog.confictura-cinematic.read-fail", e);
@@ -31,7 +30,7 @@ public class CinematicEditor extends EditorListener{
     @Override
     public void exit(){
         try{
-            cinematic.writeTo(editor.tags);
+            cinematic.writeMapTo(editor.tags);
         }catch(IOException e){
             ui.showException("@dialog.confictura-cinematic.write-fail", e);
         }finally{

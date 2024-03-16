@@ -4,6 +4,7 @@ import arc.func.*;
 import arc.graphics.*;
 import arc.util.serialization.*;
 import arc.util.serialization.Jval.*;
+import confictura.*;
 import confictura.proc.*;
 import confictura.proc.GenAtlas.*;
 import mindustry.world.blocks.environment.*;
@@ -23,7 +24,7 @@ public class BlockProc implements Proc{
         blockColors = Jval.newObject();
 
         var packer = new GenPacker();
-        content.blocks().each(block -> block.minfo.mod == mod, block -> async.get(() -> {
+        content.blocks().each(ConficturaMod::isConfictura, block -> async.get(() -> {
             block.init();
             block.loadIcon();
             block.load();

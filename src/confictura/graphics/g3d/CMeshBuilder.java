@@ -5,10 +5,10 @@ import arc.math.*;
 import arc.math.geom.*;
 import arc.struct.*;
 import confictura.graphics.g3d.CMeshBuilder.IslandShaper.*;
-import confictura.util.*;
 import mindustry.graphics.g3d.*;
 import mindustry.graphics.g3d.PlanetGrid.*;
 
+import static confictura.util.MathUtils.*;
 import static confictura.util.StructUtils.*;
 
 /**
@@ -128,15 +128,15 @@ public final class CMeshBuilder{
         begin(tiles.size * 2 * 6 * 3);
         for(var tile : tiles){
             Vec3[] l = tile.lows, h = tile.highs;
-            v1.set(normal(l[0], l[2], l[4]));
-            v2.set(normal(l[1], l[3], l[5]));
+            v1.set(normal(nor, l[0], l[2], l[4]));
+            v2.set(normal(nor, l[1], l[3], l[5]));
 
             nor.set(v1).add(v2).nor();
             yz(v1.set(tile.hex.x, tile.hex.y, tile.hex.low));
             for(int i = 0, len = l.length; i < len; i++) verts(v1, l[i], l[(i + 1) % len], nor, tile.hex.lowColor);
 
-            v1.set(normal(h[0], h[4], h[2]));
-            v2.set(normal(h[1], h[5], h[2]));
+            v1.set(normal(nor, h[0], h[4], h[2]));
+            v2.set(normal(nor, h[1], h[5], h[2]));
 
             nor.set(v1).add(v2).nor();
             yz(v1.set(tile.hex.x, tile.hex.y, tile.hex.high));
@@ -269,10 +269,6 @@ public final class CMeshBuilder{
 
         vert[6] = color.toFloatBits();
         mesh.getVerticesBuffer().put(vert);
-    }
-
-    private static Vec3 normal(Vec3 a, Vec3 b, Vec3 c){
-        return MathUtils.normal(nor, a, b, c);
     }
 
     public interface IslandShaper{

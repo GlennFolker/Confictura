@@ -10,7 +10,6 @@ import confictura.*;
 import confictura.graphics.*;
 import confictura.graphics.g3d.*;
 import confictura.graphics.g3d.CMeshBuilder.*;
-import confictura.util.*;
 import confictura.world.planets.*;
 import gltfrenzy.model.*;
 import mindustry.content.*;
@@ -18,6 +17,7 @@ import mindustry.graphics.*;
 import mindustry.type.*;
 
 import static confictura.graphics.CPal.*;
+import static confictura.util.MathUtils.*;
 
 /**
  * Defines the {@linkplain Planet planets} and other celestial objects this mod offers.
@@ -60,13 +60,13 @@ public final class CPlanets{
 
                 for(var mesh : base.mesh.containers){
                     shader.setUniformMatrix4("u_trans", mat.set(transform).mul(base.globalTrns).val);
-                    shader.setUniformMatrix("u_normal", MathUtils.copyMatrix(mat, Tmp.m1).inv().transpose());
+                    shader.setUniformMatrix("u_normal", copyMatrix(mat, Tmp.m1).inv().transpose());
                     mesh.render(shader);
                 }
 
                 for(var mesh : cage.mesh.containers){
                     shader.setUniformMatrix4("u_trans", mat.set(transform).mul(cage.globalTrns).val);
-                    shader.setUniformMatrix("u_normal", MathUtils.copyMatrix(mat, Tmp.m1).inv().transpose());
+                    shader.setUniformMatrix("u_normal", copyMatrix(mat, Tmp.m1).inv().transpose());
                     mesh.render(shader);
                 }
             };
@@ -86,7 +86,7 @@ public final class CPlanets{
                     Tmp.v33.set(Tmp.v32.x, rise * 14.25f * structureScale + structureOffset, Tmp.v32.z);
                     Tmp.v34.set(Tmp.v31.x, Tmp.v33.y, Tmp.v31.z);
 
-                    MathUtils.normal(nor, Tmp.v33, Tmp.v32, Tmp.v31);
+                    normal(nor, Tmp.v33, Tmp.v32, Tmp.v31);
                     Tmp.c1.set(monolithMid).a((1f - period(0.5f, 0f, 0.5f, Interp.pow5In)) * rise);
                     Tmp.c2.set(Tmp.c1).a(0f);
 
@@ -112,7 +112,7 @@ public final class CPlanets{
                     Tmp.v33.set(Tmp.v32.x, rise * 5f * structureScale + structureOffset, Tmp.v32.z);
                     Tmp.v34.set(Tmp.v31.x, Tmp.v33.y, Tmp.v31.z);
 
-                    MathUtils.normal(nor, Tmp.v33, Tmp.v32, Tmp.v31);
+                    normal(nor, Tmp.v33, Tmp.v32, Tmp.v31);
                     Tmp.c1.set(monolithDark).a(col);
                     Tmp.c2.set(Tmp.c1).a(0f);
 

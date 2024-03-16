@@ -13,7 +13,6 @@ import confictura.content.*;
 import confictura.graphics.*;
 import confictura.graphics.g3d.*;
 import confictura.graphics.g3d.CMeshBuilder.*;
-import confictura.util.*;
 import mindustry.graphics.*;
 import mindustry.graphics.g3d.*;
 import mindustry.graphics.g3d.PlanetGrid.*;
@@ -24,6 +23,7 @@ import java.util.*;
 
 import static arc.Core.*;
 import static confictura.graphics.CPal.*;
+import static confictura.util.MathUtils.*;
 import static mindustry.Vars.*;
 
 /**
@@ -524,7 +524,7 @@ public class PortalPlanet extends Planet{
                 mat2.mul(mat1);
 
                 shader.setUniformMatrix4("u_trans", mat2.val);
-                shader.setUniformMatrix("u_normal", MathUtils.copyMatrix(mat2, Tmp.m1).inv().transpose());
+                shader.setUniformMatrix("u_normal", copyMatrix(mat2, Tmp.m1).inv().transpose());
                 mesh.render(shader, Gl.triangles);
             }
         }

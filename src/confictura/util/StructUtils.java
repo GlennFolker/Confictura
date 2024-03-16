@@ -1,6 +1,7 @@
 package confictura.util;
 
 import arc.func.*;
+import arc.util.*;
 
 import java.util.*;
 
@@ -10,6 +11,7 @@ import java.util.*;
  */
 @SuppressWarnings("unchecked")
 public final class StructUtils{
+    private static final Object[] emptyArray = new Object[0];
     private static final Empty<?> empty = new Empty<>();
 
     private StructUtils(){
@@ -19,6 +21,11 @@ public final class StructUtils{
     public static <T> Empty<T> empty(){
         // SAFETY: Has no references or casts to T, so type erasure shouldn't mess everything up.
         return (Empty<T>)empty;
+    }
+
+    public static <T> T[] emptyArray(){
+        // SAFETY: If users require the type to be exactly T[], they can use reflection instead.
+        return (T[])emptyArray;
     }
 
     public static <T> Iter<T> iter(T[] array){
@@ -64,7 +71,7 @@ public final class StructUtils{
         float get(T item, float accum);
     }
 
-    public static class Empty<T> implements Iterable<T>, Iterator<T>{
+    public static class Empty<T> implements Iterable<T>, Iterator<T>, Eachable<T>{
         @Override
         public Empty<T> iterator(){
             return this;
@@ -77,11 +84,14 @@ public final class StructUtils{
 
         @Override
         public T next(){
-            return null;
+            throw new NoSuchElementException("Empty<T> has no elements.");
         }
+
+        @Override
+        public void each(Cons<? super T> cons){}
     }
 
-    public static class Iter<T> implements Iterable<T>, Iterator<T>{
+    public static class Iter<T> implements Iterable<T>, Iterator<T>, Eachable<T>{
         protected final T[] array;
         protected final int offset, length;
         protected int index = 0;
@@ -104,11 +114,20 @@ public final class StructUtils{
 
         @Override
         public T next(){
-            return hasNext() ? array[offset + index++] : null;
+            if(hasNext()){
+                return array[offset + index++];
+            }else{
+                throw new NoSuchElementException((offset + index) + " >= [" + offset + ".." + (offset + length) + "]");
+            }
+        }
+
+        @Override
+        public void each(Cons<? super T> cons){
+            while(hasNext()) cons.get(array[offset + index++]);
         }
     }
 
-    public static class Chain<T> implements Iterable<T>, Iterator<T>{
+    public static class Chain<T> implements Iterable<T>, Iterator<T>, Eachable<T>{
         protected final Iterator<T> first, second;
 
         public Chain(Iterator<T> first, Iterator<T> second){
@@ -129,6 +148,12 @@ public final class StructUtils{
         @Override
         public T next(){
             return first.hasNext() ? first.next() : second.next();
+        }
+
+        @Override
+        public void each(Cons<? super T> cons){
+            while(first.hasNext()) cons.get(first.next());
+            while(second.hasNext()) cons.get(second.next());
         }
     }
 }

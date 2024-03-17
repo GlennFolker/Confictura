@@ -2,6 +2,7 @@ package confictura.proc.list;
 
 import arc.func.*;
 import arc.graphics.*;
+import arc.util.*;
 import arc.util.serialization.*;
 import arc.util.serialization.Jval.*;
 import confictura.*;

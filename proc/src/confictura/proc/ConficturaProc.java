@@ -76,6 +76,9 @@ public class ConficturaProc{
         meta = new ModMeta(){{name = "confictura";}};
         mod = new LoadedMod(null, null, main, ConficturaProc.class.getClassLoader(), meta);
 
+        Reflect.<Seq<LoadedMod>>get(Mods.class, mods, "mods").add(mod);
+        Reflect.<ObjectMap<Class<?>, ModMeta>>get(Mods.class, mods, "metas").put(ConficturaMod.class, meta);
+
         Events.fire(new FileTreeInitEvent());
         runs.run();
 

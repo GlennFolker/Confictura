@@ -14,10 +14,10 @@ import static mindustry.Vars.*;
  * A custom {@linkplain Floor floor} with per-variant edges.
  * @author GlennFolker
  */
-public class CFloor extends Floor{
+public class EdgeFloor extends Floor{
     public TextureRegion[][][] edges;
 
-    public CFloor(String name){
+    public EdgeFloor(String name){
         super(name);
     }
 
@@ -61,7 +61,7 @@ public class CFloor extends Floor{
     }
 
     @Override
-    protected TextureRegion[][] edges(int x, int y){
-        return edges[variant(x, y)];
+    public TextureRegion[][] edges(int x, int y){
+        return blendGroup != this ? super.edges(x, y) : edges[variant(x, y)];
     }
 }

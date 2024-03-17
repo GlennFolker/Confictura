@@ -117,7 +117,7 @@ public class ConficturaProc{
         for(var proc : procs) proc.finish();
         wait(f -> atlas.each(reg -> f.get(exec.submit(() -> {
             var pix = reg.pixmap;
-            Pixmaps.bleed(pix);
+            Pixmaps.bleed(pix, 3);
 
             var prev = pix.copy();
             Color color = new Color(), sum = new Color(), suma = new Color();
@@ -180,6 +180,7 @@ public class ConficturaProc{
             }
 
             prev.dispose();
+            Pixmaps.bleed(pix, Integer.MAX_VALUE);
 
             var name = reg.file.name();
             if(name.endsWith(".floor.png")){

@@ -2,7 +2,7 @@ import arc.files.*
 import arc.struct.*
 import arc.util.*
 import arc.util.io.*
-import arc.util.serialization.Jval.*
+import arc.util.serialization.*
 import ent.*
 import java.io.*
 import java.nio.charset.*
@@ -249,8 +249,8 @@ project(":"){
 
         doFirst{
             output.parentFile.mkdirs()
-            val packages = newArray()
-            val classes = newArray()
+            val packages = Jval.newArray()
+            val classes = Jval.newArray()
 
             val forbid = Pattern.compile("\\$\\d+|.+Impl")
             fun proc(path: String, dir: File){
@@ -281,8 +281,8 @@ project(":"){
                 }
             }
 
-            val compacted = newObject().put("packages", packages).put("classes", classes)
-            BufferedWriter(FileWriter(output, StandardCharsets.UTF_8, false)).use{compacted.writeTo(it, Jformat.formatted)}
+            val compacted = Jval.newObject().put("packages", packages).put("classes", classes)
+            BufferedWriter(FileWriter(output, StandardCharsets.UTF_8, false)).use{compacted.writeTo(it, Jval.Jformat.formatted)}
         }
     }
 
@@ -327,11 +327,11 @@ project(":"){
             logger.lifecycle("Building ${if(isDev) "developer" else "user"} artifact.")
 
             val map = FileReader(layout.projectDirectory.file("mod.json").asFile, StandardCharsets.UTF_8)
-                .use{read(it)}
+                .use{Jval.read(it)}
                 .put("name", modName)
 
             BufferedWriter(FileWriter(meta, StandardCharsets.UTF_8, false))
-                .use{map.writeTo(it, Jformat.formatted)}
+                .use{map.writeTo(it, Jval.Jformat.formatted)}
         }
     }
 
@@ -347,7 +347,7 @@ project(":"){
             exec{
                 // Find Android SDK root.
                 val sdkRoot = File(
-                    System.getenv("ANDROID_SDK_ROOT") ?: System.getenv("ANDROID_HOME") ?:
+                    OS.env("ANDROID_SDK_ROOT") ?: OS.env("ANDROID_HOME") ?:
                     throw IllegalStateException("Neither `ANDROID_SDK_ROOT` nor `ANDROID_HOME` is set.")
                 )
 

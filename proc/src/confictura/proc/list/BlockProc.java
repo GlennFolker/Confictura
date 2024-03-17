@@ -2,12 +2,12 @@ package confictura.proc.list;
 
 import arc.func.*;
 import arc.graphics.*;
-import arc.util.*;
 import arc.util.serialization.*;
 import arc.util.serialization.Jval.*;
 import confictura.*;
 import confictura.proc.*;
 import confictura.proc.GenAtlas.*;
+import confictura.world.blocks.environment.*;
 import mindustry.world.blocks.environment.*;
 
 import java.io.*;
@@ -33,7 +33,7 @@ public class BlockProc implements Proc{
             block.createIcons(packer);
             block.load();
 
-            if(block instanceof Floor floor){
+            if(block instanceof EdgeFloor floor){
                 for(var variant : chain(iter(floor.variantRegions), iter(floor.editorVariantRegions()))){
                     var reg = atlas.conv(variant);
                     var pix = reg.pixmap();

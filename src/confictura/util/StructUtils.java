@@ -3,6 +3,7 @@ package confictura.util;
 import arc.func.*;
 import arc.util.*;
 
+import java.lang.reflect.*;
 import java.util.*;
 
 /**
@@ -61,6 +62,16 @@ public final class StructUtils{
 
     public static <T> float average(T[] array, Floatf<T> extract){
         return reducef(array, 0f, (item, accum) -> accum + extract.get(item)) / array.length;
+    }
+
+    public static <T> T[] resize(T[] array, int newSize, T fill){
+        if(array.length == newSize) return array;
+
+        var out = (T[])Array.newInstance(array.getClass().getComponentType(), newSize);
+        System.arraycopy(array, 0, out, 0, Math.min(array.length, newSize));
+
+        if(fill != null && newSize > array.length) Arrays.fill(out, array.length, newSize, fill);
+        return out;
     }
 
     public interface Reducei<T>{

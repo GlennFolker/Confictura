@@ -107,7 +107,7 @@ public class ConficturaMod extends Mod{
                 public void loadAsync(){
                     pixmaps = new ObjectMap<>();
                     var regions = content.blocks().flatMap(b -> {
-                        if(b instanceof CFloor floor){
+                        if(b instanceof EdgeFloor floor){
                             return chain(iter(b.variantRegions), iter(b.editorVariantRegions()));
                         }else{
                             return empty();
@@ -165,7 +165,7 @@ public class ConficturaMod extends Mod{
 
                 @Override
                 public String getName(){
-                    return "confictura-floor-refine";
+                    return EdgeFloor.class.getSimpleName();
                 }
             });
         }

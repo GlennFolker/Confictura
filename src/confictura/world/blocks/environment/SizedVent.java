@@ -1,12 +1,10 @@
 package confictura.world.blocks.environment;
 
-import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.geom.*;
 import arc.util.*;
 import mindustry.content.*;
 import mindustry.entities.*;
-import mindustry.graphics.*;
 import mindustry.world.*;
 import mindustry.world.blocks.environment.*;
 
@@ -25,7 +23,6 @@ public class SizedVent extends Floor{
 
     public Block parent = Blocks.air;
     public Effect effect = Fx.ventSteam;
-    public Color effectColor = Pal.vent;
     public float effectSpacing = 15f;
 
     public SizedVent(String name, int size, int border){
@@ -63,7 +60,7 @@ public class SizedVent extends Floor{
                 y += tilesize / 2f;
             }
 
-            effect.at(x, y, effectColor);
+            effect.at(x, y);
             state.data = 0f;
         }
     }

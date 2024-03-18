@@ -267,7 +267,7 @@ project(":"){
                             val name = it.name.substring(0, dot)
                             val ext = it.name.substring(dot + 1)
 
-                            if(ext == "class" && !forbid.matcher(name).find()) classes.add("$path.$name")
+                            if(ext == "class" && !forbid.matcher(name).matches()) classes.add("$path.$name")
                         }
                     }
                 }

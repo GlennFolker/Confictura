@@ -2,6 +2,7 @@ package confictura.world.blocks.environment;
 
 import arc.graphics.*;
 import arc.graphics.g2d.*;
+import confictura.graphics.g2d.*;
 import mindustry.content.*;
 import mindustry.graphics.*;
 import mindustry.graphics.MultiPacker.*;
@@ -16,6 +17,8 @@ import static mindustry.Vars.*;
  */
 public class EdgeFloor extends Floor{
     public TextureRegion[][][] edges;
+    /** If {@code true}, edges will use regions for the originating tile instead of the target tile. */
+    public boolean absolute = false;
 
     public EdgeFloor(String name){
         super(name);
@@ -48,20 +51,36 @@ public class EdgeFloor extends Floor{
             blendGroup = blend;
 
             // Instead, create individual edges for each variant.
-            var edge = atlas.getPixmap(atlas.find(name + "-edge-stencil", "edge-stencil"));
-            var result = new Pixmap(edge.width, edge.height);
             for(int i = 0; i < variantRegions.length; i++){
-                var image = atlas.getPixmap(variantRegions[i]);
+                if(packer.has(PageType.environment, name + "-edge" + (i + 1))) continue;
+
+                // These two are to be excluded from the final texture atlas.
+                var stencil = atlas.find(name + "-edge-stencil" + (i + 1), "edge-stencil");
+                var template = atlas.find(name + "-edge-template" + (i + 1), variantRegions[i]);
+
+                var edge = atlas.getPixmap(stencil);
+                var result = new Pixmap(edge.width, edge.height);
+                var image = atlas.getPixmap(template);
                 result.each((x, y) -> result.setRaw(x, y, Color.muli(edge.getRaw(x, y), image.getRaw(x % image.width, y % image.height))));
 
                 packer.add(PageType.environment, name + "-edge" + (i + 1), result);
+                result.dispose();
+
+                if(atlas instanceof FreeableAtlas free){
+                    free.delete(stencil);
+                    if(template != variantRegions[i]) free.delete(template);
+                }
             }
-            result.dispose();
         }
     }
 
     @Override
     public TextureRegion[][] edges(int x, int y){
         return blendGroup != this ? super.edges(x, y) : edges[variant(x, y)];
+    }
+
+    @Override
+    protected TextureRegion edge(int x, int y, int rx, int ry){
+        return (absolute ? edges(x - rx, y - ry) : edges(x, y))[rx][2 - ry];
     }
 }

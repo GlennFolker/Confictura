@@ -92,13 +92,15 @@ public class BlockProc implements Proc{
 
     @Override
     public void finish(){
-        var out = assetsDir.child("meta").child("confictura").child("block-colors.json");
-        try(var writer = new OutputStreamWriter(out.write(false, 4096), StandardCharsets.UTF_8)){
-            blockColors.writeTo(writer, Jformat.formatted);
-        }catch(IOException e){
-            throw new RuntimeException(e);
-        }
+        synchronized(BlockProc.class){
+            var out = assetsDir.child("meta").child("confictura").child("block-colors.json");
+            try(var writer = new OutputStreamWriter(out.write(false, 4096), StandardCharsets.UTF_8)){
+                blockColors.writeTo(writer, Jformat.formatted);
+            }catch(IOException e){
+                throw new RuntimeException(e);
+            }
 
-        blockColors = null;
+            blockColors = null;
+        }
     }
 }

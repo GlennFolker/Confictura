@@ -3,15 +3,26 @@ package confictura.proc;
 import arc.files.*;
 import arc.graphics.Texture.*;
 import arc.graphics.g2d.*;
+import confictura.graphics.g2d.*;
 import confictura.proc.GenAtlas.*;
 import mindustry.graphics.*;
 
 import static confictura.proc.ConficturaProc.*;
 
-public class GenPacker extends MultiPacker{
+public class GenPacker extends MultiPacker implements FreeablePacker{
     @Override
     public PixmapRegion get(String name){
         return new PixmapRegion(atlas.find(name).pixmap());
+    }
+
+    @Override
+    public void delete(String name){
+        atlas.delete(name);
+    }
+
+    @Override
+    public void delete(PageType type, String name){
+        atlas.delete(name);
     }
 
     @Override

@@ -39,10 +39,17 @@ public class ConficturaProc{
     public static Fi assetsDir;
 
     public static void main(String[] args){
+        loadLogger();
+        Log.info("[Confictura-Proc] Sprite processing initiated...");
+
+        var logger = Log.logger;
+        Log.logger = new NoopLogHandler();
+
+        long mark = Time.millis(), program = mark;
+
         var exec = Threads.executor("Confictura-Executor", OS.cores * 2);
         assetsDir = Fi.get(args[0]);
 
-        Log.logger = new NoopLogHandler();
         try{
             ArcNativesLoader.load();
         }catch(Throwable ignored){}
@@ -88,7 +95,10 @@ public class ConficturaProc{
         runs.run();
 
         main.init();
-        loadLogger();
+        Log.logger = logger;
+
+        Log.info("[Confictura-Proc] Initialization took @ms.", Time.timeSinceMillis(mark));
+        mark = Time.millis();
 
         wait(f -> Fi.get("sprites").walk(file -> {
             if(file.extEquals("png")) f.get(exec.submit(() -> {
@@ -97,6 +107,7 @@ public class ConficturaProc{
             }));
         }));
 
+        Log.info("[Confictura-Proc] Pixmaps atlas mapping took @ms.", Time.timeSinceMillis(mark));
         wait(f -> {
             for(var proc : procs){
                 long started = Time.millis();
@@ -108,13 +119,14 @@ public class ConficturaProc{
                 runs.each(run -> f.get(exec.submit(() -> {
                     run.run();
                     if(remaining.addAndGet(-1) == 0){
-                        Log.info("[Confictura-Proc] Total time taken for '@': @ms", proc.getClass().getSimpleName(), Time.timeSinceMillis(started));
+                        proc.finish();
+                        Log.info("[Confictura-Proc] '@' took @ms.", proc.getClass().getSimpleName(), Time.timeSinceMillis(started));
                     }
                 })));
             }
         });
 
-        for(var proc : procs) proc.finish();
+        mark = Time.millis();
         wait(f -> atlas.each(reg -> f.get(exec.submit(() -> {
             var pix = reg.pixmap;
             Pixmaps.bleed(pix, 3);
@@ -195,8 +207,12 @@ public class ConficturaProc{
             }
         }))));
 
+        Log.info("[Confictura-Proc] Anti-aliasing and alpha-bleeding took @ms.", Time.timeSinceMillis(mark));
+
         atlas.dispose();
         Threads.await(exec);
+
+        Log.info("[Confictura-Proc] Sprite processing finished, took @ms.", Time.timeSinceMillis(program));
     }
 
     protected static <T> void wait(Cons<Cons<Future<? extends T>>> futures){

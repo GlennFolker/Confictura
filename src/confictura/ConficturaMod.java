@@ -203,12 +203,7 @@ public class ConficturaMod extends Mod{
             }
         });
 
-        app.post(() -> {
-            mod = mods.getMod(ConficturaMod.class);
-
-            ScriptUtils.init();
-            cinematic = new Cinematic();
-        });
+        app.post(() -> mod = mods.getMod(ConficturaMod.class));
     }
 
     @Override
@@ -226,6 +221,9 @@ public class ConficturaMod extends Mod{
     public void loadContent(){
         EntityRegistry.register();
 
+        ScriptUtils.init();
+        cinematic = new Cinematic();
+
         CBlocks.load();
         CPlanets.load();
         CSectorPresets.load();
@@ -241,11 +239,11 @@ public class ConficturaMod extends Mod{
         }
     }
 
-    public static boolean isConfictura(Content content){
+    public static boolean isConfictura(@Nullable Content content){
         return content != null && isConfictura(content.minfo.mod);
     }
 
-    public static boolean isConfictura(LoadedMod mod){
+    public static boolean isConfictura(@Nullable LoadedMod mod){
         return mod != null && mod == mod();
     }
 

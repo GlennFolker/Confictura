@@ -129,12 +129,12 @@ public class ConficturaProc{
         mark = Time.millis();
         wait(f -> atlas.each(reg -> f.get(exec.submit(() -> {
             var pix = reg.pixmap;
-            Pixmaps.bleed(pix, 3);
+            Pixmaps.bleed(pix, Integer.MAX_VALUE);
 
             var prev = pix.copy();
             Color color = new Color(), sum = new Color(), suma = new Color();
 
-            int[] p = new int[9];
+            int[] samples = new int[9];
             for(int x = 0; x < prev.width; x++){
                 for(int y = 0; y < prev.height; y++){
                     int A = prev.getRaw(Math.max(x - 1, 0), Math.min(y + 1, prev.height - 1)),
@@ -147,20 +147,19 @@ public class ConficturaProc{
                         H = prev.getRaw(x, Math.max(y - 1, 0)),
                         I = prev.getRaw(Math.min(x + 1, prev.width - 1), Math.max(y - 1, 0));
 
-                    Arrays.fill(p, E);
-                    if(D == B && D != H && B != F) p[0] = D;
-                    if((D == B && D != H && B != F && E != C) || (B == F && B != D && F != H && E != A)) p[1] = B;
-                    if(B == F && B != D && F != H) p[2] = F;
-                    if((H == D && H != F && D != B && E != A) || (D == B && D != H && B != F && E != G)) p[3] = D;
-                    if((B == F && B != D && F != H && E != I) || (F == H && F != B && H != D && E != C)) p[5] = F;
-                    if(H == D && H != F && D != B) p[6] = D;
-                    if((F == H && F != B && H != D && E != G) || (H == D && H != F && D != B && E != I)) p[7] = H;
-                    if(F == H && F != B && H != D) p[8] = F;
+                    Arrays.fill(samples, E);
+                    if(D == B && D != H && B != F) samples[0] = D;
+                    if((D == B && D != H && B != F && E != C) || (B == F && B != D && F != H && E != A)) samples[1] = B;
+                    if(B == F && B != D && F != H) samples[2] = F;
+                    if((H == D && H != F && D != B && E != A) || (D == B && D != H && B != F && E != G)) samples[3] = D;
+                    if((B == F && B != D && F != H && E != I) || (F == H && F != B && H != D && E != C)) samples[5] = F;
+                    if(H == D && H != F && D != B) samples[6] = D;
+                    if((F == H && F != B && H != D && E != G) || (H == D && H != F && D != B && E != I)) samples[7] = H;
+                    if(F == H && F != B && H != D) samples[8] = F;
 
                     suma.set(0f, 0f, 0f, 0f);
-                    for(int val : p){
-                        color.set(val);
-                        color.premultiplyAlpha();
+                    for(int val : samples){
+                        color.set(val).premultiplyAlpha();
                         suma.r += color.r;
                         suma.g += color.g;
                         suma.b += color.b;
@@ -173,9 +172,10 @@ public class ConficturaProc{
                     float total = 0;
                     sum.set(0f, 0f, 0f, 0f);
 
-                    for(int val : p){
+                    for(int val : samples){
                         color.set(val);
                         float a = color.a;
+
                         color.lerp(suma, (1f - a));
                         sum.r += color.r;
                         sum.g += color.g;
@@ -187,7 +187,6 @@ public class ConficturaProc{
                     fm = (1f / total);
                     sum.mul(fm, fm, fm, fm);
                     pix.setRaw(x, y, sum.rgba());
-                    sum.set(0f, 0f, 0f, 0f);
                 }
             }
 

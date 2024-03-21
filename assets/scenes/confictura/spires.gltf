@@ -9,27 +9,48 @@
 		{
 			"name":"Scene",
 			"nodes":[
-				0
+				0,
+				1
 			]
 		}
 	],
 	"nodes":[
 		{
 			"mesh":0,
-			"name":"Spire"
+			"name":"SpireSmall1"
+		},
+		{
+			"mesh":1,
+			"name":"SpireSmall2",
+			"translation":[
+				3,
+				0,
+				0
+			]
 		}
 	],
 	"meshes":[
 		{
-			"name":"Spire",
+			"name":"SpireSmall1",
 			"primitives":[
 				{
 					"attributes":{
-						"COLOR_0":0,
-						"POSITION":1,
-						"NORMAL":2
+						"POSITION":0,
+						"NORMAL":1
 					},
-					"indices":3
+					"indices":2
+				}
+			]
+		},
+		{
+			"name":"SpireSmall2",
+			"primitives":[
+				{
+					"attributes":{
+						"POSITION":3,
+						"NORMAL":4
+					},
+					"indices":5
 				}
 			]
 		}
@@ -37,15 +58,8 @@
 	"accessors":[
 		{
 			"bufferView":0,
-			"componentType":5123,
-			"count":67,
-			"normalized":true,
-			"type":"VEC4"
-		},
-		{
-			"bufferView":1,
 			"componentType":5126,
-			"count":67,
+			"count":70,
 			"max":[
 				1,
 				4,
@@ -59,47 +73,87 @@
 			"type":"VEC3"
 		},
 		{
-			"bufferView":2,
+			"bufferView":1,
 			"componentType":5126,
-			"count":67,
+			"count":70,
 			"type":"VEC3"
 		},
 		{
-			"bufferView":3,
+			"bufferView":2,
 			"componentType":5123,
-			"count":84,
+			"count":90,
+			"type":"SCALAR"
+		},
+		{
+			"bufferView":3,
+			"componentType":5126,
+			"count":38,
+			"max":[
+				1,
+				2,
+				1
+			],
+			"min":[
+				-1,
+				0,
+				-1
+			],
+			"type":"VEC3"
+		},
+		{
+			"bufferView":4,
+			"componentType":5126,
+			"count":38,
+			"type":"VEC3"
+		},
+		{
+			"bufferView":5,
+			"componentType":5123,
+			"count":42,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":536,
+			"byteLength":840,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":804,
-			"byteOffset":536,
+			"byteLength":840,
+			"byteOffset":840,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":804,
-			"byteOffset":1340,
+			"byteLength":180,
+			"byteOffset":1680,
+			"target":34963
+		},
+		{
+			"buffer":0,
+			"byteLength":456,
+			"byteOffset":1860,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":168,
-			"byteOffset":2144,
+			"byteLength":456,
+			"byteOffset":2316,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":84,
+			"byteOffset":2772,
 			"target":34963
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":2312,
+			"byteLength":2856,
 			"uri":"spires.bin"
 		}
 	]

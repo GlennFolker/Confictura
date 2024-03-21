@@ -17,7 +17,7 @@ public final class CModels{
     public static Scenes3D portal;
 
     public static Node portalBase, portalCage;
-    public static Mesh slateSpire;
+    public static Mesh spireSmall1, spireSmall2;
 
     private CModels(){
         throw new AssertionError();
@@ -37,9 +37,11 @@ public final class CModels{
         assets
             .load("scenes/confictura/portal.gltf#Cage", Node.class)
             .loaded = node -> portalCage = node;
-
         assets
-            .load("scenes/confictura/spires.gltf#Spire", MeshSet.class)
-            .loaded = set -> slateSpire = set.containers.first().mesh;
+            .load("scenes/confictura/spires.gltf", Scenes3D.class)
+            .loaded = scene -> {
+            spireSmall1 = scene.meshNames.get("SpireSmall1").containers.first().mesh;
+            spireSmall2 = scene.meshNames.get("SpireSmall2").containers.first().mesh;
+        };
     }
 }

@@ -20,7 +20,7 @@ import static confictura.util.StructUtils.*;
 import static mindustry.Vars.*;
 
 public class ModelPropDrawer implements Disposable{
-    public static final VertexAttribute[] attributes = {new VertexAttribute(4, Gl.unsignedShort, true, "a_color"), VertexAttribute.position3, VertexAttribute.normal};
+    public static final VertexAttribute[] attributes = {VertexAttribute.position3, VertexAttribute.normal};
     public static final int attribStride = sumi(attributes, attrib -> attrib.size / Float.BYTES);
     public static final Boolf2<VertexAttribute, VertexAttribute> attribEq = (a, b) ->
         a.components == b.components &&
@@ -55,7 +55,7 @@ public class ModelPropDrawer implements Disposable{
     protected int vertexOffset, indexOffset;
 
     public ModelPropDrawer(ModelPropShader shader, int maxVertices, int maxIndices){
-        batch = new Mesh(false, maxVertices, maxIndices, attributes);
+        batch = new Mesh(false, maxVertices, maxIndices, VertexAttribute.position3, VertexAttribute.normal, VertexAttribute.color);
         this.shader = shader;
         vertices = new float[maxVertices * batch.vertexSize];
         indices = new short[maxIndices];
@@ -77,9 +77,10 @@ public class ModelPropDrawer implements Disposable{
         });
     }
 
-    public void draw(Mesh mesh, float x, float y, float rotation){
+    public void draw(Mesh mesh, float x, float y, float rotation, Color color){
         var req = pool.obtain();
         req.trns.set(pos.set(x, 0f, -y), quat.setFromAxis(Vec3.Y, rotation), scl.set(tilesize, tilesize, tilesize).scl(0.5f));
+        req.color.set(color);
         req.data = getData(mesh);
         requests.add(req);
     }
@@ -105,27 +106,29 @@ public class ModelPropDrawer implements Disposable{
         Gl.clearColor(0f, 0f, 0f, 0f);
         Gl.clear(Gl.colorBufferBit | Gl.depthBufferBit);
 
+        int vertStride = batch.vertexSize / Float.BYTES;
         for(var req : requests){
             var trns = req.trns;
+            var color = req.color;
             var data = req.data;
 
             var input = data.vertices;
-            if(input.length >= vertices.length - vertexOffset * attribStride || data.indices.length >= indices.length - indexOffset) flush();
+            if(input.length >= vertices.length - vertexOffset * vertStride || data.indices.length >= indices.length - indexOffset) flush();
 
-            int offset = vertexOffset * attribStride;
-            for(int i = 0; i < input.length; i += attribStride){
-                int index = offset + i;
-                System.arraycopy(input, i, vertices, index, Short.BYTES * 4 / Float.BYTES);
+            int offset = vertexOffset * vertStride;
+            for(int i = 0; i < input.length / attribStride; i++){
+                int src = i * attribStride, dst = offset + i * vertStride;
 
-                var p = Mat3D.prj(vec.set(input[i + 2], input[i + 3], input[i + 4]), trns);
-                vertices[index + 2] = p.x;
-                vertices[index + 3] = p.y;
-                vertices[index + 4] = p.z;
+                var p = Mat3D.prj(vec.set(input[src], input[src + 1], input[src + 2]), trns);
+                vertices[dst] = p.x;
+                vertices[dst + 1] = p.y;
+                vertices[dst + 2] = p.z;
 
-                var n = Mat3D.prj(vec.set(input[i + 5], input[i + 6], input[i + 7]), nor.set(trns).toNormalMatrix()).nor();
-                vertices[index + 5] = n.x;
-                vertices[index + 6] = n.y;
-                vertices[index + 7] = n.z;
+                var n = Mat3D.prj(vec.set(input[src + 3], input[src + 4], input[src + 5]), nor.set(trns).toNormalMatrix()).nor();
+                vertices[dst + 3] = n.x;
+                vertices[dst + 4] = n.y;
+                vertices[dst + 5] = n.z;
+                vertices[dst + 6] = color.toFloatBits();
             }
 
             for(short index : data.indices) indices[indexOffset++] = (short)(vertexOffset + index);
@@ -153,7 +156,7 @@ public class ModelPropDrawer implements Disposable{
         shader.lightDir.set(-1f, -1f, 1f).nor();
         shader.apply();
 
-        batch.setVertices(vertices, 0, vertexOffset * attribStride);
+        batch.setVertices(vertices, 0, vertexOffset * batch.vertexSize / Float.BYTES);
         batch.setIndices(indices, 0, indexOffset);
         batch.render(shader, Gl.triangles, 0, indexOffset);
 
@@ -179,6 +182,7 @@ public class ModelPropDrawer implements Disposable{
 
     public static class Req{
         public Mat3D trns = new Mat3D();
+        public Color color = new Color();
         public PropData data;
     }
 }

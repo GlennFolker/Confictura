@@ -1,5 +1,6 @@
 package confictura.content;
 
+import arc.graphics.*;
 import confictura.*;
 import confictura.graphics.*;
 import confictura.world.blocks.environment.*;
@@ -18,7 +19,7 @@ public final class CBlocks{
     ludellyte,
     erodedSlate, infErodedSlate, archErodedSlate, erodedEneraphyteVent, erodedSlateWall, infErodedSlateWall, archErodedSlateWall,
     sharpSlate, infSharpSlate, archSharpSlate, eneraphyteVent, sharpSlateWall, infSharpSlateWall, archSharpSlateWall,
-    slateSpire,
+    erodedSpire, sharpSpire,
     eneraphyteCrystal;
 
     private CBlocks(){
@@ -105,6 +106,7 @@ public final class CBlocks{
             lightRadius = 48f;
         }};
 
-        slateSpire = new ModelProp("slate-spire", () -> CModels.slateSpire);
+        erodedSpire = new ModelProp("eroded-spire", erodedSlateWall, new Color(0x454858ff), () -> CModels.spireSmall1, () -> CModels.spireSmall2);
+        sharpSpire = new ModelProp("sharp-spire", sharpSlateWall, new Color(0x6e7080ff), () -> CModels.spireSmall1, () -> CModels.spireSmall2);
     }
 }

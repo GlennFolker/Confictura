@@ -3,6 +3,7 @@ package confictura.world.blocks.environment;
 import arc.graphics.g2d.*;
 import arc.math.geom.*;
 import arc.util.*;
+import confictura.world.blocks.*;
 import mindustry.content.*;
 import mindustry.entities.*;
 import mindustry.world.*;
@@ -16,7 +17,7 @@ import static mindustry.Vars.*;
  * the bottom-left middle) should update and draw the actual sprite.
  * @author GlennFolker
  */
-public class SizedVent extends Floor{
+public class SizedVent extends Floor implements DelegateMapColor{
     protected static Point2[][] offsets = new Point2[0][];
 
     public int border;
@@ -29,6 +30,11 @@ public class SizedVent extends Floor{
         super(name);
         this.size = size;
         this.border = border;
+    }
+
+    @Override
+    public Block substitute(){
+        return parent;
     }
 
     @Override

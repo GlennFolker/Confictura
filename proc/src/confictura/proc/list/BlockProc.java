@@ -5,15 +5,16 @@ import arc.graphics.*;
 import arc.util.*;
 import arc.util.serialization.*;
 import arc.util.serialization.Jval.*;
-import confictura.*;
 import confictura.proc.*;
 import confictura.proc.GenAtlas.*;
+import confictura.world.blocks.*;
 import confictura.world.blocks.environment.*;
 import mindustry.world.blocks.environment.*;
 
 import java.io.*;
 import java.nio.charset.*;
 
+import static confictura.ConficturaMod.*;
 import static confictura.proc.ConficturaProc.*;
 import static confictura.util.StructUtils.*;
 import static mindustry.Vars.*;
@@ -26,7 +27,7 @@ public class BlockProc implements Proc{
         blockColors = Jval.newObject();
 
         var packer = new GenPacker();
-        content.blocks().each(ConficturaMod::isConfictura, block -> async.get(() -> {
+        content.blocks().each(b -> isConfictura(b) && b.generateIcons, block -> async.get(() -> {
             try{
                 block.init();
                 block.loadIcon();
@@ -60,37 +61,49 @@ public class BlockProc implements Proc{
                 }
 
                 block.load();
-                var icon = atlas.conv(block.fullIcon).pixmap();
 
-                boolean hollow = false;
-                Color average = new Color(), col = new Color();
+                if(block instanceof DelegateMapColor map){
+                    synchronized(BlockProc.class){
+                        var sub = map.substitute();
+                        if(isConfictura(sub)){
+                            blockColors.put(block.name.substring("confictura-".length()), sub.name.substring("confictura-".length()));
+                        }else{
+                            throw new IllegalArgumentException(Strings.format("Block '@' has non-Confictura map color substitution '@'.", block.name, sub.name));
+                        }
+                    }
+                }else{
+                    var icon = atlas.conv(block.fullIcon).pixmap();
 
-                for(int x = 0, width = icon.width; x < width; x++){
-                    for(int y = 0, height = icon.height; y < height; y++){
-                        col.set(icon.getRaw(x, y));
-                        average.r += col.r;
-                        average.g += col.g;
-                        average.b += col.b;
-                        average.a += col.a;
-                        if(col.a < 0.9f) hollow = true;
+                    boolean hollow = false;
+                    Color average = new Color(), col = new Color();
+
+                    for(int x = 0, width = icon.width; x < width; x++){
+                        for(int y = 0, height = icon.height; y < height; y++){
+                            col.set(icon.getRaw(x, y));
+                            average.r += col.r;
+                            average.g += col.g;
+                            average.b += col.b;
+                            average.a += col.a;
+                            if(col.a < 0.9f) hollow = true;
+                        }
+                    }
+
+                    float a = average.a;
+                    average.mul(1f / a);
+
+                    if(block instanceof Floor floor && !floor.wallOre){
+                        average.mul(0.77f);
+                    }else{
+                        average.mul(1.1f);
+                    }
+
+                    average.a = hollow ? 0f : 1f;
+                    synchronized(BlockProc.class){
+                        blockColors.put(block.name.substring("confictura-".length()), average.rgba());
                     }
                 }
-
-                float a = average.a;
-                average.mul(1f / a);
-
-                if(block instanceof Floor floor && !floor.wallOre){
-                    average.mul(0.77f);
-                }else{
-                    average.mul(1.1f);
-                }
-
-                average.a = hollow ? 0f : 1f;
-                synchronized(BlockProc.class){
-                    blockColors.put(block.name.substring("confictura-".length()), average.rgba());
-                }
             }catch(Throwable t){
-                Log.warn("Skipping '@': @", block.name, Strings.getFinalMessage(t));
+                Log.warn("Skipping '@': @", block.name.substring("confictura-".length()), Strings.getFinalMessage(t));
             }
         }));
     }
@@ -98,6 +111,11 @@ public class BlockProc implements Proc{
     @Override
     public void finish(){
         synchronized(BlockProc.class){
+            var map = blockColors.asObject();
+            for(var e : map){
+                if(e.value.isString()) map.put(e.key, map.get(e.value.asString()));
+            }
+
             var out = assetsDir.child("meta").child("confictura").child("block-colors.json");
             try(var writer = new OutputStreamWriter(out.write(false, 4096), StandardCharsets.UTF_8)){
                 blockColors.writeTo(writer, Jformat.formatted);

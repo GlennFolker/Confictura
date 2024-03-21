@@ -74,6 +74,14 @@ public final class StructUtils{
         return out;
     }
 
+    public static <T> boolean arrayEq(T[] first, T[] second, Boolf2<T, T> eq){
+        if(first.length != second.length) return false;
+        for(int i = 0; i < first.length; i++){
+            if(!eq.get(first[i], second[i])) return false;
+        }
+        return true;
+    }
+
     public interface Reducei<T>{
         int get(T item, int accum);
     }

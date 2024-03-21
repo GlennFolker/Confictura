@@ -19,6 +19,7 @@ public final class CShaders{
     public static PortalForcefieldShader portalForcefield;
     public static PortalBatchShader portalBatch;
     public static CelestialShader celestial;
+    public static ModelPropShader modelProp;
 
     private CShaders(){
         throw new AssertionError();
@@ -38,6 +39,7 @@ public final class CShaders{
         portalForcefield = new PortalForcefieldShader();
         portalBatch = new PortalBatchShader();
         celestial = new CelestialShader();
+        modelProp = new ModelPropShader();
 
         Shader.prependVertexCode = prevVert;
         Shader.prependFragmentCode = prevFrag;

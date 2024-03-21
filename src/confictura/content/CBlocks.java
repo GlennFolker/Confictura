@@ -1,6 +1,7 @@
 package confictura.content;
 
 import confictura.*;
+import confictura.graphics.*;
 import confictura.world.blocks.environment.*;
 import mindustry.world.*;
 import mindustry.world.blocks.environment.*;
@@ -13,10 +14,12 @@ import static confictura.graphics.CPal.*;
  */
 public final class CBlocks{
     public static Block
-        ludellyte,
-        erodedSlate, infErodedSlate, archErodedSlate, erodedEneraphyteVent, erodedSlateWall, infErodedSlateWall, archErodedSlateWall,
-        sharpSlate, infSharpSlate, archSharpSlate, eneraphyteVent, sharpSlateWall, infSharpSlateWall, archSharpSlateWall,
-        eneraphyteCrystal;
+
+    ludellyte,
+    erodedSlate, infErodedSlate, archErodedSlate, erodedEneraphyteVent, erodedSlateWall, infErodedSlateWall, archErodedSlateWall,
+    sharpSlate, infSharpSlate, archSharpSlate, eneraphyteVent, sharpSlateWall, infSharpSlateWall, archSharpSlateWall,
+    slateSpire,
+    eneraphyteCrystal;
 
     private CBlocks(){
         throw new AssertionError();
@@ -101,5 +104,7 @@ public final class CBlocks{
             lightColor.set(monolithLight).a(0.18f);
             lightRadius = 48f;
         }};
+
+        slateSpire = new ModelProp("slate-spire", () -> CModels.slateSpire);
     }
 }

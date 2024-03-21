@@ -26,6 +26,15 @@ public final class MathUtils{
         return to;
     }
 
+    public static Vec3 mul(Mat mat, float x, float y, float z, Vec3 out){
+        var m = mat.val;
+        return out.set(
+            m[Mat.M00] * x + m[Mat.M10] * y + m[Mat.M20] * z,
+            m[Mat.M01] * x + m[Mat.M11] * y + m[Mat.M21] * z,
+            m[Mat.M02] * x + m[Mat.M12] * y + m[Mat.M22] * z
+        );
+    }
+
     public static Vec3 normal(Vec3 out, Vec3 a, Vec3 b, Vec3 c){
         return out.set(b).sub(a).crs(c.x - a.x, c.y - a.y, c.z - a.z).nor();
     }

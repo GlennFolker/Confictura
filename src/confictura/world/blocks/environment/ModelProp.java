@@ -20,6 +20,8 @@ public class ModelProp extends Block{
 
     @Override
     public void drawBase(Tile tile){
+        float z = Draw.z();
         Draw.draw(ModelPropDrawer.accumLayer, () -> modelPropDrawer.draw(mesh.get(), tile.drawx(), tile.drawy(), Mathf.randomSeed(tile.pos(), 0, 4) * 90f));
+        Draw.z(z);
     }
 }

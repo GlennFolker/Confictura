@@ -12,6 +12,7 @@ import arc.struct.*;
 import arc.util.*;
 import arc.util.pooling.*;
 import confictura.graphics.shaders.*;
+import mindustry.core.*;
 import mindustry.game.EventType.*;
 import mindustry.graphics.*;
 
@@ -36,6 +37,7 @@ public class ModelPropDrawer implements Disposable{
     private static final Vec3 pos = new Vec3(), scl = new Vec3(), vec = new Vec3();
     private static final Quat quat = new Quat();
     private static final Mat3D nor = new Mat3D();
+    private static final Color col = new Color();
 
     protected ObjectMap<Mesh, PropData> data = new ObjectMap<>();
     protected Camera3D cam = new Camera3D(){{
@@ -54,13 +56,54 @@ public class ModelPropDrawer implements Disposable{
     protected short[] indices;
     protected int vertexOffset, indexOffset;
 
+    protected float[] darkness;
+
     public ModelPropDrawer(ModelPropShader shader, int maxVertices, int maxIndices){
-        batch = new Mesh(false, maxVertices, maxIndices, VertexAttribute.position3, VertexAttribute.normal, VertexAttribute.color);
+        batch = new Mesh(false, maxVertices, maxIndices,
+            VertexAttribute.position3, VertexAttribute.normal, VertexAttribute.color, new VertexAttribute(1, Gl.floatV, false, "a_darkness")
+        );
+
         this.shader = shader;
         vertices = new float[maxVertices * batch.vertexSize];
         indices = new short[maxIndices];
 
         Events.run(Trigger.drawOver, () -> Draw.draw(flushLayer, this::render));
+
+        Events.on(WorldLoadEvent.class, e -> {
+            darkness = new float[world.width() * world.height()];
+            world.tiles.each(this::updateDarkness);
+        });
+
+        Events.on(TileChangeEvent.class, e -> updateDarkness(e.tile.x, e.tile.y));
+    }
+
+    protected void updateDarkness(int x, int y){
+        float dark = world.getDarkness(x, y);
+        if(dark > 0f){
+            darkness[world.packArray(x, y)] = 1f - Math.min((dark + 0.5f) / 4f, 1f);
+        }else{
+            darkness[world.packArray(x, y)] = 1f;
+        }
+    }
+
+    protected float darkness(float x, float y){
+        x /= tilesize;
+        y /= tilesize;
+
+        int x1 = (int)x, x2 = x1 + 1,
+            y1 = (int)y, y2 = y1 + 1;
+
+        float out = state.rules.borderDarkness ? 0f : 1f;
+        var t = world.tiles;
+
+        return Mathf.lerp(
+            Mathf.lerp(t.in(x1, y1) ? darkness[world.packArray(x1, y1)] : out, t.in(x2, y1) ? darkness[world.packArray(x2, y1)] : out, x % 1f),
+            Mathf.lerp(t.in(x1, y2) ? darkness[world.packArray(x1, y2)] : out, t.in(x2, y2) ? darkness[world.packArray(x2, y2)] : out, x % 1f),
+            y % 1f
+        );
+
+        //int tx = World.toTile(x), ty = World.toTile(y);
+        //return world.tiles.in(tx, ty) ? darkness[world.packArray(tx, ty)] : state.rules.borderDarkness ? 0f : 1f;
     }
 
     public PropData getData(Mesh mesh){
@@ -128,7 +171,9 @@ public class ModelPropDrawer implements Disposable{
                 vertices[dst + 3] = n.x;
                 vertices[dst + 4] = n.y;
                 vertices[dst + 5] = n.z;
+
                 vertices[dst + 6] = color.toFloatBits();
+                vertices[dst + 7] = darkness(vertices[dst], -vertices[dst + 2]);
             }
 
             for(short index : data.indices) indices[indexOffset++] = (short)(vertexOffset + index);

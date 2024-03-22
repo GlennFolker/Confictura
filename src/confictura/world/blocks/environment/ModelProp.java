@@ -26,6 +26,11 @@ public class ModelProp extends Block implements DelegateMapColor{
     }
 
     @Override
+    public boolean isStatic(){
+        return true;
+    }
+
+    @Override
     public Block substitute(){
         return parent;
     }

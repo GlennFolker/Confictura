@@ -106,7 +106,7 @@ public final class CBlocks{
             lightRadius = 48f;
         }};
 
-        erodedSpire = new ModelProp("eroded-spire", erodedSlateWall, new Color(0x454858ff), () -> CModels.spireSmall1, () -> CModels.spireSmall2);
-        sharpSpire = new ModelProp("sharp-spire", sharpSlateWall, new Color(0x6e7080ff), () -> CModels.spireSmall1, () -> CModels.spireSmall2);
+        erodedSpire = new ModelProp("eroded-spire", erodedSlateWall, new Color(0x454858dd), () -> CModels.spireSmall1, () -> CModels.spireSmall2);
+        sharpSpire = new ModelProp("sharp-spire", sharpSlateWall, new Color(0x6e7080dd), () -> CModels.spireSmall1, () -> CModels.spireSmall2);
     }
 }

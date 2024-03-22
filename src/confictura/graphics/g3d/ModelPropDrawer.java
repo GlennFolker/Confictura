@@ -153,7 +153,8 @@ public class ModelPropDrawer implements Disposable{
 
         shader.bind();
         shader.camera = cam;
-        shader.lightDir.set(-1f, -1f, 1f).nor();
+        shader.lightDir.set(-1.2f, -0.8f, 0.9f).nor();
+        shader.reflectColor.set(!state.rules.lighting ? Color.white : state.rules.ambientLight);
         shader.apply();
 
         batch.setVertices(vertices, 0, vertexOffset * batch.vertexSize / Float.BYTES);

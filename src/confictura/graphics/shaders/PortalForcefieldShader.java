@@ -5,7 +5,7 @@ import arc.graphics.gl.*;
 import arc.math.geom.*;
 import arc.util.*;
 import confictura.content.*;
-import confictura.world.planets.*;
+import confictura.world.celestial.*;
 import mindustry.graphics.g3d.*;
 
 import static arc.Core.*;
@@ -20,7 +20,7 @@ public class PortalForcefieldShader extends Shader{
     private static final Vec3 axis = new Vec3(Vec3.Y).crs(PlanetGrid.create(3).tiles[0].v);
 
     public Camera3D camera;
-    public PortalPlanet planet;
+    public Portal planet;
 
     public PortalForcefieldShader(){
         super(file("portal-forcefield.vert"), file("portal-forcefield.frag"));

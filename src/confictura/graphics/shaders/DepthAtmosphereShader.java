@@ -4,7 +4,7 @@ import arc.graphics.g3d.*;
 import arc.graphics.gl.*;
 import arc.math.geom.*;
 import arc.util.*;
-import confictura.world.planets.*;
+import confictura.world.celestial.*;
 
 import static arc.Core.*;
 import static confictura.graphics.CShaders.*;

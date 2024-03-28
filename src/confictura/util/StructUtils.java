@@ -29,7 +29,7 @@ public final class StructUtils{
         return (T[])emptyArray;
     }
 
-    public static <T> Iter<T> iter(T[] array){
+    public static <T> Iter<T> iter(T... array){
         return iter(array, 0, array.length);
     }
 

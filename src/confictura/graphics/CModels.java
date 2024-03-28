@@ -17,6 +17,8 @@ public final class CModels{
     public static Scenes3D portal;
 
     public static Node portalBase, portalCage;
+    public static Node satelliteBase, satelliteThruster, satelliteArmInner, satelliteArmOuter;
+
     public static Mesh spireSmall1, spireSmall2;
 
     private CModels(){
@@ -38,10 +40,22 @@ public final class CModels{
             .load("scenes/confictura/portal.gltf#Cage", Node.class)
             .loaded = node -> portalCage = node;
         assets
-            .load("scenes/confictura/spires.gltf", Scenes3D.class)
-            .loaded = scene -> {
-            spireSmall1 = scene.meshNames.get("SpireSmall1").containers.first().mesh;
-            spireSmall2 = scene.meshNames.get("SpireSmall2").containers.first().mesh;
-        };
+            .load("scenes/confictura/satellite.gltf#Base", Node.class)
+            .loaded = node -> satelliteBase = node;
+        assets
+            .load("scenes/confictura/satellite.gltf#Thruster", Node.class)
+            .loaded = node -> satelliteThruster = node;
+        assets
+            .load("scenes/confictura/satellite.gltf#ArmInner", Node.class)
+            .loaded = node -> satelliteArmInner = node;
+        assets
+            .load("scenes/confictura/satellite.gltf#ArmOuter", Node.class)
+            .loaded = node -> satelliteArmOuter = node;
+        assets
+            .load("scenes/confictura/spires.gltf#SpireSmall1", MeshSet.class)
+            .loaded = mesh -> spireSmall1 = mesh.containers.first().mesh;
+        assets
+            .load("scenes/confictura/spires.gltf#SpireSmall2", MeshSet.class)
+            .loaded = mesh -> spireSmall2 = mesh.containers.first().mesh;
     }
 }

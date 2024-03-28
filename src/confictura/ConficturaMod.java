@@ -199,6 +199,7 @@ public class ConficturaMod extends Mod{
         CBlocks.load();
         CPlanets.load();
         CSectorPresets.load();
+        CTechTree.load();
 
         for(var e : blockColors){
             var block = content.block("confictura-" + e.key);

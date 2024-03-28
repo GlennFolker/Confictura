@@ -38,4 +38,12 @@ public final class MathUtils{
     public static Vec3 normal(Vec3 out, Vec3 a, Vec3 b, Vec3 c){
         return out.set(b).sub(a).crs(c.x - a.x, c.y - a.y, c.z - a.z).nor();
     }
+
+    public static float absin(float rad){
+        return absin(rad, 1f, 1f);
+    }
+
+    public static float absin(float rad, float scl, float mag){
+        return (Mathf.sin(rad / scl) + 1f) / 2f * mag;
+    }
 }

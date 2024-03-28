@@ -1,4 +1,4 @@
-package confictura.world.planets;
+package confictura.world.celestial;
 
 import arc.graphics.*;
 import arc.graphics.Texture.*;

@@ -164,14 +164,13 @@ public final class CPlanets{
 
         satellite = new Satellite("satellite", Planets.serpulo, 0.525f){{
             var mat = new Mat3D();
-            var nor = new Vec3();
 
-            float scl = 0.015f;
+            scale = 0.015f;
             drawStructure = (shader, transform) -> {
                 Node base = CModels.satelliteBase, thruster = CModels.satelliteThruster, inner = CModels.satelliteArmInner, outer = CModels.satelliteArmOuter;
-                base.localTrns.translation.set(0f, -absin(period(345f, Interp.linear) * Mathf.PI2, 1f, 0.5f) * scl, 0f);
+                base.localTrns.translation.set(0f, -absin(period(345f, Interp.linear) * Mathf.PI2, 1f, 0.5f) * scale, 0f);
                 base.localTrns.rotation.idt();
-                base.localTrns.scale.set(scl, scl, scl);
+                base.localTrns.scale.set(1f, 1f, 1f);
 
                 thruster.localTrns.translation.set(0f, -absin(period(168f, Interp.linear) * Mathf.PI2, 1f, 1f), 0f);
                 thruster.localTrns.rotation.idt();
@@ -191,81 +190,6 @@ public final class CPlanets{
                     shader.setUniformMatrix("u_normal", copyMatrix(mat, Tmp.m1).inv().transpose());
 
                     node.mesh.containers.each(mesh -> mesh.render(shader));
-                }
-            };
-
-            emissions = new Color[]{monolithDark, monolithDarker};
-            drawEmissive = batch -> {
-                TextureRegion beam = emissiveRegions[0], shade = emissiveRegions[1];
-                for(int i = 0; i < 3; i++){
-                    float time = period(240f, i / 3f, 0f, 1f, Interp.linear);
-                    float rot = Interp.pow2Out.apply(time) * 180f;
-                    float rad = Interp.pow2Out.apply(1f - time) * 8f * scl;
-                    float offset = (Interp.pow2Out.apply(1f - time) - 1f) * 8f * scl - scl - absin(period(168f, Interp.linear) * Mathf.PI2, 1f, scl);
-                    float col = Interp.pow2Out.apply(Mathf.curve(time, 0f, 0.24f)) - Interp.pow2In.apply(Mathf.curve(time, 0.24f, 1f));
-
-                    for(int j = 0; j < 8; j++){
-                        Tmp.v1.trns(rot + j * 45f, rad);
-                        Tmp.v2.trns(rot + j * 45f, Math.max(rad - scl, 0f));
-                        Tmp.v3.trns(rot + (j + 1) * 45f, rad);
-                        Tmp.v4.trns(rot + (j + 1) * 45f, Math.max(rad - scl, 0f));
-
-                        Tmp.v31.set(Tmp.v1.x, offset, -Tmp.v1.y);
-                        Tmp.v32.set(Tmp.v3.x, offset, -Tmp.v3.y);
-                        Tmp.v33.set(Tmp.v4.x, offset, -Tmp.v4.y);
-                        Tmp.v34.set(Tmp.v2.x, offset, -Tmp.v2.y);
-
-                        normal(nor, Tmp.v31, Tmp.v32, Tmp.v33);
-                        Tmp.c1.set(monolithMid).a(col);
-
-                        Draw3DUtils.quad2(
-                            batch,
-                            Tmp.v31, nor, Tmp.c1, beam.u, beam.v2,
-                            Tmp.v32, nor, Tmp.c1, beam.u2, beam.v2,
-                            Tmp.v33, nor, Tmp.c1, beam.u2, beam.v,
-                            Tmp.v34, nor, Tmp.c1, beam.u, beam.v
-                        );
-
-                        Tmp.v33.set(Tmp.v32).y -= scl;
-                        Tmp.v34.set(Tmp.v31).y -= scl;
-
-                        normal(nor, Tmp.v31, Tmp.v32, Tmp.v33);
-                        Tmp.c1.a /= 2f;
-                        Tmp.c2.set(Tmp.c1).a(0f);
-
-                        Draw3DUtils.quad2(
-                            batch,
-                            Tmp.v34, nor, Tmp.c2, beam.u, beam.v,
-                            Tmp.v33, nor, Tmp.c2, beam.u2, beam.v,
-                            Tmp.v32, nor, Tmp.c1, beam.u2, beam.v2,
-                            Tmp.v31, nor, Tmp.c1, beam.u, beam.v2
-                        );
-                    }
-                }
-
-                for(int i = 0; i < 4; i++){
-                    float rad = Mathf.sqrt2 * scl;
-                    float thrust = 0.64f + absin(period(120f, Interp.linear) * Mathf.PI2) * 0.36f;
-
-                    Tmp.v1.trns(45f + i * 90f, rad);
-                    Tmp.v2.trns(45f + (i + 1f) * 90f, rad);
-
-                    Tmp.v31.set(Tmp.v1.x, 0f, Tmp.v1.y);
-                    Tmp.v32.set(Tmp.v2.x, 0f, Tmp.v2.y);
-                    Tmp.v33.set(Tmp.v32.x, -thrust * 10f * scl, Tmp.v32.z);
-                    Tmp.v34.set(Tmp.v31.x, Tmp.v33.y, Tmp.v31.z);
-
-                    normal(nor, Tmp.v31, Tmp.v32, Tmp.v33);
-                    Tmp.c1.set(monolithDark).a(1f - thrust * 0.5f);
-                    Tmp.c2.set(Tmp.c1).a(0f);
-
-                    Draw3DUtils.quad2(
-                        batch,
-                        Tmp.v31, nor, Tmp.c1, shade.u, shade.v2,
-                        Tmp.v32, nor, Tmp.c1, shade.u2, shade.v2,
-                        Tmp.v33, nor, Tmp.c2, shade.u2, shade.v,
-                        Tmp.v34, nor, Tmp.c2, shade.u, shade.v
-                    );
                 }
             };
         }};

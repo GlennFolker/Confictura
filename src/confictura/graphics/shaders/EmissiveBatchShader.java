@@ -12,7 +12,7 @@ import static confictura.util.MathUtils.*;
 public class EmissiveBatchShader extends Shader{
     private static final Mat3D mat = new Mat3D();
 
-    public Emissive planet;
+    public EmissiveObject planet;
 
     public EmissiveBatchShader(){
         super(file("emissive-batch.vert"), file("emissive-batch.frag"));
@@ -20,12 +20,10 @@ public class EmissiveBatchShader extends Shader{
 
     @Override
     public void apply(){
-        if(!(planet instanceof Planet p)) throw new IllegalArgumentException("'" + planet + "' isn't an instance of Planet.");
-
-        setUniformMatrix4("u_trans", p.getTransform(mat).val);
+        setUniformMatrix4("u_trans", planet.getTransform(mat).val);
         setUniformMatrix("u_normal", copyMatrix(mat, Tmp.m1).inv().transpose());
-        setUniformf("u_light", p.solarSystem.position);
-        setUniformf("u_ambientColor", p.solarSystem.lightColor.r, p.solarSystem.lightColor.g, p.solarSystem.lightColor.b);
-        planet.getEmissive().bind(0);
+        setUniformf("u_light", planet.solarSystem.position);
+        setUniformf("u_ambientColor", planet.solarSystem.lightColor.r, planet.solarSystem.lightColor.g, planet.solarSystem.lightColor.b);
+        planet.emissiveTexture.bind(0);
     }
 }

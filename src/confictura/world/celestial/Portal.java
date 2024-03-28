@@ -3,7 +3,6 @@ package confictura.world.celestial;
 import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.Texture.*;
-import arc.graphics.g2d.*;
 import arc.graphics.g3d.*;
 import arc.graphics.gl.*;
 import arc.math.*;
@@ -29,7 +28,7 @@ import static mindustry.Vars.*;
  * and an artificial gravity forcefield.
  * @author GlennFolker
  */
-public class Portal extends Planet implements Emissive{
+public class Portal extends EmissiveObject{
     private static final Mat3D mat1 = new Mat3D(), mat2 = new Mat3D();
     private static final Quat quat = new Quat();
     private static final Vec3 v1 = new Vec3(), v2 = new Vec3(), v3 = new Vec3();
@@ -51,21 +50,13 @@ public class Portal extends Planet implements Emissive{
     public Cons<VertexBatch3D> drawEmissive = batch -> {};
     public float period = 60f;
 
-    public @Nullable Texture emissiveTexture;
-    public @Nullable TextureRegion[] emissiveRegions;
-    public Color[] emissions = new Color[0];
-
-    protected @Nullable VertexBatch3D batch;
-    protected @Nullable PlanetParams lastParams;
-    protected boolean wasAtmospheric;
-
     public static final int sectorSides = 8;
 
     protected static final float[] vertices = new float[sectorSides * 3];
     protected static final short[] indices = new short[(sectorSides - 2) * 3];
 
     public Portal(String name, Planet parent, float radius){
-        super(name, parent, radius, 0);
+        super(name, parent, radius);
 
         generateIcons = true;
         meshLoader = PortalMesh::new;
@@ -127,15 +118,7 @@ public class Portal extends Planet implements Emissive{
                 depthBuffer = new FrameBuffer(graphics.getWidth(), graphics.getHeight(), true);
                 depthBuffer.getTexture().setFilter(TextureFilter.nearest);
             }
-
-            if(batch == null) batch = new VertexBatch3D(4096, true, true, 1, CShaders.emissiveBatch);
-            if(emissiveTexture == null) createEmissions(emissions, t -> emissiveTexture = t, r -> emissiveRegions = r);
         }
-    }
-
-    @Override
-    public Texture getEmissive(){
-        return emissiveTexture;
     }
 
     public PlanetGrid createSectorGrid(){
@@ -364,32 +347,13 @@ public class Portal extends Planet implements Emissive{
         return interpolation.apply(Mathf.curve(frac % 1f, from, to));
     }
 
+    @Override
     public void drawEmissive(){
-        CShaders.emissiveBatch.planet = this;
-
         drawEmissive.get(batch);
-        batch.flush(Gl.triangles);
     }
 
     @Override
-    public void draw(PlanetParams params, Mat3D projection, Mat3D transform){
-        // Force draw artificial gravity forcefield.
-        // If this becomes an issue, the way to fix it is to purchase a better device.
-        wasAtmospheric = params.alwaysDrawAtmosphere;
-        params.alwaysDrawAtmosphere = true;
-        lastParams = params;
-
-        super.draw(params, projection, transform);
-    }
-
-    @Override
-    public void drawAtmosphere(Mesh atmosphere, Camera3D cam){
-        Gl.depthMask(false);
-        Blending.additive.apply();
-
-        batch.proj(cam.combined);
-        drawEmissive();
-
+    public void drawActualAtmosphere(Mesh atmosphere, Camera3D cam){
         var shader = CShaders.portalForcefield;
         shader.camera = cam;
         shader.planet = this;
@@ -397,14 +361,6 @@ public class Portal extends Planet implements Emissive{
         shader.bind();
         shader.apply();
         atmosphereMesh.render(shader, Gl.triangles);
-
-        Blending.normal.apply();
-        Gl.depthMask(true);
-
-        if(lastParams != null){
-            lastParams.alwaysDrawAtmosphere = wasAtmospheric;
-            lastParams = null;
-        }
     }
 
     @Override

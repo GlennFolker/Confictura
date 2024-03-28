@@ -1,16 +1,15 @@
 package confictura.world.celestial;
 
 import arc.*;
-import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.graphics.g3d.*;
-import arc.graphics.gl.*;
 import arc.math.*;
 import arc.math.geom.*;
 import arc.util.*;
 import confictura.graphics.*;
 import confictura.graphics.g3d.*;
+import gltfrenzy.model.*;
 import mindustry.game.EventType.*;
 import mindustry.graphics.g3d.*;
 import mindustry.type.*;
@@ -18,16 +17,17 @@ import mindustry.world.meta.*;
 
 import static confictura.graphics.CPal.*;
 import static confictura.util.MathUtils.*;
+import static confictura.util.StructUtils.*;
 import static mindustry.Vars.*;
 
 public class Satellite extends EmissiveObject{
+    private static final Mat3D mat = new Mat3D();
     private static final Quat quat = new Quat();
     private static final Vec3 nor = new Vec3();
 
     private static float lastSpacing;
 
-    public Cons2<Shader, Mat3D> drawStructure = (shader, transform) -> {};
-    public float scale = 1f;
+    public float scale = 0.0175f;
 
     public Satellite(String name, Planet observed, float distance){
         super(name, distance(observed, distance), 0.1f);
@@ -167,6 +167,24 @@ public class Satellite extends EmissiveObject{
     public class SatelliteMesh implements GenericMesh{
         @Override
         public void render(PlanetParams params, Mat3D projection, Mat3D transform){
+            Node base = CModels.satelliteBase, thruster = CModels.satelliteThruster, inner = CModels.satelliteArmInner, outer = CModels.satelliteArmOuter;
+            base.localTrns.translation.set(0f, -absin(period(345f, Interp.linear) * Mathf.PI2, 1f, 0.5f) * scale, 0f);
+            base.localTrns.rotation.idt();
+            base.localTrns.scale.set(1f, 1f, 1f);
+
+            thruster.localTrns.translation.set(0f, -absin(period(168f, Interp.linear) * Mathf.PI2, 1f, 1f), 0f);
+            thruster.localTrns.rotation.idt();
+            thruster.localTrns.scale.set(1f, 1f, 1f);
+
+            inner.localTrns.translation.set(0f, -absin(period(128f, Interp.linear) * Mathf.PI2, 1f, 2f), 0f);
+            inner.localTrns.rotation.set(Vec3.Y, period(320f, Interp.pow2) * 360f);
+            inner.localTrns.scale.set(1f, 1f, 1f);
+
+            outer.localTrns.translation.set(0f, absin(period(128f, Interp.linear) * Mathf.PI2, 1f, 2f), 0f);
+            outer.localTrns.rotation.set(Vec3.Y, -period(320f, Interp.pow2) * 360f);
+            outer.localTrns.scale.set(1f, 1f, 1f);
+            base.update();
+
             var shader = CShaders.celestial;
             shader.light.set(solarSystem.position);
             shader.ambientColor.set(solarSystem.lightColor);
@@ -175,7 +193,12 @@ public class Satellite extends EmissiveObject{
             shader.apply();
 
             shader.setUniformMatrix4("u_proj", projection.val);
-            drawStructure.get(shader, transform);
+            for(var node : iter(base, thruster, inner, outer)){
+                shader.setUniformMatrix4("u_trans", mat.set(transform).mul(node.globalTrns).val);
+                shader.setUniformMatrix("u_normal", copyMatrix(mat, Tmp.m1).inv().transpose());
+
+                node.mesh.containers.each(mesh -> mesh.render(shader));
+            }
         }
     }
 }

@@ -5,7 +5,6 @@ import arc.util.io.*
 import arc.util.serialization.*
 import ent.*
 import java.io.*
-import java.nio.charset.*
 import java.util.regex.*
 
 buildscript{
@@ -35,12 +34,12 @@ configure<ExtraPropertiesExtension>{
     val local = layout.projectDirectory.file("local.properties").asFile
     if(local.exists()){
         logger.lifecycle("Found `local.properties` file.")
-        FileReader(local, StandardCharsets.UTF_8).use{
+        FileReader(local, Charsets.UTF_8).use{
             PropertiesUtils.load(props, it)
         }
     }
 
-    props.each{key, value -> set(key, value)}
+    props.each{key, value -> if(!hasProperty(key)) set(key, value)}
 }
 
 val arcVersion: String by project
@@ -133,13 +132,9 @@ project(":proc"){
 
     val fetchFiles = tasks.register<DefaultTask>("fetchFiles"){
         val out = layout.buildDirectory.dir("fetched")
-        val cache = out.map{it.file("cache.txt")}
 
+        inputs.property("version", if(useJitpack) mindustryBEVersion else mindustryVersion)
         outputs.dir(out)
-        outputs.upToDateWhen{
-            val c = cache.get().asFile
-            c.exists() && c.readText(StandardCharsets.UTF_8) == if(useJitpack) mindustryBEVersion else mindustryVersion
-        }
 
         doFirst{
             val dir = out.get().asFile
@@ -163,9 +158,6 @@ project(":proc"){
             }}
 
             Threads.await(exec)
-
-            val c = cache.get().asFile
-            c.writeText(if(useJitpack) mindustryBEVersion else mindustryVersion, StandardCharsets.UTF_8)
         }
     }
 
@@ -203,7 +195,6 @@ project(":proc"){
             copy{
                 from(files(fetchFiles))
                 into(temporaryDir)
-                exclude("cache.txt")
             }
         }
 
@@ -282,7 +273,7 @@ project(":"){
             }
 
             val compacted = Jval.newObject().put("packages", packages).put("classes", classes)
-            BufferedWriter(FileWriter(output, StandardCharsets.UTF_8, false)).use{compacted.writeTo(it, Jval.Jformat.formatted)}
+            BufferedWriter(FileWriter(output, Charsets.UTF_8, false)).use{compacted.writeTo(it, Jval.Jformat.formatted)}
         }
     }
 
@@ -300,6 +291,7 @@ project(":"){
     val deploy = tasks.register<Jar>("deploy"){
         val proc = project(":proc").tasks.named<JavaExec>("run")
 
+        inputs.property("dev", isDev)
         inputs.files(list)
         mustRunAfter(proc)
 
@@ -326,11 +318,11 @@ project(":"){
         doFirst{
             logger.lifecycle("Building ${if(isDev) "developer" else "user"} artifact.")
 
-            val map = FileReader(layout.projectDirectory.file("mod.json").asFile, StandardCharsets.UTF_8)
+            val map = FileReader(layout.projectDirectory.file("mod.json").asFile, Charsets.UTF_8)
                 .use{Jval.read(it)}
                 .put("name", modName)
 
-            BufferedWriter(FileWriter(meta, StandardCharsets.UTF_8, false))
+            BufferedWriter(FileWriter(meta, Charsets.UTF_8, false))
                 .use{map.writeTo(it, Jval.Jformat.formatted)}
         }
     }

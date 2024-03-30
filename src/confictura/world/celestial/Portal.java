@@ -75,7 +75,7 @@ public class Portal extends EmissiveObject{
         forcefieldRadius = radius;
         hasAtmosphere = true;
 
-        emissions = new Color[]{monolithDark, monolithDarker};
+        emissions = new Color[]{monolithMid, monolithDark};
         atmosphereColor.set(0x3366e5ff);
         atmosphereOutlineColor.set(0x1966ffff);
 
@@ -107,20 +107,7 @@ public class Portal extends EmissiveObject{
         sectorApproxRadius = sectors.first().tile.v.dst(sectors.first().tile.corners[0].v);
         gridMeshLoader = () -> CMeshBuilder.gridLines(grid, sectorColor);
 
-        generator = new PlanetGenerator(){
-            @Override
-            public void generateSector(Sector sector){}
-
-            @Override
-            public float getHeight(Vec3 position){
-                return 0f;
-            }
-
-            @Override
-            public Color getColor(Vec3 position){
-                return null;
-            }
-        };
+        generator = new BlankPlanetGenerator();
     }
 
     @Override
@@ -365,13 +352,13 @@ public class Portal extends EmissiveObject{
             v2.set(next.v);
             v3.set(curr.v).sub(tile.v);
             v3.setLength(v3.len() - stroke).add(tile.v);
-            batch.tri(v1, v2, v3, c1);
+            batch.tri2(v1, v2, v3, c1);
 
             v1.set(v3);
             v2.set(next.v);
             v3.set(next.v).sub(tile.v);
             v3.setLength(v3.len() - stroke).add(tile.v);
-            batch.tri(v1, v2, v3, c1);
+            batch.tri2(v1, v2, v3, c1);
         }
     }
 

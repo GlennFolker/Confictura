@@ -4,19 +4,17 @@ import arc.*;
 import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
-import arc.graphics.g3d.*;
 import arc.graphics.gl.*;
-import arc.math.*;
 import arc.math.geom.*;
 import arc.struct.*;
 import arc.util.*;
 import arc.util.pooling.*;
 import confictura.graphics.shaders.*;
-import mindustry.core.*;
 import mindustry.game.EventType.*;
 import mindustry.graphics.*;
 
 import static arc.Core.*;
+import static confictura.ConficturaMod.*;
 import static confictura.util.StructUtils.*;
 import static mindustry.Vars.*;
 
@@ -40,23 +38,14 @@ public class ModelPropDrawer implements Disposable{
     private static final Color col = new Color();
 
     protected ObjectMap<Mesh, PropData> data = new ObjectMap<>();
-    protected Camera3D cam = new Camera3D(){{
-        fov = 60f;
-        near = 1f;
-
-        up.set(0f, 0f, -1f);
-        direction.set(0f, -1f, 0f);
-    }};
     protected FrameBuffer buffer = new FrameBuffer(2, 2, true);
     protected Seq<Req> requests = new Seq<>();
 
-    protected Mesh batch;
-    protected ModelPropShader shader;
+    protected final Mesh batch;
+    protected final ModelPropShader shader;
     protected float[] vertices;
     protected short[] indices;
     protected int vertexOffset, indexOffset;
-
-    protected float[] darkness;
 
     public ModelPropDrawer(ModelPropShader shader, int maxVertices, int maxIndices){
         batch = new Mesh(false, maxVertices, maxIndices,
@@ -68,42 +57,6 @@ public class ModelPropDrawer implements Disposable{
         indices = new short[maxIndices];
 
         Events.run(Trigger.drawOver, () -> Draw.draw(flushLayer, this::render));
-
-        Events.on(WorldLoadEvent.class, e -> {
-            darkness = new float[world.width() * world.height()];
-            world.tiles.each(this::updateDarkness);
-        });
-
-        Events.on(TileChangeEvent.class, e -> updateDarkness(e.tile.x, e.tile.y));
-    }
-
-    protected void updateDarkness(int x, int y){
-        float dark = world.getDarkness(x, y);
-        if(dark > 0f){
-            darkness[world.packArray(x, y)] = 1f - Math.min((dark + 0.5f) / 4f, 1f);
-        }else{
-            darkness[world.packArray(x, y)] = 1f;
-        }
-    }
-
-    protected float darkness(float x, float y){
-        x /= tilesize;
-        y /= tilesize;
-
-        int x1 = (int)x, x2 = x1 + 1,
-            y1 = (int)y, y2 = y1 + 1;
-
-        float out = state.rules.borderDarkness ? 0f : 1f;
-        var t = world.tiles;
-
-        return Mathf.lerp(
-            Mathf.lerp(t.in(x1, y1) ? darkness[world.packArray(x1, y1)] : out, t.in(x2, y1) ? darkness[world.packArray(x2, y1)] : out, x % 1f),
-            Mathf.lerp(t.in(x1, y2) ? darkness[world.packArray(x1, y2)] : out, t.in(x2, y2) ? darkness[world.packArray(x2, y2)] : out, x % 1f),
-            y % 1f
-        );
-
-        //int tx = World.toTile(x), ty = World.toTile(y);
-        //return world.tiles.in(tx, ty) ? darkness[world.packArray(tx, ty)] : state.rules.borderDarkness ? 0f : 1f;
     }
 
     public PropData getData(Mesh mesh){
@@ -131,11 +84,6 @@ public class ModelPropDrawer implements Disposable{
     public void render(){
         if(requests.isEmpty()) return;
         int sw = graphics.getWidth(), sh = graphics.getHeight();
-
-        cam.resize(sw, sh);
-        cam.position.set(camera.position.x, camera.height / 2f / Mathf.tan(cam.fov / 2f * Mathf.degRad, 1f, 1f), -camera.position.y);
-        cam.far = Math.max(150f, cam.position.y * 1.5f);
-        cam.update();
 
         buffer.resize(sw, sh);
         buffer.begin();
@@ -173,7 +121,7 @@ public class ModelPropDrawer implements Disposable{
                 vertices[dst + 5] = n.z;
 
                 vertices[dst + 6] = color.toFloatBits();
-                vertices[dst + 7] = darkness(vertices[dst], -vertices[dst + 2]);
+                vertices[dst + 7] = renderContext.darkness(vertices[dst], -vertices[dst + 2]);
             }
 
             for(short index : data.indices) indices[indexOffset++] = (short)(vertexOffset + index);
@@ -197,7 +145,7 @@ public class ModelPropDrawer implements Disposable{
         if(indexOffset == 0) return;
 
         shader.bind();
-        shader.camera = cam;
+        shader.camera = renderContext.camera;
         shader.lightDir.set(-1.2f, -0.8f, 0.9f).nor();
         shader.reflectColor.set(!state.rules.lighting ? Color.white : state.rules.ambientLight);
         shader.apply();

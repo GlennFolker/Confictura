@@ -12,6 +12,8 @@ import confictura.graphics.g3d.*;
 import gltfrenzy.model.*;
 import mindustry.game.EventType.*;
 import mindustry.graphics.g3d.*;
+import mindustry.graphics.g3d.PlanetGrid.*;
+import mindustry.maps.generators.*;
 import mindustry.type.*;
 import mindustry.world.meta.*;
 
@@ -37,8 +39,11 @@ public class Satellite extends EmissiveObject{
         defaultEnv = Env.space;
         meshLoader = SatelliteMesh::new;
         tidalLock = true;
+        camRadius = 1.3f;
 
         emissions = new Color[]{monolithDark, monolithDarker};
+        sectors.add(new Sector(this, Ptile.empty));
+        generator = new BlankPlanetGenerator();
 
         // Deliberately make it as the first child to get as close as possible.
         // This *might* be invasive for mods that are sensitive towards their planet children indices (which I can
@@ -116,7 +121,7 @@ public class Satellite extends EmissiveObject{
                 Tmp.v33.set(Tmp.v32).y -= 1f;
                 Tmp.v34.set(Tmp.v31).y -= 1f;
 
-                normal(nor, Tmp.v31, Tmp.v32, Tmp.v33);
+                normal(nor, Tmp.v33, Tmp.v32, Tmp.v31);
                 Tmp.c1.a /= 2f;
                 Tmp.c2.set(Tmp.c1).a(0f);
 

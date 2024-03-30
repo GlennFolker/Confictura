@@ -18,7 +18,7 @@ void main(){
     vec3 normal = normalize(u_normal * a_normal);
     vec3 lightDir = normalize(u_light - pos.xyz);
 
-    vec3 diffuse = u_ambientColor * vec3(0.01 + clamp((dot(normal, lightDir) + 1.0) / 2.0, 0.0, 1.0));
+    vec3 diffuse = u_ambientColor * ((dot(normal, lightDir) + 1.0) / 2.0);
     v_color = a_color * vec4(diffuse, 1.0);
     v_texCoord = a_texCoord0;
 

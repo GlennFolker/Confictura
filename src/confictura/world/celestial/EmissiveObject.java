@@ -93,7 +93,7 @@ public abstract class EmissiveObject extends Planet{
     }
 
     @Override
-    public void drawAtmosphere(Mesh atmosphere, Camera3D cam){
+    public final void drawAtmosphere(Mesh atmosphere, Camera3D cam){
         Gl.depthMask(false);
         Blending.additive.apply();
 

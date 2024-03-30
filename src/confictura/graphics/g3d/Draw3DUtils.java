@@ -9,6 +9,8 @@ import arc.math.geom.*;
  * @author GlennFolker
  */
 public final class Draw3DUtils{
+    private static final Vec3 a = new Vec3(), b = new Vec3(), c = new Vec3(), d = new Vec3();
+
     private Draw3DUtils(){
         throw new AssertionError();
     }
@@ -68,10 +70,10 @@ public final class Draw3DUtils{
 
         quad(
             batch,
-            p4, n4, c4, u4, v4,
-            p3, n3, c3, u3, v3,
-            p2, n2, c2, u2, v2,
-            p1, n1, c1, u1, v1
+            p4, a.set(n4).scl(-1f), c4, u4, v4,
+            p3, b.set(n3).scl(-1f), c3, u3, v3,
+            p2, c.set(n2).scl(-1f), c2, u2, v2,
+            p1, d.set(n1).scl(-1f), c1, u1, v1
         );
     }
 }

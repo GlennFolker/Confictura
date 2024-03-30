@@ -44,6 +44,7 @@ public class ConficturaMod extends Mod{
 
     public static Cinematic cinematic;
 
+    public static RenderContext renderContext;
     public static ModelPropDrawer modelPropDrawer;
 
     public static CinematicEditor cinematicEditor;
@@ -170,6 +171,8 @@ public class ConficturaMod extends Mod{
                 CModels.load();
                 app.post(() -> {
                     CShaders.load();
+
+                    renderContext = new RenderContext();
                     modelPropDrawer = new ModelPropDrawer(CShaders.modelProp, 8192, 16384);
                 });
             }

@@ -20,7 +20,9 @@ public final class CBlocks{
     erodedSlate, infErodedSlate, archErodedSlate, erodedEneraphyteVent, erodedSlateWall, infErodedSlateWall, archErodedSlateWall,
     sharpSlate, infSharpSlate, archSharpSlate, eneraphyteVent, sharpSlateWall, infSharpSlateWall, archSharpSlateWall,
     erodedSpire, sharpSpire,
-    eneraphyteCrystal;
+    eneraphyteCrystal,
+
+    satelliteTiling;
 
     private CBlocks(){
         throw new AssertionError();
@@ -28,7 +30,7 @@ public final class CBlocks{
 
     /** Instantiates all contents. Called in the main thread in {@link ConficturaMod#loadContent()}. */
     public static void load(){
-        ludellyte = new EdgeFloor("ludellyte");
+        ludellyte = new Floor("ludellyte", 3);
 
         erodedSlate = new EdgeFloor("eroded-slate");
 
@@ -106,7 +108,9 @@ public final class CBlocks{
             lightRadius = 48f;
         }};
 
-        erodedSpire = new ModelProp("eroded-spire", erodedSlateWall, new Color(0x454858bf), () -> CModels.spireSmall1, () -> CModels.spireSmall2);
-        sharpSpire = new ModelProp("sharp-spire", sharpSlateWall, new Color(0x6e7080bf), () -> CModels.spireSmall1, () -> CModels.spireSmall2);
+        erodedSpire = new ModelProp("eroded-spire", erodedSlateWall, new Color(0x454858bf), CModels.spireSmall1, CModels.spireSmall2);
+        sharpSpire = new ModelProp("sharp-spire", sharpSlateWall, new Color(0x6e7080bf), CModels.spireSmall1, CModels.spireSmall2);
+
+        satelliteTiling = new Floor("satellite-tiling", 0);
     }
 }

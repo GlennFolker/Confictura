@@ -37,7 +37,7 @@ for(local in arrayOf("glTFrenzy", "EntityAnno")){
                                 useTarget("com.github.Anuken.Arc:${it.module}:$arcVersion")
                             }else if(it.group.startsWith("com.github.GlennFolker")){
                                 val group = it.group.substring("com.github.GlennFolker".length)
-                                if(group.isEmpty() && it.group == local){
+                                if(group.isEmpty() && it.module == local){
                                     useTarget(project(":"))
                                 }else if(group.isNotEmpty() && group.substring(1) == local){
                                     if(it.module.endsWith(".gradle.plugin")){

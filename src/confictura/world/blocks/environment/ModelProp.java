@@ -1,6 +1,5 @@
 package confictura.world.blocks.environment;
 
-import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
@@ -13,10 +12,9 @@ import static confictura.ConficturaMod.*;
 public class ModelProp extends Block implements DelegateMapColor{
     public Block parent;
     public Color color;
-    public Prov<Mesh>[] meshes;
+    public Mesh[] meshes;
 
-    @SafeVarargs
-    public ModelProp(String name, Block parent, Color color, Prov<Mesh>... meshes){
+    public ModelProp(String name, Block parent, Color color, Mesh... meshes){
         super(name);
         this.parent = parent;
         this.color = color;
@@ -41,7 +39,7 @@ public class ModelProp extends Block implements DelegateMapColor{
         float z = Draw.z();
 
         Draw.draw(ModelPropDrawer.accumLayer, () -> modelPropDrawer.draw(
-            meshes[Mathf.randomSeed(tile.pos(), 0, meshes.length - 1)].get(), tile.worldx(), tile.worldy(),
+            meshes[Mathf.randomSeed(tile.pos(), 0, meshes.length - 1)], tile.worldx(), tile.worldy(),
             Mathf.randomSeed(tile.pos() + 1, 0, 4) * 90f, color
         ));
         Draw.z(z);

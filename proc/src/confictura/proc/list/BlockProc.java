@@ -2,6 +2,7 @@ package confictura.proc.list;
 
 import arc.func.*;
 import arc.graphics.*;
+import arc.math.*;
 import arc.util.*;
 import arc.util.serialization.*;
 import arc.util.serialization.Jval.*;
@@ -60,8 +61,58 @@ public class BlockProc implements Proc{
                     }
                 }
 
-                block.load();
+                if(block.customShadow && (block.variants == 0 ? !block.customShadowRegion.found() : any(block.variantRegions, t -> !t.found()))){
+                    // Gaussian blur kernel half-width and -height.
+                    int blurWidth = 64, blurHeight = 64;
+                    // Gaussian filter standard deviation.
+                    float deviation = 16f;
 
+                    var blur = new float[(2 * blurWidth + 1) * (2 * blurHeight + 1)];
+                    float s = 2f * deviation * deviation, nor = 0f;
+
+                    for(int tx = -blurWidth; tx <= blurWidth; tx++){
+                        for(int ty = -blurHeight; ty <= blurHeight; ty++){
+                            float r = Mathf.sqrt(tx * tx + ty * ty);
+                            float res = Mathf.pow(Mathf.E, -(r * r) / s) / (Mathf.pi * s);
+
+                            blur[tx + blurWidth + (ty + blurHeight) * (2 * blurWidth + 1)] = res;
+                            nor += res;
+                        }
+                    }
+
+                    for(int i = 0; i < blur.length; i++) blur[i] /= nor;
+
+                    int index = 0;
+                    for(var variant : block.variants == 0 ? iter(block.fullIcon) : iter(block.variantRegions)){
+                        var reg = atlas.conv(variant);
+                        var pix = reg.pixmap();
+
+                        var ref = new Pixmap(pix.width + blurWidth * 2, pix.height + blurHeight * 2);
+                        ref.draw(pix, blurWidth, blurHeight);
+                        Pixmaps.bleed(ref, Integer.MAX_VALUE);
+
+                        var shadow = new Pixmap(ref.width, ref.height);
+                        ref.each((x, y) -> {
+                            float a = 0f;
+                            for(int tx = -blurWidth; tx <= blurWidth; tx++){
+                                for(int ty = -blurHeight; ty <= blurHeight; ty++){
+                                    float factor = blur[tx + blurWidth + (ty + blurHeight) * (2 * blurWidth + 1)];
+                                    a += ((ref.get(x + tx, y + ty) & 0xff) / 255f) * factor;
+                                }
+                            }
+
+                            shadow.setRaw(x, y, 0xffffff00 | (int)(a * 255f));
+                        });
+
+                        var name = block.name.substring("confictura-".length()) + "-shadow";
+                        if(block.variants != 0) name += ++index;
+
+                        new GenRegion(name, reg.file.sibling(name + ".png"), shadow).save(true);
+                        ref.dispose();
+                    }
+                }
+
+                block.load();
                 if(block instanceof DelegateMapColor map){
                     synchronized(BlockProc.class){
                         var sub = map.substitute();
@@ -103,7 +154,7 @@ public class BlockProc implements Proc{
                     }
                 }
             }catch(Throwable t){
-                Log.warn("Skipping '@': @", block.name.substring("confictura-".length()), Strings.getFinalMessage(t));
+                Log.warn("Skipping '@': @", block.name.substring("confictura-".length()), Strings.getStackTrace(Strings.getFinalCause(t)));
             }
         }));
     }

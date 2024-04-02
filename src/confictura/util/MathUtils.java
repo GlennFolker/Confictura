@@ -12,6 +12,26 @@ public final class MathUtils{
         throw new AssertionError();
     }
 
+    public static float bound(float in, float from, float to, float start, float end, Interp interpolation){
+        if(in < from || in > to){
+            return 0f;
+        }else{
+            float f = (in - from) / (to - from);
+            return interpolation.apply(start, end, f);
+        }
+    }
+
+    public static float curve(float in, float from, float to, float start, float end, Interp interpolation){
+        if(in < from){
+            return start;
+        }else if(in > to){
+            return end;
+        }else{
+            float f = (in - from) / (to - from);
+            return interpolation.apply(start, end, f);
+        }
+    }
+
     /**
      * Sets a 3x3 matrix to the top left 3x3 corner of the provided 4x4 matrix.
      * @param from The 4x4 matrix. This matrix will not be modified.

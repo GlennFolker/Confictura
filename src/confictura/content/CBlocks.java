@@ -3,6 +3,7 @@ package confictura.content;
 import arc.graphics.*;
 import confictura.*;
 import confictura.graphics.*;
+import confictura.world.blocks.core.*;
 import confictura.world.blocks.environment.*;
 import mindustry.world.*;
 import mindustry.world.blocks.environment.*;
@@ -22,7 +23,9 @@ public final class CBlocks{
     erodedSpire, sharpSpire,
     eneraphyteCrystal,
 
-    satelliteTiling;
+    satelliteTiling,
+
+    satelliteIntercom;
 
     private CBlocks(){
         throw new AssertionError();
@@ -112,5 +115,10 @@ public final class CBlocks{
         sharpSpire = new ModelProp("sharp-spire", sharpSlateWall, new Color(0x6e7080bf), CModels.spireSmall1, CModels.spireSmall2);
 
         satelliteTiling = new Floor("satellite-tiling", 0);
+
+        satelliteIntercom = new SatelliteEntry("satellite-intercom"){{
+            size = 4;
+            customShadow = true;
+        }};
     }
 }

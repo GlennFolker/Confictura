@@ -1,8 +1,7 @@
 package confictura.content;
 
-//import mindustry.content.TechTree.*;
-
-//import static confictura.content.CPlanets.*;
+import static confictura.content.CBlocks.*;
+import static confictura.content.CPlanets.*;
 import static mindustry.content.TechTree.*;
 
 /**
@@ -13,8 +12,8 @@ public final class CTechTree{
     private CTechTree(){}
 
     public static void load(){
+        portal.techTree = satelliteSerpulo.techTree = satelliteErekir.techTree = nodeRoot("monolith", satelliteIntercom, true, () -> {
 
-        //portal.techTree = nodeRoot();
-        //portal = nodeRoot(portal);
+        });
     }
 }

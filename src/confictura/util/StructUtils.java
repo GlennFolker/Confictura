@@ -29,12 +29,26 @@ public final class StructUtils{
         return (T[])emptyArray;
     }
 
+    public static <T> boolean any(T[] array, Boolf<T> pred){
+        for(var e : array) if(pred.get(e)) return true;
+        return false;
+    }
+
+    public static <T> boolean all(T[] array, Boolf<T> pred){
+        for(var e : array) if(!pred.get(e)) return false;
+        return true;
+    }
+
     public static <T> void each(T[] array, Cons<? super T> cons){
         each(array, 0, array.length, cons);
     }
 
     public static <T> void each(T[] array, int offset, int length, Cons<? super T> cons){
         for(int i = offset, len = i + length; i < len; i++) cons.get(array[i]);
+    }
+
+    public static <T> Single<T> iter(T item){
+        return new Single<>(item);
     }
 
     public static <T> Iter<T> iter(T... array){
@@ -118,6 +132,37 @@ public final class StructUtils{
         public void each(Cons<? super T> cons){}
     }
 
+    public static class Single<T> implements Iterable<T>, Iterator<T>, Eachable<T>{
+        protected final T item;
+        protected boolean done;
+
+        public Single(T item){
+            this.item = item;
+        }
+
+        @Override
+        public Single<T> iterator(){
+            return this;
+        }
+
+        @Override
+        public boolean hasNext(){
+            return !done;
+        }
+
+        @Override
+        public T next(){
+            if(done) throw new NoSuchElementException("Single iterator already accessed.");
+            done = true;
+            return item;
+        }
+
+        @Override
+        public void each(Cons<? super T> cons){
+            if(!done) cons.get(item);
+        }
+    }
+
     public static class Iter<T> implements Iterable<T>, Iterator<T>, Eachable<T>{
         protected final T[] array;
         protected final int offset, length;
@@ -144,7 +189,7 @@ public final class StructUtils{
             if(hasNext()){
                 return array[offset + index++];
             }else{
-                throw new NoSuchElementException((offset + index) + " >= [" + offset + ".." + (offset + length) + "]");
+                throw new NoSuchElementException((offset + index) + " >= [" + offset + ".." + (offset + length) + "].");
             }
         }
 

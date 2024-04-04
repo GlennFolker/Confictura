@@ -29,6 +29,12 @@ public final class StructUtils{
         return (T[])emptyArray;
     }
 
+    public static <T> T[] copyArray(T[] array, Func<T, T> copy){
+        var out = array.clone();
+        for(int i = 0, len = out.length; i < len; i++) out[i] = copy.get(out[i]);
+        return out;
+    }
+
     public static <T> boolean any(T[] array, Boolf<T> pred){
         for(var e : array) if(pred.get(e)) return true;
         return false;

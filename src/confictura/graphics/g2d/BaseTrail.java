@@ -18,6 +18,8 @@ public abstract class BaseTrail extends Trail{
     public float baseWidth = 1f;
     public Blending blend = Blending.normal;
 
+    protected float headX = Float.NaN, headY = Float.NaN, headW = Float.NaN, headAngle = Float.NaN;
+
     public BaseTrail(int length, TrailAttrib... attributes){
         this(length, BaseTrail::defRotation, attributes);
     }
@@ -61,6 +63,11 @@ public abstract class BaseTrail extends Trail{
         out.forceCap = forceCap;
         out.baseWidth = baseWidth;
         out.blend = blend;
+
+        out.headX = headX;
+        out.headY = headY;
+        out.headW = headW;
+        out.headAngle = headAngle;
     }
 
     @Override
@@ -114,11 +121,11 @@ public abstract class BaseTrail extends Trail{
 
     @Override
     public void update(float x, float y, float width){
-        if(Float.isNaN(lastX)) lastX = x;
-        if(Float.isNaN(lastY)) lastY = y;
-        if(Float.isNaN(lastW)) lastW = width;
+        if(Float.isNaN(lastX)) lastX = headX = x;
+        if(Float.isNaN(lastY)) lastY = headY = y;
+        if(Float.isNaN(lastW)) lastW = headW = width;
 
-        int stride = this.stride;
+        int len = points.size, stride = this.stride;
         var items = points.items;
 
         // May be NaN if this is the first `update(x, y, width)`, since there's only one point. That's okay though, since
@@ -126,8 +133,8 @@ public abstract class BaseTrail extends Trail{
         // vertices with invalid angles.
         float angle = rot.get(this, lastX, lastY, lastAngle, x, y);
         if(!Float.isNaN(angle) && Float.isNaN(lastAngle)){
-            lastAngle = angle;
-            for(int i = 0, len = points.size; i < len && Float.isNaN(angle(items, i)); i += stride){
+            lastAngle = headAngle = angle;
+            for(int i = 0; i < len && Float.isNaN(angle(items, i)); i += stride){
                 angle(items, i, angle);
             }
         }
@@ -136,26 +143,53 @@ public abstract class BaseTrail extends Trail{
         counter -= count;
 
         if(count > 0){
+            if(len > 0){
+                int prev = len - stride;
+                float f = counter / (count + 1f);
+
+                headX = Mathf.lerp(x, x(items, prev), f);
+                headY = Mathf.lerp(y, y(items, prev), f);
+                headW = Mathf.lerp(width, width(items, prev), f);
+                headAngle = Mathf.slerpRad(angle, angle(items, prev), f);
+            }else{
+                headX = x;
+                headY = y;
+                headW = width;
+                headAngle = angle;
+            }
+
             int added = count * stride;
-            if(points.size > length * stride - added) points.removeRange(0, added - 1);
+            if(len > length * stride - added){
+                points.removeRange(0, added - 1);
+                len = points.size;
+            }
 
-            int len = points.size;
             if(count > 1){
-                for(int i = 0; i < count; i++){
-                    float f = i / (count - 1f);
+                if(len > 0){
+                    int prev = len - stride;
+                    float fromX = x(items, prev), fromY = y(items, prev), fromW = width(items, prev), fromAngle = angle(items, prev);
 
-                    point(Mathf.lerp(lastX, x, f), Mathf.lerp(lastY, y, f), Mathf.lerp(lastW, width, f), Mathf.slerpRad(lastAngle, angle, f), items, len);
-                    len += stride;
+                    for(int i = 0; i < count; i++){
+                        float f = (i + 1f) / count;
+
+                        point(Mathf.lerp(fromX, headX, f), Mathf.lerp(fromY, headY, f), Mathf.lerp(fromW, headW, f), Mathf.slerpRad(fromAngle, headAngle, f), items, len);
+                        len += stride;
+                    }
+                }else{
+                    for(int i = 0; i < count; i++){
+                        point(headX, headY, headW, headAngle, items, len);
+                        len += stride;
+                    }
                 }
             }else{
-                point(x, y, width, angle, items, len);
+                point(headX, headY, headW, headAngle, items, len);
                 len += stride;
             }
 
             points.size = len;
         }
 
-        for(int i = 0, len = points.size; i < len; i += stride){
+        for(int i = 0; i < len; i += stride){
             int offset = i;
             eachAttrib((attrib, off) -> attrib.update(this, items, offset, off));
         }

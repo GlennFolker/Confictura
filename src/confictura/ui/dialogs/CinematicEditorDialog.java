@@ -26,7 +26,7 @@ public class CinematicEditorDialog extends BaseDialog{
                 up = Tex.buttonEdge3;
                 down = Tex.buttonEdgeDown3;
                 over = Tex.buttonEdgeOver3;
-            }}, this::show).width(320f).visible(cinematicEditor::isAttached));
+            }}, this::show).width(320f).visible(() -> ui.hudfrag.shown && cinematicEditor.isAttached()));
         }else{
             //TODO mobile.
         }

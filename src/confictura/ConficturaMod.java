@@ -189,6 +189,10 @@ public class ConficturaMod extends Mod{
 
             cinematicDialog = new CinematicEditorDialog();
             scriptDialog = new ScriptDialog();
+
+            //TODO Ideally I should make my own duplicate `Lines` class that draws things with more detail.
+            //     However, until I can get rid of my laziness, I'll keep this code.
+            Lines.setCirclePrecision(2.4f);
         }
     }
 

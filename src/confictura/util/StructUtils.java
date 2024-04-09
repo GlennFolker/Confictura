@@ -115,12 +115,10 @@ public final class StructUtils{
         return true;
     }
 
-    @FunctionalInterface
     public interface Reducei<T>{
         int get(T item, int accum);
     }
 
-    @FunctionalInterface
     public interface Reducef<T>{
         float get(T item, float accum);
     }

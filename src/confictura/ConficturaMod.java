@@ -14,6 +14,8 @@ import confictura.editor.*;
 import confictura.gen.*;
 import confictura.graphics.*;
 import confictura.graphics.g3d.*;
+import confictura.input.*;
+import confictura.net.*;
 import confictura.ui.*;
 import confictura.ui.dialogs.*;
 import confictura.util.*;
@@ -34,26 +36,32 @@ import static mindustry.Vars.*;
  * Main entry point of the mod. Handles startup things like content loading, entity registering, and utility bindings.
  * @author GlennFolker
  */
-@SuppressWarnings("unchecked")
 public class ConficturaMod extends Mod{
+    // <--- Meta information. --->
     public static DevBuild dev;
 
     public static Seq<String> packages = Seq.with("java.lang", "java.util");
     public static Seq<Class<?>> classes = new Seq<>();
     public static ObjectIntMap<String> blockColors = new ObjectIntMap<>();
 
+    // <--- Modules present in both servers and clients. --->
     public static Cinematic cinematic;
+    public static InputAggregator inputAggregator;
 
+    // <--- Modules only present in clients, typically rendering or auxiliary input utilities. --->
     public static RenderContext renderContext;
     public static ModelPropDrawer modelPropDrawer;
 
+    // <--- Map-editor extension modules. --->
     public static CinematicEditor cinematicEditor;
 
+    // <--- UI extension modules. --->
     public static CinematicEditorDialog cinematicDialog;
     public static ScriptDialog scriptDialog;
 
     protected static LoadedMod mod;
 
+    @SuppressWarnings("unchecked")
     public ConficturaMod(){
         try{
             var devImpl = (Class<? extends DevBuild>)Class.forName("confictura.DevBuildImpl", true, mods.mainLoader());
@@ -172,6 +180,7 @@ public class ConficturaMod extends Mod{
                 app.post(() -> {
                     CShaders.load();
 
+                    inputAggregator = new InputAggregator();
                     renderContext = new RenderContext();
                     modelPropDrawer = new ModelPropDrawer(CShaders.modelProp, 8192, 16384);
                 });
@@ -198,6 +207,7 @@ public class ConficturaMod extends Mod{
 
     @Override
     public void loadContent(){
+        CCall.init();
         EntityRegistry.register();
 
         ScriptUtils.init();

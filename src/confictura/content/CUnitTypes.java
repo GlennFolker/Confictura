@@ -20,6 +20,8 @@ public final class CUnitTypes{
 
     /** Instantiates all contents. Called in the main thread in {@link ConficturaMod#loadContent()}. */
     public static void load(){
-        parrier = new CUnitType("parrier", SkillMechUnit.class);
+        parrier = new CUnitType("parrier", SkillMechUnit.class){{
+            canBoost = true;
+        }};
     }
 }

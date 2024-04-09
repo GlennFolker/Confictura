@@ -203,6 +203,7 @@ public class ConficturaMod extends Mod{
         ScriptUtils.init();
         cinematic = new Cinematic();
 
+        CUnitTypes.load();
         CBlocks.load();
         CPlanets.load();
         CSectorPresets.load();

@@ -93,9 +93,14 @@ public final class StructUtils{
     }
 
     public static <T> T[] resize(T[] array, int newSize, T fill){
+        var type = array.getClass().getComponentType();
+        return resize(array, size -> (T[])Array.newInstance(type, size), newSize, fill);
+    }
+
+    public static <T> T[] resize(T[] array, ArrayCreator<T> create, int newSize, T fill){
         if(array.length == newSize) return array;
 
-        var out = (T[])Array.newInstance(array.getClass().getComponentType(), newSize);
+        var out = create.get(newSize);
         System.arraycopy(array, 0, out, 0, Math.min(array.length, newSize));
 
         if(fill != null && newSize > array.length) Arrays.fill(out, array.length, newSize, fill);
@@ -110,12 +115,18 @@ public final class StructUtils{
         return true;
     }
 
+    @FunctionalInterface
     public interface Reducei<T>{
         int get(T item, int accum);
     }
 
+    @FunctionalInterface
     public interface Reducef<T>{
         float get(T item, float accum);
+    }
+
+    public interface ArrayCreator<T>{
+        T[] get(int size);
     }
 
     public static class Empty<T> implements Iterable<T>, Iterator<T>, Eachable<T>{

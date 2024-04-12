@@ -6,7 +6,7 @@ import arc.math.geom.*;
 
 /**
  * Provides convenient extension methods for things like {@link VertexBatch3D}.
- * @author GlennFolker
+ * @author GlFolker
  */
 public final class Draw3DUtils{
     private static final Vec3 a = new Vec3(), b = new Vec3(), c = new Vec3(), d = new Vec3();

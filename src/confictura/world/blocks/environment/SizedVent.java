@@ -15,7 +15,7 @@ import static mindustry.Vars.*;
 /**
  * A {@link SteamVent} that can be of any size. Spans multiple tiles; only the middle tile (or in case of {@code size % 2 == 0},
  * the bottom-left middle) should update and draw the actual sprite.
- * @author GlennFolker
+ * @author GlFolker
  */
 public class SizedVent extends Floor implements DelegateMapColor{
     protected static Point2[][] offsets = new Point2[0][];

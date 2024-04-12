@@ -6,7 +6,7 @@ import static mindustry.content.TechTree.*;
 
 /**
  * Sets up content {@link TechNode tech tree nodes}. Loaded after every other content is instantiated.
- * @author GlennFolker
+ * @author GlFolker
  */
 public final class CTechTree{
     private CTechTree(){}

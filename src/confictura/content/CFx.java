@@ -22,7 +22,7 @@ import static mindustry.Vars.*;
 
 /**
  * Defines the {@linkplain Effect visual effects} this mod offers.
- * @author GlennFolker
+ * @author GlFolker
  */
 public final class CFx{
     private static final Rand rand = new Rand();

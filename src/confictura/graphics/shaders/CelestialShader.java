@@ -9,7 +9,7 @@ import static confictura.graphics.CShaders.*;
 
 /**
  * Similar to {@link PlanetShader}, but properly calculates the light normals.
- * @author GlennFolker
+ * @author GlFolker
  */
 public class CelestialShader extends Shader{
     public Vec3 light = new Vec3();

@@ -7,7 +7,7 @@ import mindustry.type.*;
 
 /**
  * Defines the {@linkplain Planet planets} and other celestial objects this mod offers.
- * @author GlennFolker
+ * @author GlFolker
  */
 public final class CPlanets{
     public static Planet

@@ -11,7 +11,7 @@ import static mindustry.Vars.*;
 
 /**
  * Defines the {@linkplain Scenes3D 3D model}s this mod offers.
- * @author GlennFolker
+ * @author GlFolker
  */
 public final class CModels{
     public static Scenes3D portal, satellite, spires;

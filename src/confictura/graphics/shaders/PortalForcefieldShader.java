@@ -13,7 +13,7 @@ import static confictura.graphics.CShaders.*;
 
 /**
  * Specialized atmosphere shader to render {@link CPlanets#portal}'s artificial gravity forcefield.
- * @author GlennFolker
+ * @author GlFolker
  */
 public class PortalForcefieldShader extends Shader{
     private static final Mat3D mat = new Mat3D();

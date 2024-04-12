@@ -7,7 +7,7 @@ import static confictura.graphics.CShaders.*;
 
 /**
  * Specialized mesh shader to capture fragment depths.
- * @author GlennFolker
+ * @author GlFolker
  */
 public class DepthShader extends Shader{
     public Camera3D camera;

@@ -12,7 +12,7 @@ import static confictura.graphics.CPal.*;
 
 /**
  * Defines the {@linkplain Block blocks} this mod offers.
- * @author GlennFolker
+ * @author GlFolker
  */
 public final class CBlocks{
     public static Block
@@ -117,6 +117,7 @@ public final class CBlocks{
         satelliteTiling = new Floor("satellite-tiling", 0);
 
         satelliteIntercom = new SatelliteEntry("satellite-intercom"){{
+            unitType = CUnitTypes.parrier;
             size = 4;
             customShadow = true;
         }};

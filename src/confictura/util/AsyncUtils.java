@@ -9,7 +9,7 @@ import static arc.Core.*;
 
 /**
  * Provides multithreading utilities, primarily synchronizations from threads to the main thread for OpenGL purposes.
- * @author GlennFolker
+ * @author GlFolker
  */
 @SuppressWarnings("unchecked")
 public final class AsyncUtils{

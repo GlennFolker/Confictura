@@ -16,7 +16,7 @@ import static mindustry.Vars.*;
 
 /**
  * Just a regular planet, but with a fixed atmosphere shader at the little cost of performance.
- * @author GlennFolker
+ * @author GlFolker
  */
 public class AtmospherePlanet extends Planet{
     public @Nullable FrameBuffer depthBuffer;

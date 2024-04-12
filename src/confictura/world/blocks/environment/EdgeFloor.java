@@ -13,7 +13,7 @@ import static mindustry.Vars.*;
 
 /**
  * A custom {@linkplain Floor floor} with per-variant edges.
- * @author GlennFolker
+ * @author GlFolker
  */
 public class EdgeFloor extends Floor{
     public TextureRegion[][][] edges;

@@ -30,7 +30,7 @@ import static mindustry.Vars.*;
 /**
  * The {@linkplain CPlanets#portal portal} celestial object. Composed of floating islands, 9 sectors arranged on the surface,
  * and an artificial gravity forcefield.
- * @author GlennFolker
+ * @author GlFolker
  */
 public class Portal extends EmissiveObject{
     private static final Mat3D mat1 = new Mat3D(), mat2 = new Mat3D();

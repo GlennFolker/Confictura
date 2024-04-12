@@ -8,7 +8,7 @@ import static mindustry.Vars.*;
 
 /**
  * Common utility bridge for JavaScript codes.
- * @author GlennFolker
+ * @author GlFolker
  */
 public final class ScriptUtils{
     public static Context context;

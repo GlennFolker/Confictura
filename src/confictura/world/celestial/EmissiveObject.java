@@ -18,7 +18,7 @@ import static mindustry.Vars.*;
 
 /**
  * Defines a celestial object that may draw emissive vertices.
- * @author GlennFolker
+ * @author GlFolker
  */
 public abstract class EmissiveObject extends Planet{
     public EmissiveBatchShader batchShader = CShaders.emissiveBatch;

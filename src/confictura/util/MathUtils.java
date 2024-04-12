@@ -5,7 +5,7 @@ import arc.math.geom.*;
 
 /**
  * Provides several convenience mathematical operations, mainly bridging Arc's core module and its 3D extension.
- * @author GlennFolker
+ * @author GlFolker
  */
 public final class MathUtils{
     private MathUtils(){

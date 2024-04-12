@@ -6,7 +6,7 @@ import static mindustry.Vars.*;
 
 /**
  * Reflection utilities, mainly for wrapping reflective operations to eradicate checked exceptions.
- * @author GlennFolker
+ * @author GlFolker
  */
 @SuppressWarnings("unchecked")
 public final class ReflectUtils{

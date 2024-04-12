@@ -34,7 +34,7 @@ import static mindustry.Vars.*;
 
 /**
  * Main entry point of the mod. Handles startup things like content loading, entity registering, and utility bindings.
- * @author GlennFolker
+ * @author GlFolker
  */
 public class ConficturaMod extends Mod{
     // <--- Meta information. --->

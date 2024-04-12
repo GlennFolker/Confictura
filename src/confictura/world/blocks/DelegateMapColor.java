@@ -4,7 +4,7 @@ import mindustry.world.*;
 
 /**
  * Uses another block's {@link Block#mapColor mapColor}.
- * @author GlennFolker
+ * @author GlFolker
  */
 public interface DelegateMapColor{
     Block substitute();

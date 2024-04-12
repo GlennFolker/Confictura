@@ -5,7 +5,7 @@ import mindustry.type.*;
 
 /**
  * Defines the {@linkplain SectorPreset maps} this mod offers.
- * @author GlennFolker
+ * @author GlFolker
  */
 public final class CSectorPresets{
     private CSectorPresets(){

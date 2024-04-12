@@ -8,7 +8,7 @@ import static mindustry.Vars.*;
 
 /**
  * Base class for listeners that attach themselves when the game is in editor mode.
- * @author GlennFolker
+ * @author GlFolker
  */
 public abstract class EditorListener{
     private boolean attached;

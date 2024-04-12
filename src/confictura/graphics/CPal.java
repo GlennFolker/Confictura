@@ -4,7 +4,7 @@ import arc.graphics.*;
 
 /**
  * Static read-only palettes that are used throughout the mod.
- * @author GlennFolker
+ * @author GlFolker
  */
 public final class CPal{
     public static final Color

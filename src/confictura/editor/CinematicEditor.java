@@ -9,7 +9,7 @@ import static mindustry.Vars.*;
 
 /**
  * Editor extension for custom {@link SectorPreset}s.
- * @author GlennFolker
+ * @author GlFolker
  */
 public class CinematicEditor extends EditorListener{
     @Override

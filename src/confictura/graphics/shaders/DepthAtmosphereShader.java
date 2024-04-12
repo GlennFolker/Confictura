@@ -12,7 +12,7 @@ import static confictura.graphics.CShaders.*;
 /**
  * An atmosphere shader that incorporates the planet shape in a form of depth texture. Better quality, but at the little
  * cost of performance.
- * @author GlennFolker
+ * @author GlFolker
  */
 public class DepthAtmosphereShader extends Shader{
     private static final Mat3D mat = new Mat3D();

@@ -12,7 +12,7 @@ import static mindustry.Vars.*;
 
 /**
  * Implementation class for {@link DevBuild}. This class is excluded in the built JARs for non-developer builds.
- * @author GlennFolker
+ * @author GlFolker
  */
 public class DevBuildImpl implements DevBuild{
     public DevBuildImpl(){

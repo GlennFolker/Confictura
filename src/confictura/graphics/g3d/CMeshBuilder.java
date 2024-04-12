@@ -13,7 +13,7 @@ import static confictura.util.StructUtils.*;
 
 /**
  * Utilities for composing specialized OpenGL {@linkplain Mesh meshes}.
- * @author GlennFolker
+ * @author GlFolker
  */
 public final class CMeshBuilder{
     private static Mesh mesh;

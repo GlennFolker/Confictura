@@ -15,7 +15,8 @@ public final class CPal{
     monolithDark = new Color(0x354d97ff),
     monolithDarker = new Color(0x253080ff),
 
-    monolithOutline = new Color(0x38383dff);
+    monolithOutline = new Color(0x0d0d14ff),
+    monolithOutlineLight = new Color(0x1d1c28ff);
 
     private CPal(){
         throw new AssertionError();

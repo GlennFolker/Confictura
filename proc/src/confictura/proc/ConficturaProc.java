@@ -28,7 +28,7 @@ import static mindustry.Vars.*;
 
 public class ConficturaProc{
     protected static final TaskQueue runs = new TaskQueue();
-    protected static final Proc[] procs = {new BlockProc(), new EffectProc()};
+    protected static final Proc[] procs = {new BlockProc(), new UnitProc(), new EffectProc()};
 
     public static GenAtlas atlas;
 

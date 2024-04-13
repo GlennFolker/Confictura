@@ -126,7 +126,7 @@ public class InputAggregator implements Eachable<String>{
 
             // Swap-remove, and fix the swapped handle's index.
             handles.removeIndex(index);
-            if(handleKeys.size > index) handles.get(handleKeys.items[index]).index = index;
+            if(handleKeys.size > index) handles.get(handleKeys.get(index)).index = index;
         }
     }
 

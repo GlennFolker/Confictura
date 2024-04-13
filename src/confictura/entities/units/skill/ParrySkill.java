@@ -1,15 +1,18 @@
 package confictura.entities.units.skill;
 
 import arc.math.geom.*;
-import arc.util.*;
 import confictura.entities.units.*;
 import confictura.gen.*;
+import mindustry.content.*;
+import mindustry.entities.*;
 
 public class ParrySkill extends Skill{
     private static final Vec2 vec = new Vec2();
 
     public float clipSize = 16f;
     public float offset = 2.4f;
+
+    public Effect triggerEffect = Fx.none;
 
     public ParrySkill(String name){
         super(name);
@@ -31,7 +34,6 @@ public class ParrySkill extends Skill{
     public class ParryState extends SkillState{
         @Override
         public void activate(float x, float y){
-            Log.info("(@, @)", x, y);
             float rot = unit.angleTo(x, y);
             vec.trns(rot, unit.hitSize + offset).add(unit);
 
@@ -44,11 +46,8 @@ public class ParrySkill extends Skill{
 
             unit.rotation = rot;
             unit.snapInterpolation();
-        }
 
-        @Override
-        public void regress(float x, float y){
-            Log.info("Womp womp");
+            triggerEffect.at(unit.x, unit.y, unit.rotation, unit);
         }
     }
 }

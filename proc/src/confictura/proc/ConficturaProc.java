@@ -5,6 +5,7 @@ import arc.assets.*;
 import arc.files.*;
 import arc.func.*;
 import arc.graphics.*;
+import arc.graphics.g2d.*;
 import arc.mock.*;
 import arc.struct.*;
 import arc.util.*;
@@ -39,6 +40,8 @@ public class ConficturaProc{
     public static Fi assetsDir;
 
     public static void main(String[] args){
+        Draw.scl = 1f / 4f;
+
         loadLogger();
         Log.info("[Confictura-Proc] Sprite processing initiated...");
 
@@ -120,7 +123,7 @@ public class ConficturaProc{
                     run.run();
                     if(remaining.addAndGet(-1) == 0){
                         proc.finish();
-                        Log.info("[Confictura-Proc] '@' took @ms.", proc.getClass().getSimpleName(), Time.timeSinceMillis(started));
+                        Log.info("[Confictura-Proc] @ took @ms.", proc.getClass().getSimpleName(), Time.timeSinceMillis(started));
                     }
                 })));
             }

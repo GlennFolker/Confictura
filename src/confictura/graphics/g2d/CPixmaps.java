@@ -53,4 +53,27 @@ public final class CPixmaps{
         ref.dispose();
         return out;
     }
+
+    public static void drawCenter(Pixmap dst, Pixmap src){
+        dst.draw(src, dst.width / 2 - src.width / 2, dst.height / 2 - src.height / 2, true);
+    }
+
+    public static Pixmap copyScaled(Pixmap src, int w, int h){
+        var out = new Pixmap(w, h);
+
+        Color a = new Color(), b = new Color(), c = new Color(), d = new Color();
+        out.each((x, y) -> {
+            float fracX = x / (float)w * src.width, fracY = y / (float)h * src.height;
+            int fx = (int)fracX, tx = Math.min(fx + 1, src.width - 1),
+                fy = (int)fracY, ty = Math.min(fy + 1, src.height - 1);
+            fracX -= fx;
+            fracY -= fy;
+
+            a.set(src.getRaw(fx, fy)).lerp(b.set(src.getRaw(tx, fy)), fracX);
+            c.set(src.getRaw(fx, ty)).lerp(d.set(src.getRaw(tx, ty)), fracX);
+            out.setRaw(x, y, a.lerp(c, fracY).rgba());
+        });
+
+        return out;
+    }
 }

@@ -70,7 +70,7 @@ public class BlockProc implements Proc{
 
                         var shadow = CPixmaps.gaussianBlur(reg.pixmap(), 32, 32, 8f);
                         shadow.each((x, y) -> shadow.setRaw(x, y, 0xffffff00 | shadow.getRaw(x, y) & 0xff));
-                        new GenRegion(name, reg.file.sibling(name + ".png"), shadow).save(true);
+                        new GenRegion("confictura-" + name, reg.file.sibling(name + ".png"), shadow).save(true);
                     }
                 }
 

@@ -25,7 +25,10 @@ public class GenAtlas extends TextureAtlas implements FreeableAtlas, Eachable<Ge
 
     public void addRegion(GenRegion region){
         var old = AsyncUtils.write(lock, () -> regions.put(region.name, region));
-        if(old != null && old.found()) old.pixmap.dispose();
+        if(old != null && old.found()){
+            old.pixmap.dispose();
+            if(old.file != region.file) old.file.delete();
+        }
     }
 
     @Override

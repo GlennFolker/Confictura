@@ -49,7 +49,12 @@ abstract class SkillComp implements Unitc{
 
     @Override
     public void update(){
-        for(var skill : skills) skill.update();
+        for(var skill : skills){
+            // I don't know why, but when players respawn to cores using the keybind (ctrl-clicking doesn't do this!),
+            // `update()` is still called even after `remove()` is called. I'm not sure if this is worth reporting...
+            if(skill.unit == null) return;
+            skill.update();
+        }
     }
 
     @Override

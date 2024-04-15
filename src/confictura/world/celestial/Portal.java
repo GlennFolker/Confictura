@@ -126,7 +126,7 @@ public class Portal extends EmissiveObject{
         IslandBuilder island = (int seed, float dstScale, float depth, float depthScale, Color stroke) -> {
             int seeded = seed * 4;
             return (x, y, hex) -> {
-                float dst = Mathf.len(x, y) / dstScale;
+                float dst = Mathf.dst(x, y) / dstScale;
                 hex.low = depth + dst * depthScale + Simplex.noise2d(seeded, 3f, 0.5f, 4.5f, x + 31.41f, y + 59.26f) * (0.3f + Interp.pow2In.apply(dst) * 0.7f) * 0.1f;
                 hex.high = -Interp.pow3In.apply(dst) * 0.067f + Simplex.noise2d(seeded + 1, 3f, 0.5f, 4f, x + 53.58f, y + 97.93f) * (0.4f + Interp.pow2In.apply(dst) * 0.6f) * 0.08f;
 

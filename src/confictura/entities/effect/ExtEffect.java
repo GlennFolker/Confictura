@@ -1,4 +1,4 @@
-package confictura.graphics;
+package confictura.entities.effect;
 
 import arc.func.*;
 import arc.graphics.*;

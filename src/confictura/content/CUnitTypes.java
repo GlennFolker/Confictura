@@ -28,7 +28,7 @@ public final class CUnitTypes{
             rotateSpeed = 2.4f;
             baseRotateSpeed = 3.6f;
             mechStride = 6f;
-            hitSize = 32f / 4f;
+            hitSize = 35f / 4f;
 
             canBoost = true;
             outlineColor = monolithOutline;

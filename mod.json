@@ -3,7 +3,7 @@
     "description": "Dive into the past of a trauma-driven uprising.",
     "version": "v0.2.0",
     "minGameVersion": "147",
-    "author": "GlennFolker",
+    "author": "GlFolker",
     "java": true,
     "pregenerated": true,
     "main": "confictura.ConficturaMod",

@@ -5,7 +5,8 @@ import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.math.geom.*;
 import arc.util.pooling.*;
-import confictura.graphics.*;
+import confictura.entities.effect.*;
+import confictura.entities.units.skill.ParrySkill.*;
 import mindustry.content.*;
 import mindustry.entities.*;
 import mindustry.gen.*;
@@ -28,6 +29,8 @@ public final class CFx{
     private static final Rand rand = new Rand();
     private static final Vec2 v1 = new Vec2(), v2 = new Vec2();
     private static final Color c1 = new Color();
+
+    private static int index = 0;
 
     public static final Effect
 
@@ -147,6 +150,41 @@ public final class CFx{
         randLenVectors(e.id, 6, 64f, e.rotation, 30f, (x, y) ->
             lineAngle(e.x + x * e.fin(pow3Out), e.y + y * e.fin(pow3Out), Mathf.angle(x, y), e.fout(pow2Out) * 8f)
         );
+    }),
+
+    parry = new Effect(36f, e -> {
+        if(!(e.data instanceof FxData fx && fx.data instanceof ParryData data)) return;
+        float rot = 180f * Mathf.sign(!data.clockwise) * e.fin(pow3Out);
+
+        index = 0;
+        randLenVectors(e.id, 8, data.unit.hitSize + data.offset, 4f, (x, y) -> {
+            rand.setSeed(e.id + index++);
+
+            stroke((1f + rand.range(0.5f)) * e.fout());
+            color(monolithMid, monolithLight, monolithLighter, rand.random(0f, 1f));
+            arc(e.x, e.y, Mathf.dst(x, y), 0.2f + rand.range(0.1f), rand.random(360f) + rot + rand.range(45f));
+        });
+
+        z(Layer.flyingUnitLow);
+        blend(Blending.additive);
+        color();
+
+        for(int i = 0, len = Math.max(Mathf.roundPositive(Angles.angleDist(data.fromRot, data.toRot) / 45f), 2); i < len; i++){
+            float f = i / (len - 1f);
+            alpha((i + 1f) / len * 0.5f);
+
+            e.scaled(24f * f, s -> {
+                mixcol(c1.set(monolithDarker).lerp(monolithLighter, f), Color.black, s.fin(pow2In));
+                Draw.rect(data.unit.type.fullIcon, e.x, e.y, Mathf.slerp(data.fromRot, data.toRot, f) - 90f);
+            });
+        }
+
+        alpha(e.fin(pow2Out));
+        e.scaled(24f, s -> {
+            mixcol(monolithLighter, Color.black, s.fin(pow2In));
+            Draw.rect(data.unit.type.fullIcon, e.x, e.y, Mathf.slerp(data.fromRot, data.toRot, s.fin(pow3Out)) - 90f);
+        });
+        blend();
     });
 
     private CFx(){

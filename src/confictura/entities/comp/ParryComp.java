@@ -9,6 +9,7 @@ import mindustry.gen.*;
 @EntityDef(value = Parryc.class, serialize = false, pooled = true)
 abstract class ParryComp implements Drawc, Rotc, Timedc{
     ParrySkill skill;
+    boolean clockwise;
 
     @Override
     public void update(){

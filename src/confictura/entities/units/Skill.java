@@ -60,6 +60,14 @@ public abstract class Skill{
 
         public void draw(){}
 
+        public float speedMultiplier(){
+            return 1f;
+        }
+
+        public float reloadMultiplier(){
+            return 1f;
+        }
+
         @Override
         public boolean canTap(Player player, float x, float y){
             return reload >= reloadTime;

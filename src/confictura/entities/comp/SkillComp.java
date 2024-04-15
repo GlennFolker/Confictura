@@ -6,6 +6,8 @@ import ent.anno.Annotations.*;
 import mindustry.gen.*;
 import mindustry.type.*;
 
+import static confictura.util.StructUtils.*;
+
 @EntityComponent
 abstract class SkillComp implements Unitc{
     /** Compared by-reference to see if the unit hasn't setup its skills. */
@@ -45,6 +47,13 @@ abstract class SkillComp implements Unitc{
                 skill.unit = null;
             }
         }
+    }
+
+    @Insert(value = "update()", block = Statusc.class, after = false)
+    void updateSkillStats(){
+        var stat = applyDynamicStatus();
+        stat.speedMultiplier = reducef(skills, 1f, (skill, out) -> out * skill.speedMultiplier());
+        stat.reloadMultiplier = reducef(skills, 1f, (skill, out) -> out * skill.reloadMultiplier());
     }
 
     @Override

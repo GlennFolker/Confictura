@@ -6,7 +6,7 @@ import arc.util.*;
 import mindustry.entities.*;
 import mindustry.gen.*;
 
-public class ExtEffect extends Effect{
+public class ExtEffect extends CEffect{
     public Prov<? extends EffectState> constructor;
     public @Nullable Prov<Object> data;
 

@@ -23,7 +23,7 @@ public final class ReflectUtils{
     public static <T> @Nullable Class<T> findClass(String name){
         try{
             return (Class<T>)Class.forName(name, true, mods.mainLoader());
-        }catch(ClassNotFoundException | NoClassDefFoundError e){
+        }catch(ClassNotFoundException e){
             return null;
         }
     }

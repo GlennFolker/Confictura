@@ -18,6 +18,7 @@ Instead, you have two options:
    - On Android, see the game's built-in mod import functionality below.
 
   You can also use Mindustry's built-in "Import mod" button in the mods menu dialog, restart the game, and play.
+
 - ### Bleeding-Edge
 
   Make sure you have a GitHub account. Head over to the [actions](https://github.com/GlennFolker/Confictura/actions) page, click the most recent successful workflow runs *(marked by green checkmark)*, scroll down to "Artifacts" section, and download the one titled `Confictura (zipped)`. As the name suggests, **you must unzip it first to extract the actual `.jar`**, then you can import it. If you open an issue report that is exactly this, I too will simply ignore you and refer you to this file. <br>

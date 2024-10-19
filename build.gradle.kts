@@ -296,8 +296,10 @@ project(":"){
         mustRunAfter(proc)
 
         if(!layout.projectDirectory.dir("assets").dir("sprites").asFile.exists()){
-            logger.lifecycle("Sprites folder not found; automatically running `:proc:run`.")
             inputs.files(proc)
+            doFirst{
+                logger.lifecycle("Sprites folder not found; automatically running `:proc:run`.")
+            }
         }
 
         archiveFileName = "${modArtifact}Desktop.jar"

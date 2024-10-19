@@ -127,11 +127,6 @@ public class FxData implements Posc, Rotc{
     }
 
     @Override
-    public boolean isNull(){
-        return delegate.isNull();
-    }
-
-    @Override
     public boolean isRemote(){
         return delegate.isRemote();
     }

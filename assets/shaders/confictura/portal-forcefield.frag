@@ -25,9 +25,11 @@ therefore here is the required copyright notice.
 
 #define HIGHP
 
-varying vec3 v_position;
-varying float v_progress;
-varying vec4 v_color;
+in vec3 v_position;
+in float v_progress;
+in vec4 v_color;
+
+out vec4 fragColor;
 
 uniform mat4 u_proj;
 uniform float u_radius;
@@ -191,7 +193,7 @@ void main(){
     vec3 normal = normalize(v_position - u_center);
 
     vec2 intersect = intersect(eye, ray, u_radius - 0.01);
-    float topo = unpack(texture2D(u_topology, gl_FragCoord.xy / u_viewport));
+    float topo = unpack(texture(u_topology, gl_FragCoord.xy / u_viewport));
 
     float dst = (intersect.y - intersect.x) / ((u_radius - 0.01) * 2.0);
     float noise = octNoise(vec3(eye + ray * intersect.x), 4, 1.8, 1.8, 0.67);
@@ -223,11 +225,9 @@ void main(){
     outline *= medium * light;
 
     vec3 outlineColor = v_color.xyz * pow(max(1.0 - v_color.a - 0.5, 0.0) * 2.0, 4.0) * outline;
-    gl_FragColor = vec4(baseColor + outlineColor, 1.0);
+    fragColor = vec4(baseColor + outlineColor, 1.0);
 
-    #ifdef HAS_GL_FRAGDEPTH
     float far = gl_DepthRange.far, near = gl_DepthRange.near;
     vec4 clip = u_proj * vec4(u_camPos + ray * intersect.x, 1.0);
     gl_FragDepth = (((far - near) * (clip.z / clip.w)) + near + far) / 2.0;
-    #endif
 }

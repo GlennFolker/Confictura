@@ -1,6 +1,8 @@
-attribute vec3 a_position;
-attribute vec3 a_normal;
-attribute vec4 a_color;
+in vec3 a_position;
+in vec3 a_normal;
+in vec4 a_color;
+
+out vec3 v_color;
 
 uniform mat4 u_proj;
 uniform mat4 u_trans;
@@ -9,8 +11,6 @@ uniform mat3 u_normal;
 uniform vec3 u_light;
 uniform vec3 u_ambientColor;
 uniform vec3 u_camPos;
-
-varying vec3 v_color;
 
 void main(){
     vec4 pos = u_trans * vec4(a_position, 1.0);

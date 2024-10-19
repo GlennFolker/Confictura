@@ -2,12 +2,12 @@ package confictura.graphics.shaders;
 
 import arc.graphics.*;
 import arc.graphics.g3d.*;
-import arc.graphics.gl.*;
 import arc.math.geom.*;
+import confictura.graphics.gl.*;
 
 import static confictura.graphics.CShaders.*;
 
-public class ModelPropShader extends Shader{
+public class ModelPropShader extends Gl30Shader{
     public Camera3D camera;
     public Vec3 lightDir = new Vec3();
     public Color reflectColor = new Color();

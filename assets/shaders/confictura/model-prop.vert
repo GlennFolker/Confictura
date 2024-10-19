@@ -1,16 +1,16 @@
-attribute vec3 a_position;
-attribute vec3 a_normal;
-attribute vec4 a_color;
-attribute float a_darkness;
+in vec3 a_position;
+in vec3 a_normal;
+in vec4 a_color;
+in float a_darkness;
+
+out vec3 v_color;
+out float v_height;
+out float v_darkness;
 
 uniform mat4 u_proj;
 uniform vec3 u_camPos;
 uniform vec3 u_lightDir;
 uniform vec4 u_reflectColor;
-
-varying vec3 v_color;
-varying float v_height;
-varying float v_darkness;
 
 void main(){
     gl_Position = u_proj * vec4(a_position, 1.0);

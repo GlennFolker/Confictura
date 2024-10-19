@@ -1,7 +1,7 @@
 package confictura.graphics.shaders;
 
 import arc.graphics.g3d.*;
-import arc.graphics.gl.*;
+import confictura.graphics.gl.*;
 
 import static confictura.graphics.CShaders.*;
 
@@ -9,7 +9,7 @@ import static confictura.graphics.CShaders.*;
  * Specialized mesh shader to capture fragment depths.
  * @author GlFolker
  */
-public class DepthShader extends Shader{
+public class DepthShader extends Gl30Shader{
     public Camera3D camera;
 
     public DepthShader(){

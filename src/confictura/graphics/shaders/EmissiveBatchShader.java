@@ -1,15 +1,14 @@
 package confictura.graphics.shaders;
 
-import arc.graphics.gl.*;
 import arc.math.geom.*;
 import arc.util.*;
+import confictura.graphics.gl.*;
 import confictura.world.celestial.*;
-import mindustry.type.*;
 
 import static confictura.graphics.CShaders.*;
 import static confictura.util.MathUtils.*;
 
-public class EmissiveBatchShader extends Shader{
+public class EmissiveBatchShader extends Gl30Shader{
     private static final Mat3D mat = new Mat3D();
 
     public EmissiveObject planet;

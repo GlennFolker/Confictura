@@ -2,11 +2,9 @@ package confictura.graphics;
 
 import arc.files.*;
 import arc.graphics.gl.*;
-import arc.graphics.gl.GLVersion.*;
 import confictura.graphics.shaders.*;
 import mindustry.*;
 
-import static arc.Core.*;
 import static mindustry.Vars.*;
 
 /**
@@ -20,6 +18,8 @@ public final class CShaders{
     public static EmissiveBatchShader emissiveBatch;
     public static CelestialShader celestial;
     public static ModelPropShader modelProp;
+    public static BlackHoleShader blackHole;
+    public static BlackHoleStencilShader blackHoleStencil;
 
     private CShaders(){
         throw new AssertionError();
@@ -30,16 +30,14 @@ public final class CShaders{
         String prevVert = Shader.prependVertexCode, prevFrag = Shader.prependFragmentCode;
         Shader.prependVertexCode = Shader.prependFragmentCode = "";
 
-        if(graphics.getGLVersion().type == GlType.OpenGL){
-            Shader.prependFragmentCode = "#define HAS_GL_FRAGDEPTH\n";
-        }
-
         depth = new DepthShader();
         depthAtmosphere = new DepthAtmosphereShader();
         portalForcefield = new PortalForcefieldShader();
         emissiveBatch = new EmissiveBatchShader();
         celestial = new CelestialShader();
         modelProp = new ModelPropShader();
+        blackHole = new BlackHoleShader();
+        blackHoleStencil = new BlackHoleStencilShader();
 
         Shader.prependVertexCode = prevVert;
         Shader.prependFragmentCode = prevFrag;

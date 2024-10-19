@@ -1,9 +1,9 @@
 package confictura.graphics.shaders;
 
 import arc.graphics.g3d.*;
-import arc.graphics.gl.*;
 import arc.math.geom.*;
 import arc.util.*;
+import confictura.graphics.gl.*;
 import confictura.world.celestial.*;
 
 import static arc.Core.*;
@@ -14,7 +14,7 @@ import static confictura.graphics.CShaders.*;
  * cost of performance.
  * @author GlFolker
  */
-public class DepthAtmosphereShader extends Shader{
+public class DepthAtmosphereShader extends Gl30Shader{
     private static final Mat3D mat = new Mat3D();
 
     public Camera3D camera;

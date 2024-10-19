@@ -1,6 +1,8 @@
 #define HIGHP
 
-varying float v_depth;
+in float v_depth;
+
+out vec4 fragColor;
 
 uniform vec2 u_camRange;
 
@@ -14,5 +16,5 @@ vec4 pack(float value){
 }
 
 void main(){
-    gl_FragColor = pack(v_depth);
+    fragColor = pack(v_depth);
 }

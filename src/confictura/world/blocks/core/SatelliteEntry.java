@@ -197,8 +197,6 @@ public class SatelliteEntry extends CoreBlock{
         public void drawLanding(CoreBlock block){}
 
         @Override
-        public void updateLandParticles(){
-
-        }
+        public void updateLandParticles(){}
     }
 }

@@ -63,16 +63,21 @@ public class ConficturaMod extends Mod{
 
     @SuppressWarnings("unchecked")
     public ConficturaMod(){
+        if(gl30 == null){
+            throw new UnsupportedOperationException("Confictura only runs with OpenGL 3.0 (on desktop) or OpenGL ES 3.0 (on android) and above!");
+        }
+
         try{
             var devImpl = (Class<? extends DevBuild>)Class.forName("confictura.DevBuildImpl", true, mods.mainLoader());
             dev = devImpl.getConstructor().newInstance();
 
             Log.info("[Confictura] Instantiated developer build.");
         }catch(ClassNotFoundException | NoClassDefFoundError e){
-            dev = new DevBuild(){};
             Log.info("[Confictura] Instantiated user build.");
         }catch(Throwable e){
             Log.err("[Confictura] Failed instantiating developer build", Strings.getFinalCause(e));
+        }finally{
+            if(dev == null) dev = new DevBuild(){};
         }
 
         if(!headless){
@@ -85,7 +90,7 @@ public class ConficturaMod extends Mod{
                 public void loadAsync(){
                     pixmaps = new ObjectMap<>();
                     var regions = content.blocks().flatMap(b -> {
-                        if(b instanceof EdgeFloor floor){
+                        if(b instanceof EdgeFloor){
                             return chain(iter(b.variantRegions), iter(b.editorVariantRegions()));
                         }else{
                             return empty();
@@ -104,7 +109,7 @@ public class ConficturaMod extends Mod{
                             buffer.end();
 
                             // Generally it's a bad idea to modify a collection while iterating over it.
-                            // However in this case, the map's inner hash tables are structurally unchanged, so it should be fine.
+                            // However in this case, the map's inner hash table is structurally unchanged, so it should be fine.
                             pixmaps.put(texture, pixels);
                         }
                         buffer.dispose();

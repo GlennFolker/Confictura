@@ -63,7 +63,7 @@ public class ConficturaMod extends Mod{
 
     @SuppressWarnings("unchecked")
     public ConficturaMod(){
-        if(gl30 == null){
+        if(!headless && gl30 == null){
             throw new UnsupportedOperationException("Confictura only runs with OpenGL 3.0 (on desktop) or OpenGL ES 3.0 (on android) and above!");
         }
 

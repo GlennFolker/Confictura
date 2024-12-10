@@ -8,16 +8,15 @@ import java.io.*
 import java.util.regex.*
 
 buildscript{
+    val arcVersion: String by project
+    val useJitpack = property("mindustryBE").toString().toBooleanStrict()
+
     dependencies{
-        val arcVersion: String by project
         classpath("com.github.Anuken.Arc:arc-core:$arcVersion")
     }
 
     repositories{
-        mavenCentral()
-        maven("https://oss.sonatype.org/content/repositories/snapshots/")
-        maven("https://oss.sonatype.org/content/repositories/releases/")
-        maven("https://raw.githubusercontent.com/Zelaux/MindustryRepo/master/repository")
+        if(!useJitpack) maven("https://raw.githubusercontent.com/Zelaux/MindustryRepo/master/repository")
         maven("https://jitpack.io")
     }
 }
@@ -28,7 +27,7 @@ plugins{
     id("com.github.GlennFolker.EntityAnno") apply(false)
 }
 
-configure<ExtraPropertiesExtension>{
+ext{
     val props = StringMap()
 
     val local = layout.projectDirectory.file("local.properties").asFile
@@ -79,7 +78,7 @@ fun entity(module: String): String{
 
 allprojects{
     apply(plugin = "java-library")
-    sourceSets["main"].java.setSrcDirs(arrayListOf(layout.projectDirectory.dir("src")))
+    sourceSets["main"].java.setSrcDirs(listOf(layout.projectDirectory.dir("src")))
 
     configurations.configureEach{
         // Resolve the correct Mindustry dependency, and force Arc version.
@@ -102,6 +101,8 @@ allprojects{
         mavenCentral()
         maven("https://oss.sonatype.org/content/repositories/snapshots/")
         maven("https://oss.sonatype.org/content/repositories/releases/")
+        maven("https://raw.githubusercontent.com/GlennFolker/EntityAnnoMaven/main")
+        maven("https://raw.githubusercontent.com/GlennFolker/glTFrenzyMaven/main")
 
         // Use Zelaux's non-buggy repository for release Mindustry and Arc builds.
         if(!useJitpack) maven("https://raw.githubusercontent.com/Zelaux/MindustryRepo/master/repository")
@@ -338,7 +339,8 @@ project(":"){
 
         from(zipTree(desktopJar), zipTree(dexJar))
         doFirst{
-            exec{
+            logger.lifecycle("Running `d8`.")
+            providers.exec{
                 // Find Android SDK root.
                 val sdkRoot = File(
                     OS.env("ANDROID_SDK_ROOT") ?: OS.env("ANDROID_HOME") ?:
@@ -366,9 +368,8 @@ project(":"){
                 if(OS.isWindows) command.addAll(0, arrayOf("cmd", "/c").toList())
 
                 // Run `d8`.
-                logger.lifecycle("Running `d8`.")
                 commandLine(command)
-            }
+            }.result.get().rethrowFailure()
         }
     }
 

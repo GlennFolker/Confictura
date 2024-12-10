@@ -1,7 +1,7 @@
 pluginManagement{
     repositories{
         gradlePluginPortal()
-        maven("https://jitpack.io")
+        maven("https://raw.githubusercontent.com/GlennFolker/EntityAnnoMaven/main")
     }
 
     plugins{

@@ -33,8 +33,8 @@ public final class CPlanets{
 
         satelliteErekir = new Satellite("satellite-erekir", Planets.erekir, 0.525f);
 
-        blackHole = new BlackHole("black-hole", 12f){{
-            orbitSpacing = 24f;
+        blackHole = new BlackHole("black-hole", 10f){{
+            orbitSpacing = 16f;
         }};
 
         new AtmospherePlanet("test", blackHole, 1f){{

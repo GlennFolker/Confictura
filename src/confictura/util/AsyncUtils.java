@@ -28,8 +28,11 @@ public final class AsyncUtils{
     public static void postWait(Runnable runSync){
         var flag = new Semaphore(0);
         app.post(() -> {
-            runSync.run();
-            flag.release();
+            try{
+                runSync.run();
+            }finally{
+                flag.release();
+            }
         });
 
         try{
@@ -44,8 +47,11 @@ public final class AsyncUtils{
 
         var out = new Object[1];
         app.post(() -> {
-            out[0] = runSync.get();
-            flag.release();
+            try{
+                out[0] = runSync.get();
+            }finally{
+                flag.release();
+            }
         });
 
         try{

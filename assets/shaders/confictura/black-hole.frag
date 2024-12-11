@@ -75,7 +75,7 @@ void main(){
     vec3 origin = u_camPos + bound.x * ray;
     vec4 shift = texture(u_ref, coords(origin, newRay));
 
-    float inner = 1.0 - smoothstep(0.0, 1.0, pow(1.0 - max(-dist + u_horizon, 0.0) / u_horizon, 16.0));
+    float inner = 1.0 - smoothstep(0.0, 1.0, pow(1.0 - max(-dist + u_horizon, 0.0) / u_horizon, 30.0));
     fragColor = mix(
         shift,
         vec4(vec3(0.0), 1.0),

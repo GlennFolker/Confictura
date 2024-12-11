@@ -6,6 +6,7 @@ import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.graphics.g3d.*;
 import arc.graphics.gl.*;
+import arc.math.*;
 import arc.math.geom.*;
 import arc.struct.*;
 import arc.util.*;
@@ -27,14 +28,12 @@ import static mindustry.Vars.*;
 public class BlackHole extends Planet{
     private static final Mat3D mat = new Mat3D();
 
-    public float horizon = 0.45f;
+    public float horizon = 0.36f;
 
     public @Nullable Mesh mesh;
     public @Nullable FrameBuffer ref;
     public @Nullable CFrameBuffer depth, depthRef;
     public @Nullable Cubemap skybox;
-
-    public @Nullable Cubemap pov;
 
     protected Seq<Planet> stashChildren = new Seq<>(), requests = new Seq<>();
     protected Cubemap stashSkybox;
@@ -71,7 +70,6 @@ public class BlackHole extends Planet{
         if(ref == null) ref = new FrameBuffer(2, 2);
         if(depth == null) depth = new CFrameBuffer(2, 2, true);
         if(depthRef == null) depthRef = new CFrameBuffer(2, 2, true);
-
         if(skybox == null) {
             var base = "skyboxes/confictura/megalith/";
             skybox = new Cubemap(
@@ -83,26 +81,20 @@ public class BlackHole extends Planet{
                 tree.get(base + "back.png")
             );
         }
-
-        if(pov == null) pov = new Cubemap(
-            new GLOnlyTextureData(1024, 1024, 0, Gl.rgba, Gl.rgba, Gl.unsignedByte),
-            new GLOnlyTextureData(1024, 1024, 0, Gl.rgba, Gl.rgba, Gl.unsignedByte),
-            new GLOnlyTextureData(1024, 1024, 0, Gl.rgba, Gl.rgba, Gl.unsignedByte),
-            new GLOnlyTextureData(1024, 1024, 0, Gl.rgba, Gl.rgba, Gl.unsignedByte),
-            new GLOnlyTextureData(1024, 1024, 0, Gl.rgba, Gl.rgba, Gl.unsignedByte),
-            new GLOnlyTextureData(1024, 1024, 0, Gl.rgba, Gl.rgba, Gl.unsignedByte)
-        );
     }
 
     @Override
     public void draw(PlanetParams params, Mat3D projection, Mat3D transform){
         // Fool `PlanetRenderer` into thinking the black hole has no children, so that it can draw them itself.
-        /*var stash = stashChildren;
+        var stash = stashChildren;
         stashChildren = children;
         children = stash;
 
         drawing = true;
         var cam = renderer.planets.cam;
+        //float prevFov = cam.fov;
+        //cam.fov = Mathf.atan2(cam.far - cam.near, graphics.getWidth()) * Mathf.radDeg;
+        //cam.update();
 
         depth.resize(graphics.getWidth(), graphics.getHeight());
         depthRef.resize(graphics.getWidth(), graphics.getHeight());
@@ -180,6 +172,9 @@ public class BlackHole extends Planet{
             ref.end();
         }
 
+        //cam.fov = prevFov;
+        //cam.update();
+
         var shader = CShaders.blackHole;
         shader.camera = cam;
         shader.planet = this;
@@ -193,7 +188,7 @@ public class BlackHole extends Planet{
             renderer.planets.batch.proj(cam.combined);
             if(params.drawUi) renderer.planets.renderOrbit(planet, params);
         }
-        draw.get(back, requests.size);*/
+        draw.get(back, requests.size);
     }
 
     @Override

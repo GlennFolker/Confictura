@@ -91,11 +91,8 @@ public class BlackHole extends Planet{
         children = stash;
 
         drawing = true;
-        var cam = renderer.planets.cam;
-        //float prevFov = cam.fov;
-        //cam.fov = Mathf.atan2(cam.far - cam.near, graphics.getWidth()) * Mathf.radDeg;
-        //cam.update();
 
+        var cam = renderer.planets.cam;
         depth.resize(graphics.getWidth(), graphics.getHeight());
         depthRef.resize(graphics.getWidth(), graphics.getHeight());
 
@@ -171,9 +168,6 @@ public class BlackHole extends Planet{
             Draw.blit(buf.getTexture(), Shaders.screenspace);
             ref.end();
         }
-
-        //cam.fov = prevFov;
-        //cam.update();
 
         var shader = CShaders.blackHole;
         shader.camera = cam;

@@ -20,6 +20,8 @@ public final class CShaders{
     public static ModelPropShader modelProp;
     public static BlackHoleShader blackHole;
     public static BlackHoleStencilShader blackHoleStencil;
+    public static ScreenspaceShader screenspace;
+    public static RayBlackHoleShader rayBlackHole;
 
     private CShaders(){
         throw new AssertionError();
@@ -38,6 +40,8 @@ public final class CShaders{
         modelProp = new ModelPropShader();
         blackHole = new BlackHoleShader();
         blackHoleStencil = new BlackHoleStencilShader();
+        screenspace = new ScreenspaceShader();
+        rayBlackHole = new RayBlackHoleShader();
 
         Shader.prependVertexCode = prevVert;
         Shader.prependFragmentCode = prevFrag;

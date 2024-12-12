@@ -32,7 +32,7 @@ public class BlackHoleShader extends Gl30Shader{
         setUniformf("u_radius", planet.radius);
         setUniformf("u_horizon", planet.horizon);
 
-        planet.ref.getTexture().bind(0);
+        //planet.ref.getTexture().bind(0);
         setUniformi("u_ref", 0);
     }
 }

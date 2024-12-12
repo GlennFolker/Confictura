@@ -49,7 +49,6 @@ vec2 coords(vec3 origin, vec3 ray){
 
 void main(){
     vec3 ray = normalize(v_position - u_camPos);
-    vec3 normal = normalize(v_position - u_center);
 
     vec2 bound;
     if(!intersectSphere(u_relCamPos, ray, u_radius, bound)) discard;

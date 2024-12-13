@@ -31,8 +31,10 @@ public class BlackHole extends Planet{
 
     public float horizon = 0.4f;
 
+    public @Nullable Mesh mesh;
     public @Nullable Cubemap skybox;
     public @Nullable CFrameBufferCubemap pov;
+    public @Nullable CFrameBuffer orbit, orbitRef;
 
     protected Seq<Planet> stashChildren = new Seq<>(), requests = new Seq<>();
     protected Cubemap stashSkybox;
@@ -65,6 +67,8 @@ public class BlackHole extends Planet{
     @Override
     public void load(){
         super.load();
+        if(mesh == null) mesh = MeshBuilder.buildIcosphere(3, radius);
+
         if(skybox == null){
             var base = "skyboxes/confictura/megalith/";
             skybox = new Cubemap(
@@ -81,11 +85,17 @@ public class BlackHole extends Planet{
             pov = new CFrameBufferCubemap(2, 2, true);
             pov.getTexture().setFilter(TextureFilter.nearest);
         }
+
+        if(orbit == null){
+            orbit = new CFrameBuffer(2, 2, true);
+            orbit.getTexture().setFilter(TextureFilter.nearest);
+        }
+
+        if(orbitRef == null) orbitRef = new CFrameBuffer(2, 2, true);
     }
 
     @Override
     public void draw(PlanetParams params, Mat3D projection, Mat3D transform){
-        renderer.planets.bloom.setBloomIntensity(0f);
         // Fool `PlanetRenderer` into thinking the black hole has no children, so that it can draw them itself.
         var stash = stashChildren;
         stashChildren = children;
@@ -110,7 +120,10 @@ public class BlackHole extends Planet{
         requests.clear();
         visit(this, requests::add);
 
-        var shader = CShaders.rayBlackHole;
+        orbit.resize(dim, dim);
+        orbitRef.resize(dim, dim);
+
+        var shader = CShaders.blackHole;
         pov.resize(dim, dim);
         pov.begin();
         pov.eachSide(side -> {
@@ -156,6 +169,18 @@ public class BlackHole extends Planet{
                 }
             }
 
+            orbitRef.begin(Color.clear);
+
+            var unlit = Shaders.unlit;
+            unlit.bind();
+            unlit.setUniformMatrix4("u_proj", cam.combined.val);
+            unlit.setUniformMatrix4("u_trans", getTransform(mat).val);
+            unlit.apply();
+
+            mesh.render(unlit, Gl.triangles);
+            orbitRef.end();
+
+            orbit.begin(Color.clear);
             for(var p : requests){
                 if(!p.visible()) continue;
                 if(params.drawUi){
@@ -163,6 +188,12 @@ public class BlackHole extends Planet{
                     renderer.planets.renderOrbit(p, params);
                 }
             }
+            orbit.end();
+
+            var stencil = CShaders.blackHoleStencil;
+            stencil.src = orbit;
+            stencil.ref = orbitRef;
+            Draw.blit(stencil);
         });
         pov.end();
 
@@ -179,127 +210,6 @@ public class BlackHole extends Planet{
 
         for(var child : stashChildren) renderer.planets.renderPlanet(child, params);
         for(var child : stashChildren) renderer.planets.renderTransparent(child, params);
-
-        /*var cam = renderer.planets.cam;
-        float fov = cam.fov;
-        cam.fov = (float)(Math.atan(2 * Math.tan(fov * Mathf.doubleDegRad)) * Mathf.doubleRadDeg);
-        cam.update();
-
-        big.resize(graphics.getWidth() * 2, graphics.getHeight() * 2);
-        big.begin(Color.clear);
-
-        if(params.drawSkybox){
-            //render skybox at 0,0,0
-            Vec3 lastPos = Tmp.v31.set(cam.position);
-            cam.position.setZero();
-            cam.update();
-
-            Gl.depthMask(false);
-
-            renderer.planets.skybox.render(cam.combined);
-
-            Gl.depthMask(true);
-
-            cam.position.set(lastPos);
-            cam.update();
-        }
-
-        depth.resize(graphics.getWidth() * 2, graphics.getHeight() * 2);
-        depthRef.resize(graphics.getWidth() * 2, graphics.getHeight() * 2);
-
-        {
-            depthRef.begin(Color.clear);
-
-            var shader = Shaders.unlit;
-            shader.bind();
-            shader.setUniformMatrix4("u_proj", projection.val);
-            shader.setUniformMatrix4("u_trans", transform.val);
-            shader.apply();
-
-            mesh.render(shader, Gl.triangles);
-            depthRef.end();
-        }
-
-        requests.clear();
-        visit(this, requests::add);
-        requests.sort(p -> -p.position.dst2(cam.position));
-
-        int back = requests.indexOf(p -> p.position.dst2(cam.position) < position.dst2(cam.position));
-        if(back == -1) back = requests.size;
-
-        Intc2 draw = (begin, end) -> {
-            for(int i = begin; i < end; i++){
-                var planet = requests.get(i);
-                if(!planet.visible()) continue;
-
-                cam.update();
-                if(cam.frustum.containsSphere(planet.position, planet.clipRadius)){
-                    planet.draw(params, cam.combined, planet.getTransform(mat));
-                }
-            }
-
-            for(int i = begin; i < end; i++){
-                var planet = requests.get(i);
-                if(!planet.visible()) continue;
-
-                planet.drawClouds(params, cam.combined, planet.getTransform(mat));
-                if(planet.hasGrid() && planet == params.planet && params.drawUi){
-                    renderer.planets.renderSectors(planet, params);
-                }
-
-                if(cam.frustum.containsSphere(planet.position, planet.clipRadius) && planet.hasAtmosphere && (params.alwaysDrawAtmosphere || Core.settings.getBool("atmosphere"))){
-                    planet.drawAtmosphere(renderer.planets.atmosphere, cam);
-                }
-            }
-        };
-
-        draw.get(0, back);
-
-        depth.begin(Color.clear);
-        for(var planet : requests){
-            if(!planet.visible()) continue;
-
-            renderer.planets.batch.proj(cam.combined);
-            if(params.drawUi) renderer.planets.renderOrbit(planet, params);
-        }
-        depth.end();
-
-        {
-            var stencil = CShaders.blackHoleStencil;
-            stencil.src = depth;
-            stencil.ref = depthRef;
-            Draw.blit(stencil);
-        }
-
-        {
-            var buf = big;//renderer.planets.bloom.buffer();
-            ref.resize(buf.getWidth(), buf.getHeight());
-
-            ref.begin();
-            Draw.blit(buf.getTexture(), CShaders.screenspace.trns(0.5f, 0.5f, 1f, 1f));
-            ref.end();
-        }
-
-        var shader = CShaders.blackHole;
-        shader.camera = cam;
-        shader.planet = this;
-        shader.bind();
-        shader.apply();
-        mesh.render(shader, Gl.triangles);
-
-        for(var planet : requests){
-            if(!planet.visible()) continue;
-
-            renderer.planets.batch.proj(cam.combined);
-            if(params.drawUi) renderer.planets.renderOrbit(planet, params);
-        }
-        draw.get(back, requests.size);
-
-        big.end();
-        cam.fov = fov;
-        cam.update();
-
-        Draw.blit(big.getTexture(), CShaders.screenspace.trns(0.5f, 0.5f, 1f / 2f, 1f / 2f));*/
     }
 
     @Override

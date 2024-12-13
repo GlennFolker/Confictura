@@ -1,3 +1,5 @@
+#define HIGHP
+
 in vec2 v_texCoords;
 
 out vec4 fragColor;

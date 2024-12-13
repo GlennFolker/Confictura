@@ -1,7 +1,6 @@
 package confictura.graphics.shaders;
 
 import confictura.graphics.gl.*;
-import mindustry.graphics.*;
 
 import static confictura.graphics.CShaders.*;
 
@@ -9,7 +8,7 @@ public class BlackHoleStencilShader extends Gl30Shader{
     public CFrameBuffer src, ref;
 
     public BlackHoleStencilShader(){
-        super(Shaders.getShaderFi("screenspace.vert"), file("black-hole-stencil.frag"));
+        super(file("black-hole-stencil.vert"), file("black-hole-stencil.frag"));
     }
 
     @Override

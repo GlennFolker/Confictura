@@ -1,16 +1,11 @@
 #define HIGHP
 
-in vec3 a_position;
+in vec4 a_position;
+in vec2 a_texCoord0;
 
-out vec3 v_position;
-
-uniform mat4 u_proj;
-uniform mat4 u_trans;
-uniform float u_radius;
+out vec2 v_texCoords;
 
 void main(){
-    vec4 pos = u_trans * vec4(a_position, 1.0);
-
-    v_position = pos.xyz;
-    gl_Position = u_proj * pos;
+    v_texCoords = a_texCoord0;
+    gl_Position = a_position;
 }

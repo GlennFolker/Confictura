@@ -17,6 +17,7 @@ import mindustry.graphics.g3d.*;
 import mindustry.type.*;
 
 import static arc.Core.*;
+import static confictura.ConficturaMod.*;
 import static mindustry.Vars.*;
 
 /**
@@ -102,100 +103,102 @@ public class BlackHole extends Planet{
         children = stash;
 
         drawing = true;
-
-        int dim = Math.max(graphics.getWidth(), graphics.getHeight());
         var cam = renderer.planets.cam;
         float fov = cam.fov, w = cam.width, h = cam.height;
         var up = v1.set(cam.up);
         var dir = v2.set(cam.direction);
-        cam.fov = 90f;
-        cam.width = cam.height = dim;
-
-        frustum.position.set(position);
-        frustum.fov = 30f;
-        frustum.width = frustum.height = 1f;
-        frustum.lookAt(cam.position);
-        frustum.update();
-
-        requests.clear();
-        visit(this, requests::add);
-
-        orbit.resize(dim, dim);
-        orbitRef.resize(dim, dim);
 
         var shader = CShaders.blackHole;
-        pov.resize(dim, dim);
-        pov.begin();
-        pov.eachSide(side -> {
-            Gl.clearColor(0f, 0f, 0f, 0f);
-            Gl.clear(Gl.colorBufferBit | Gl.depthBufferBit);
+        sizedGraphics.override(Math.max(graphics.getWidth(), graphics.getHeight()), () -> {
+            cam.fov = 90f;
+            cam.width = graphics.getWidth();
+            cam.height = graphics.getHeight();
 
-            side.getUp(cam.up);
-            side.getDirection(cam.direction);
+            frustum.position.set(position);
+            frustum.fov = 30f;
+            frustum.width = frustum.height = 1f;
+            frustum.lookAt(cam.position);
+            frustum.update();
 
-            if(params.drawSkybox){
-                var lastPos = v3.set(cam.position);
-                cam.position.setZero();
+            requests.clear();
+            visit(this, requests::add);
+
+            orbit.resize(graphics.getWidth(), graphics.getHeight());
+            orbitRef.resize(graphics.getWidth(), graphics.getHeight());
+
+            pov.resize(graphics.getWidth(), graphics.getHeight());
+            pov.begin();
+            pov.eachSide(side -> {
+                Gl.clearColor(0f, 0f, 0f, 0f);
+                Gl.clear(Gl.colorBufferBit | Gl.depthBufferBit);
+
+                side.getUp(cam.up);
+                side.getDirection(cam.direction);
+
+                if(params.drawSkybox){
+                    var lastPos = v3.set(cam.position);
+                    cam.position.setZero();
+                    cam.update();
+
+                    Gl.depthMask(false);
+                    renderer.planets.skybox.render(cam.combined);
+                    Gl.depthMask(true);
+
+                    cam.position.set(lastPos);
+                }
+
                 cam.update();
+                shader.cubemapView[side.index].set(cam.view);
 
-                Gl.depthMask(false);
-                renderer.planets.skybox.render(cam.combined);
-                Gl.depthMask(true);
-
-                cam.position.set(lastPos);
-            }
-
-            cam.update();
-            shader.cubemapView[side.index].set(cam.view);
-
-            for(var p : requests){
-                if(!p.visible()) continue;
-                if(cam.frustum.containsSphere(p.position, p.clipRadius) && !frustum.frustum.containsSphere(p.position, p.clipRadius)){
-                    p.draw(params, cam.combined, p.getTransform(mat));
-                }
-            }
-
-            for(var p : requests){
-                if(!p.visible()) continue;
-                if(!frustum.frustum.containsSphere(p.position, p.clipRadius)){
-                    p.drawClouds(params, cam.combined, p.getTransform(mat));
-                    if(p.hasGrid() && p == params.planet && params.drawUi){
-                        renderer.planets.renderSectors(p, params);
-                    }
-
-                    if(cam.frustum.containsSphere(p.position, p.clipRadius) && p.parent != null && p.hasAtmosphere && (params.alwaysDrawAtmosphere || Core.settings.getBool("atmosphere"))){
-                        p.drawAtmosphere(renderer.planets.atmosphere, cam);
+                for(var p : requests){
+                    if(!p.visible()) continue;
+                    if(cam.frustum.containsSphere(p.position, p.clipRadius) && !frustum.frustum.containsSphere(p.position, p.clipRadius)){
+                        p.draw(params, cam.combined, p.getTransform(mat));
                     }
                 }
-            }
 
-            orbitRef.begin(Color.clear);
+                for(var p : requests){
+                    if(!p.visible()) continue;
+                    if(!frustum.frustum.containsSphere(p.position, p.clipRadius)){
+                        p.drawClouds(params, cam.combined, p.getTransform(mat));
+                        if(p.hasGrid() && p == params.planet && params.drawUi){
+                            renderer.planets.renderSectors(p, params);
+                        }
 
-            var unlit = Shaders.unlit;
-            unlit.bind();
-            unlit.setUniformMatrix4("u_proj", cam.combined.val);
-            unlit.setUniformMatrix4("u_trans", getTransform(mat).val);
-            unlit.apply();
-
-            mesh.render(unlit, Gl.triangles);
-            orbitRef.end();
-
-            orbit.begin(Color.clear);
-            for(var p : requests){
-                if(!p.visible()) continue;
-                if(params.drawUi){
-                    renderer.planets.batch.proj(cam.combined);
-                    renderer.planets.renderOrbit(p, params);
+                        if(cam.frustum.containsSphere(p.position, p.clipRadius) && p.parent != null && p.hasAtmosphere && (params.alwaysDrawAtmosphere || Core.settings.getBool("atmosphere"))){
+                            p.drawAtmosphere(renderer.planets.atmosphere, cam);
+                        }
+                    }
                 }
-            }
-            orbit.end();
 
-            var stencil = CShaders.blackHoleStencil;
-            stencil.src = orbit;
-            stencil.ref = orbitRef;
-            Draw.blit(stencil);
+                orbitRef.begin(Color.clear);
+
+                var unlit = Shaders.unlit;
+                unlit.bind();
+                unlit.setUniformMatrix4("u_proj", cam.combined.val);
+                unlit.setUniformMatrix4("u_trans", getTransform(mat).val);
+                unlit.apply();
+
+                mesh.render(unlit, Gl.triangles);
+                orbitRef.end();
+
+                orbit.begin(Color.clear);
+                for(var p : requests){
+                    if(!p.visible()) continue;
+                    if(params.drawUi){
+                        renderer.planets.batch.proj(cam.combined);
+                        renderer.planets.renderOrbit(p, params);
+                    }
+                }
+                orbit.end();
+
+                var stencil = CShaders.blackHoleStencil;
+                stencil.src = orbit;
+                stencil.ref = orbitRef;
+                Draw.blit(stencil);
+            });
+            pov.end();
         });
-        pov.end();
 
         cam.up.set(up);
         cam.direction.set(dir);

@@ -12,6 +12,7 @@ import static mindustry.Vars.*;
  * @author GlFolker
  */
 public final class CShaders{
+    public static DepthScreenspaceShader depthScreenspace;
     public static DepthShader depth;
     public static DepthAtmosphereShader depthAtmosphere;
     public static PortalForcefieldShader portalForcefield;
@@ -30,6 +31,7 @@ public final class CShaders{
         String prevVert = Shader.prependVertexCode, prevFrag = Shader.prependFragmentCode;
         Shader.prependVertexCode = Shader.prependFragmentCode = "";
 
+        depthScreenspace = new DepthScreenspaceShader();
         depth = new DepthShader();
         depthAtmosphere = new DepthAtmosphereShader();
         portalForcefield = new PortalForcefieldShader();

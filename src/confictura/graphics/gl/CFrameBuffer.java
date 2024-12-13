@@ -102,6 +102,7 @@ public class CFrameBuffer extends FrameBuffer{
     public void begin(Color clearColor){
         begin();
         Gl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+        Gl.clearDepthf(1f);
         Gl.clear(Gl.colorBufferBit | (hasDepth ? Gl.depthBufferBit : 0) | (hasStencil ? Gl.stencilBufferBit : 0));
     }
 }

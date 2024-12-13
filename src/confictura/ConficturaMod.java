@@ -51,6 +51,7 @@ public class ConficturaMod extends Mod{
     // <--- Modules only present in clients, typically rendering or auxiliary input utilities. --->
     public static RenderContext renderContext;
     public static ModelPropDrawer modelPropDrawer;
+    public static SizedGraphics sizedGraphics;
 
     // <--- Map-editor extension modules. --->
     public static CinematicEditor cinematicEditor;
@@ -188,6 +189,7 @@ public class ConficturaMod extends Mod{
                     inputAggregator = new InputAggregator();
                     renderContext = new RenderContext();
                     modelPropDrawer = new ModelPropDrawer(CShaders.modelProp, 8192, 16384);
+                    sizedGraphics = new SizedGraphics();
                 });
             }
         });

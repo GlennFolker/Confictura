@@ -21,7 +21,6 @@ import static mindustry.Vars.*;
  * @author GlFolker
  */
 public class AtmospherePlanet extends Planet{
-    public @Nullable FrameBuffer depthBuffer;
     public @Nullable CFrameBuffer buffer;
 
     public AtmospherePlanet(String name, Planet parent, float radius){
@@ -35,12 +34,7 @@ public class AtmospherePlanet extends Planet{
     @Override
     public void load(){
         super.load();
-        if(depthBuffer == null){
-            depthBuffer = new FrameBuffer(graphics.getWidth(), graphics.getHeight(), true);
-            depthBuffer.getTexture().setFilter(TextureFilter.nearest);
-        }
-
-        if(buffer == null){
+        if(!headless && buffer == null){
             buffer = new CFrameBuffer(2, 2, true);
             buffer.getTexture().setFilter(TextureFilter.nearest);
         }
@@ -75,7 +69,7 @@ public class AtmospherePlanet extends Planet{
 
         @Override
         public void render(PlanetParams params, Mat3D projection, Mat3D transform){
-            /*buffer.resize(graphics.getWidth(), graphics.getHeight());
+            buffer.resize(graphics.getWidth(), graphics.getHeight());
             buffer.begin(Color.clear);
 
             var shader = Shaders.planet;
@@ -92,34 +86,7 @@ public class AtmospherePlanet extends Planet{
 
             var blit = CShaders.depthScreenspace;
             blit.buffer = buffer;
-            Draw.blit(blit);*/
-
-            if(params.alwaysDrawAtmosphere || settings.getBool("atmosphere")){
-                var depth = CShaders.depth;
-                depthBuffer.resize(graphics.getWidth(), graphics.getHeight());
-                depthBuffer.begin(Tmp.c1.set(0xffffff00));
-                Blending.disabled.apply();
-
-                depth.camera = renderer.planets.cam;
-                depth.bind();
-                depth.setUniformMatrix4("u_proj", renderer.planets.cam.combined.val);
-                depth.setUniformMatrix4("u_trans", transform.val);
-                depth.apply();
-                mesh.render(depth, Gl.triangles);
-
-                Blending.normal.apply();
-                depthBuffer.end();
-            }
-
-            var shader = Shaders.planet;
-            shader.planet = AtmospherePlanet.this;
-            shader.lightDir.set(solarSystem.position).sub(position).rotate(Vec3.Y, getRotation()).nor();
-            shader.ambientColor.set(solarSystem.lightColor);
-            shader.bind();
-            shader.setUniformMatrix4("u_proj", renderer.planets.cam.combined.val);
-            shader.setUniformMatrix4("u_trans", transform.val);
-            shader.apply();
-            mesh.render(shader, Gl.triangles);
+            Draw.blit(blit);
         }
     }
 }

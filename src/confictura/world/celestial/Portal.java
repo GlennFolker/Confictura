@@ -1,11 +1,9 @@
 package confictura.world.celestial;
 
-import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.Texture.*;
 import arc.graphics.g2d.*;
 import arc.graphics.g3d.*;
-import arc.graphics.gl.*;
 import arc.math.*;
 import arc.math.geom.*;
 import arc.util.*;
@@ -14,6 +12,7 @@ import confictura.content.*;
 import confictura.graphics.*;
 import confictura.graphics.g3d.*;
 import confictura.graphics.g3d.CMeshBuilder.*;
+import confictura.graphics.gl.*;
 import gltfrenzy.model.*;
 import mindustry.graphics.*;
 import mindustry.graphics.g3d.*;
@@ -51,7 +50,7 @@ public class Portal extends EmissiveObject{
     public @Nullable Mesh atmosphereMesh;
     public Color atmosphereOutlineColor = new Color();
 
-    public @Nullable FrameBuffer depthBuffer;
+    public @Nullable CFrameBuffer buffer;
 
     public static final int sectorSides = 8;
 
@@ -115,9 +114,9 @@ public class Portal extends EmissiveObject{
         super.load();
         if(!headless){
             if(atmosphereMesh == null) atmosphereMesh = CMeshBuilder.gridDistance(PlanetGrid.create(3), atmosphereOutlineColor, 1f);
-            if(depthBuffer == null){
-                depthBuffer = new FrameBuffer(graphics.getWidth(), graphics.getHeight(), true);
-                depthBuffer.getTexture().setFilter(TextureFilter.nearest);
+            if(buffer == null){
+                buffer = new CFrameBuffer(2, 2, true);
+                buffer.getTexture().setFilter(TextureFilter.nearest);
             }
         }
     }
@@ -527,36 +526,17 @@ public class Portal extends EmissiveObject{
 
         @Override
         public void render(PlanetParams params, Mat3D projection, Mat3D transform){
-            if(params.alwaysDrawAtmosphere || settings.getBool("atmosphere")){
-                depthBuffer.resize(graphics.getWidth(), graphics.getHeight());
-                depthBuffer.begin(c1.set(0xffffff00));
-                Blending.disabled.apply();
+            buffer.resize(graphics.getWidth(), graphics.getHeight());
+            buffer.begin(Color.clear);
 
-                render(() -> {
-                    var shader = CShaders.depth;
-                    shader.camera = renderer.planets.cam;
-                    return shader;
-                }, projection, transform);
-
-                Blending.normal.apply();
-                depthBuffer.end();
-            }
-
-            render(() -> {
-                var shader = CShaders.celestial;
-                shader.light.set(solarSystem.position);
-                shader.ambientColor.set(solarSystem.lightColor);
-                shader.camPos.set(renderer.planets.cam.position);
-                return shader;
-            }, projection, transform);
-        }
-
-        protected void render(Prov<? extends Shader> shaderProv, Mat3D projection, Mat3D transform){
-            var shader = shaderProv.get();
+            var shader = CShaders.celestial;
+            shader.light.set(solarSystem.position);
+            shader.ambientColor.set(solarSystem.lightColor);
+            shader.camPos.set(renderer.planets.cam.position);
             shader.bind();
             shader.apply();
 
-            shader.setUniformMatrix4("u_proj", projection.val);
+            shader.setUniformMatrix4("u_proj", renderer.planets.cam.combined.val);
 
             Node base = CModels.portalBase, cage = CModels.portalCage;
             base.localTrns.translation.set(0f, structureOffset, 0f);
@@ -589,6 +569,12 @@ public class Portal extends EmissiveObject{
                 shader.setUniformMatrix("u_normal", copyMatrix(mat2, Tmp.m1).inv().transpose());
                 mesh.render(shader, Gl.triangles);
             }
+
+            buffer.end();
+
+            var blit = CShaders.depthScreenspace;
+            blit.buffer = buffer;
+            Draw.blit(blit);
         }
     }
 

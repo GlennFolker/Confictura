@@ -31,12 +31,13 @@ in vec4 v_color;
 
 out vec4 fragColor;
 
-uniform mat4 u_proj;
+uniform mat4 u_projView;
+uniform mat4 u_invProj;
 uniform float u_radius;
 
 uniform vec3 u_camPos;
 uniform vec3 u_relCamPos;
-uniform vec2 u_camRange;
+uniform vec2 u_depthRange;
 uniform vec3 u_center;
 uniform vec3 u_light;
 
@@ -183,8 +184,16 @@ vec2 intersect(vec3 ray_origin, vec3 ray_dir, float radius){
     return vec2(near, far);
 }
 
-float unpack(vec4 pack){
-    return dot(pack, 1.0 / vec4(1.0, 255.0, 65025.0, 16581375.0)) * u_camRange.y + u_camRange.x;
+float depth(vec2 uv){
+    float depth = texture(u_topology, uv).r;
+
+    float x_ndc = uv.x * 2.0 - 1.0;
+    float y_ndc = uv.y * 2.0 - 1.0;
+    float z_ndc = depth * 2.0 - 1.0;
+    vec4 clip = vec4(x_ndc, y_ndc, z_ndc, 1.0);
+
+    vec4 view = u_invProj * clip;
+    return length(view.xyz / view.w);
 }
 
 void main(){
@@ -193,7 +202,7 @@ void main(){
     vec3 normal = normalize(v_position - u_center);
 
     vec2 intersect = intersect(eye, ray, u_radius - 0.01);
-    float topo = unpack(texture(u_topology, gl_FragCoord.xy / u_viewport));
+    float topo = depth(gl_FragCoord.xy / u_viewport);
 
     float dst = (intersect.y - intersect.x) / ((u_radius - 0.01) * 2.0);
     float noise = octNoise(vec3(eye + ray * intersect.x), 4, 1.8, 1.8, 0.67);
@@ -228,6 +237,6 @@ void main(){
     fragColor = vec4(baseColor + outlineColor, 1.0);
 
     float far = gl_DepthRange.far, near = gl_DepthRange.near;
-    vec4 clip = u_proj * vec4(u_camPos + ray * intersect.x, 1.0);
+    vec4 clip = u_projView * vec4(u_camPos + ray * intersect.x, 1.0);
     gl_FragDepth = (((far - near) * (clip.z / clip.w)) + near + far) / 2.0;
 }

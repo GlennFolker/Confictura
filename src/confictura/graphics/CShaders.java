@@ -13,7 +13,6 @@ import static mindustry.Vars.*;
  */
 public final class CShaders{
     public static DepthScreenspaceShader depthScreenspace;
-    public static DepthShader depth;
     public static DepthAtmosphereShader depthAtmosphere;
     public static PortalForcefieldShader portalForcefield;
     public static EmissiveBatchShader emissiveBatch;
@@ -32,7 +31,6 @@ public final class CShaders{
         Shader.prependVertexCode = Shader.prependFragmentCode = "";
 
         depthScreenspace = new DepthScreenspaceShader();
-        depth = new DepthShader();
         depthAtmosphere = new DepthAtmosphereShader();
         portalForcefield = new PortalForcefieldShader();
         emissiveBatch = new EmissiveBatchShader();

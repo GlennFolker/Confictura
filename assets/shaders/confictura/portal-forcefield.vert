@@ -8,7 +8,7 @@ out vec3 v_position;
 out float v_progress;
 out vec4 v_color;
 
-uniform mat4 u_proj;
+uniform mat4 u_projView;
 uniform mat4 u_trans;
 uniform float u_radius;
 
@@ -19,5 +19,5 @@ void main(){
     v_progress = a_normal.x;
     v_color = a_color;
 
-    gl_Position = u_proj * pos;
+    gl_Position = u_projView * pos;
 }

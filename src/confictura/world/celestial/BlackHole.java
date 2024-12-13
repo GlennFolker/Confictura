@@ -68,31 +68,32 @@ public class BlackHole extends Planet{
     @Override
     public void load(){
         super.load();
-        if(mesh == null) mesh = MeshBuilder.buildIcosphere(3, radius);
+        if(!headless){
+            if(mesh == null) mesh = MeshBuilder.buildIcosphere(3, radius);
+            if(skybox == null){
+                var base = "skyboxes/confictura/megalith/";
+                skybox = new Cubemap(
+                    tree.get(base + "right.png"),
+                    tree.get(base + "left.png"),
+                    tree.get(base + "top.png"),
+                    tree.get(base + "bottom.png"),
+                    tree.get(base + "front.png"),
+                    tree.get(base + "back.png")
+                );
+            }
 
-        if(skybox == null){
-            var base = "skyboxes/confictura/megalith/";
-            skybox = new Cubemap(
-                tree.get(base + "right.png"),
-                tree.get(base + "left.png"),
-                tree.get(base + "top.png"),
-                tree.get(base + "bottom.png"),
-                tree.get(base + "front.png"),
-                tree.get(base + "back.png")
-            );
+            if(pov == null){
+                pov = new CFrameBufferCubemap(2, 2, true);
+                pov.getTexture().setFilter(TextureFilter.nearest);
+            }
+
+            if(orbit == null){
+                orbit = new CFrameBuffer(2, 2, true);
+                orbit.getTexture().setFilter(TextureFilter.nearest);
+            }
+
+            if(orbitRef == null) orbitRef = new CFrameBuffer(2, 2, true);
         }
-
-        if(pov == null){
-            pov = new CFrameBufferCubemap(2, 2, true);
-            pov.getTexture().setFilter(TextureFilter.nearest);
-        }
-
-        if(orbit == null){
-            orbit = new CFrameBuffer(2, 2, true);
-            orbit.getTexture().setFilter(TextureFilter.nearest);
-        }
-
-        if(orbitRef == null) orbitRef = new CFrameBuffer(2, 2, true);
     }
 
     @Override

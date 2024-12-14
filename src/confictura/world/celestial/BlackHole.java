@@ -32,10 +32,9 @@ public class BlackHole extends Planet{
 
     public float horizon = 0.4f;
 
-    public @Nullable Mesh mesh;
     public @Nullable Cubemap skybox;
     public @Nullable CFrameBufferCubemap pov;
-    public @Nullable CFrameBuffer orbit, orbitRef;
+    public @Nullable CFrameBuffer orbit;
 
     protected Seq<Planet> stashChildren = new Seq<>(), requests = new Seq<>();
     protected Cubemap stashSkybox;
@@ -69,7 +68,6 @@ public class BlackHole extends Planet{
     public void load(){
         super.load();
         if(!headless){
-            if(mesh == null) mesh = MeshBuilder.buildIcosphere(3, radius);
             if(skybox == null){
                 var base = "skyboxes/confictura/megalith/";
                 skybox = new Cubemap(
@@ -91,8 +89,6 @@ public class BlackHole extends Planet{
                 orbit = new CFrameBuffer(2, 2, true);
                 orbit.getTexture().setFilter(TextureFilter.nearest);
             }
-
-            if(orbitRef == null) orbitRef = new CFrameBuffer(2, 2, true);
         }
     }
 
@@ -123,9 +119,6 @@ public class BlackHole extends Planet{
 
             requests.clear();
             visit(this, requests::add);
-
-            orbit.resize(graphics.getWidth(), graphics.getHeight());
-            orbitRef.resize(graphics.getWidth(), graphics.getHeight());
 
             pov.resize(graphics.getWidth(), graphics.getHeight());
             pov.begin();
@@ -172,31 +165,23 @@ public class BlackHole extends Planet{
                     }
                 }
 
-                orbitRef.begin(Color.clear);
-
-                var unlit = Shaders.unlit;
-                unlit.bind();
-                unlit.setUniformMatrix4("u_proj", cam.combined.val);
-                unlit.setUniformMatrix4("u_trans", getTransform(mat).val);
-                unlit.apply();
-
-                mesh.render(unlit, Gl.triangles);
-                orbitRef.end();
-
                 renderer.planets.batch.proj(cam.combined);
 
+                orbit.resize(graphics.getWidth(), graphics.getHeight());
                 orbit.begin(Color.clear);
                 Blending.disabled.apply();
+
                 for(var p : requests){
                     if(!p.visible()) continue;
                     if(params.drawUi) renderer.planets.renderOrbit(p, params);
                 }
+
                 Blending.normal.apply();
                 orbit.end();
 
                 var stencil = CShaders.blackHoleStencil;
-                stencil.src = orbit;
-                stencil.ref = orbitRef;
+                stencil.camera = cam;
+                stencil.planet = this;
                 Draw.blit(stencil);
             });
             pov.end();

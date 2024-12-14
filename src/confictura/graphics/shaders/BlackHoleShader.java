@@ -40,7 +40,7 @@ public class BlackHoleShader extends Gl30Shader{
         }
 
         setUniformMatrix4("u_projView", camera.combined.val);
-        setUniformMatrix4("u_invProj", camera.invProjectionView.val);
+        setUniformMatrix4("u_invProjView", camera.invProjectionView.val);
         setUniformf("u_depthRange", camera.near, camera.far);
 
         planet.pov.getDepthTexture().bind(1);

@@ -15,7 +15,7 @@ uniform float u_horizon;
 uniform mat4 u_cubeView[6];
 uniform mat4 u_cubeInvView[6];
 uniform mat4 u_projView;
-uniform mat4 u_invProj;
+uniform mat4 u_invProjView;
 uniform vec2 u_depthRange;
 
 uniform samplerCube u_ref;
@@ -59,7 +59,7 @@ vec3 rotate(vec3 v, vec3 axis, float angle){
 
 void main(){
     vec2 ndc = (gl_FragCoord.xy / u_viewport) * 2.0 - 1.0;
-    vec4 view = u_invProj * vec4(ndc, -1.0, 1.0);
+    vec4 view = u_invProjView * vec4(ndc, -1.0, 1.0);
     vec3 ray = normalize(view.xyz / view.w - u_camPos);
 
     int faceIndex = cubeIndex(ray);

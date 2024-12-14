@@ -39,7 +39,7 @@ public class BlackHoleShader extends Gl30Shader{
             setUniformMatrix4("u_cubeInvView[" + i + "]", mat.set(cubemapView[i]).inv().val);
         }
 
-        setUniformMatrix4("u_proj", camera.combined.val);
+        setUniformMatrix4("u_projView", camera.combined.val);
         setUniformMatrix4("u_invProj", camera.invProjectionView.val);
         setUniformf("u_depthRange", camera.near, camera.far);
 

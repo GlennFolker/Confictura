@@ -7,13 +7,17 @@ import arc.graphics.gl.*;
 
 import java.lang.reflect.*;
 
-import static arc.Core.*;
-
+/**
+ * A {@link Graphics} mock-module used to logically pretend that the window's screen resolution is something else. This
+ * is typically done to adjust rendering code to a {@linkplain FrameBuffer framebuffer}'s size that is different from
+ * the screen by overriding what {@link Graphics#getWidth()} and {@link Graphics#getHeight()} return.
+ * @author GlFolker
+ */
 public class SizedGraphics extends Graphics{
     private static final Method setCursor, setSystemCursor;
 
-    protected boolean overriding;
     protected int overrideWidth, overrideHeight;
+    protected Graphics delegate;
 
     static{
         try{
@@ -32,170 +36,242 @@ public class SizedGraphics extends Graphics{
     }
 
     public void override(int width, int height, Runnable run){
-        overriding = true;
         overrideWidth = width;
         overrideHeight = height;
 
-        var prev = graphics;
-        graphics = this;
+        var prev = Core.graphics;
+        var prevDelegate = delegate;
+
+        Core.graphics = this;
+        delegate = prev;
 
         try{
             run.run();
         }finally{
-            overriding = false;
-            graphics = prev;
+            Core.graphics = prev;
+            delegate = prevDelegate;
         }
     }
 
     @Override
-    public int getWidth(){
-        return overriding ? overrideWidth : graphics.getWidth();
-    }
-
-    @Override
-    public int getHeight(){
-        return overriding ? overrideHeight : graphics.getHeight();
+    public boolean isGL30Available(){
+        return delegate.isGL30Available();
     }
 
     @Override
     public GL20 getGL20(){
-        return graphics.getGL20();
+        return delegate.getGL20();
     }
 
     @Override
     public void setGL20(GL20 gl20){
-        graphics.setGL20(gl20);
+        delegate.setGL20(gl20);
     }
 
     @Override
     public GL30 getGL30(){
-        return graphics.getGL30();
+        return delegate.getGL30();
     }
 
     @Override
     public void setGL30(GL30 gl30){
-        graphics.setGL30(gl30);
+        delegate.setGL30(gl30);
+    }
+
+    @Override
+    public void clear(Color color){
+        delegate.clear(color);
+    }
+
+    @Override
+    public void clear(float r, float g, float b, float a){
+        delegate.clear(r, g, b, a);
+    }
+
+    @Override
+    public boolean isPortrait(){
+        return delegate.isPortrait();
+    }
+
+    @Override
+    public int getWidth(){
+        return overrideWidth;
+    }
+
+    @Override
+    public int getHeight(){
+        return overrideHeight;
+    }
+
+    @Override
+    public float getAspect(){
+        return (float)overrideWidth / overrideHeight;
+    }
+
+    @Override
+    public boolean isHidden(){
+        return delegate.isHidden();
     }
 
     @Override
     public int getBackBufferWidth(){
-        return graphics.getBackBufferWidth();
+        return delegate.getBackBufferWidth();
     }
 
     @Override
     public int getBackBufferHeight(){
-        return graphics.getBackBufferHeight();
+        return delegate.getBackBufferHeight();
+    }
+
+    @Override
+    public int[] getSafeInsets(){
+        return delegate.getSafeInsets();
     }
 
     @Override
     public long getFrameId(){
-        return graphics.getFrameId();
+        return delegate.getFrameId();
     }
 
     @Override
     public float getDeltaTime(){
-        return graphics.getDeltaTime();
+        return delegate.getDeltaTime();
     }
 
     @Override
     public int getFramesPerSecond(){
-        return graphics.getFramesPerSecond();
+        return delegate.getFramesPerSecond();
     }
 
     @Override
     public GLVersion getGLVersion(){
-        return graphics.getGLVersion();
+        return delegate.getGLVersion();
     }
 
     @Override
     public float getPpiX(){
-        return graphics.getPpiX();
+        return delegate.getPpiX();
     }
 
     @Override
     public float getPpiY(){
-        return graphics.getPpiY();
+        return delegate.getPpiY();
     }
 
     @Override
     public float getPpcX(){
-        return graphics.getPpcX();
+        return delegate.getPpcX();
     }
 
     @Override
     public float getPpcY(){
-        return graphics.getPpcY();
+        return delegate.getPpcY();
     }
 
     @Override
     public float getDensity(){
-        return graphics.getDensity();
+        return delegate.getDensity();
+    }
+
+    @Override
+    public boolean setFullscreen(){
+        return delegate.setFullscreen();
     }
 
     @Override
     public boolean setWindowedMode(int width, int height){
-        return graphics.setWindowedMode(width, height);
+        return delegate.setWindowedMode(width, height);
     }
 
     @Override
     public void setTitle(String title){
-        graphics.setTitle(title);
+        delegate.setTitle(title);
     }
 
     @Override
     public void setBorderless(boolean undecorated){
-        graphics.setBorderless(undecorated);
+        delegate.setBorderless(undecorated);
     }
 
     @Override
     public void setResizable(boolean resizable){
-        graphics.setResizable(resizable);
+        delegate.setResizable(resizable);
     }
 
     @Override
     public void setVSync(boolean vsync){
-        graphics.setVSync(vsync);
+        delegate.setVSync(vsync);
     }
 
     @Override
     public BufferFormat getBufferFormat(){
-        return graphics.getBufferFormat();
+        return delegate.getBufferFormat();
     }
 
     @Override
     public boolean supportsExtension(String extension){
-        return graphics.supportsExtension(extension);
+        return delegate.supportsExtension(extension);
     }
 
     @Override
     public boolean isContinuousRendering(){
-        return graphics.isContinuousRendering();
+        return delegate.isContinuousRendering();
     }
 
     @Override
     public void setContinuousRendering(boolean isContinuous){
-        graphics.setContinuousRendering(isContinuous);
+        delegate.setContinuousRendering(isContinuous);
     }
 
     @Override
     public void requestRendering(){
-        graphics.requestRendering();
+        delegate.requestRendering();
     }
 
     @Override
     public boolean isFullscreen(){
-        return graphics.isFullscreen();
+        return delegate.isFullscreen();
+    }
+
+    @Override
+    public Cursor newCursor(String filename){
+        return delegate.newCursor(filename);
+    }
+
+    @Override
+    public Cursor newCursor(String filename, int scale){
+        return delegate.newCursor(filename, scale);
+    }
+
+    @Override
+    public Cursor newCursor(String filename, int scaling, Color outlineColor, int outlineScaling){
+        return delegate.newCursor(filename, scaling, outlineColor, outlineScaling);
     }
 
     @Override
     public Cursor newCursor(Pixmap pixmap, int xHotspot, int yHotspot){
-        return graphics.newCursor(pixmap, xHotspot, yHotspot);
+        return delegate.newCursor(pixmap, xHotspot, yHotspot);
+    }
+
+    @Override
+    public Cursor newCursor(Pixmap pixmap, int scaling, Color outlineColor, int outlineThickness){
+        return delegate.newCursor(pixmap, scaling, outlineColor, outlineThickness);
+    }
+
+    @Override
+    public void restoreCursor(){
+        delegate.restoreCursor();
+    }
+
+    @Override
+    public void cursor(Cursor cursor){
+        delegate.cursor(cursor);
     }
 
     @Override
     protected void setCursor(Cursor cursor){
         try{
-            setCursor.invoke(graphics, cursor);
+            setCursor.invoke(delegate, cursor);
         }catch(InvocationTargetException | IllegalAccessException e){
             throw new RuntimeException(e);
         }
@@ -204,9 +280,19 @@ public class SizedGraphics extends Graphics{
     @Override
     protected void setSystemCursor(SystemCursor systemCursor){
         try{
-            setSystemCursor.invoke(graphics, systemCursor);
+            setSystemCursor.invoke(delegate, systemCursor);
         }catch(InvocationTargetException | IllegalAccessException e){
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void dispose(){
+        delegate.dispose();
+    }
+
+    @Override
+    public boolean isDisposed(){
+        return delegate.isDisposed();
     }
 }

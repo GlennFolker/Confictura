@@ -20,7 +20,7 @@ import static mindustry.Vars.*;
  * Just a regular planet, but with a fixed atmosphere shader at the little cost of performance.
  * @author GlFolker
  */
-public class AtmospherePlanet extends Planet{
+public class AtmospherePlanet extends EmissiveObject{
     public @Nullable CFrameBuffer buffer;
 
     public AtmospherePlanet(String name, Planet parent, float radius){
@@ -41,19 +41,16 @@ public class AtmospherePlanet extends Planet{
     }
 
     @Override
-    public void drawAtmosphere(Mesh atmosphere, Camera3D cam){
-        Gl.depthMask(false);
-        Blending.additive.apply();
+    public void drawEmissive(){}
 
+    @Override
+    public void drawActualAtmosphere(Mesh atmosphere, Camera3D cam){
         var shader = CShaders.depthAtmosphere;
         shader.camera = cam;
         shader.planet = this;
         shader.bind();
         shader.apply();
         atmosphere.render(shader, Gl.triangles);
-
-        Blending.normal.apply();
-        Gl.depthMask(true);
     }
 
     public class AtmosphereHexMesh implements GenericMesh{

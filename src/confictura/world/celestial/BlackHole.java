@@ -183,14 +183,15 @@ public class BlackHole extends Planet{
                 mesh.render(unlit, Gl.triangles);
                 orbitRef.end();
 
+                renderer.planets.batch.proj(cam.combined);
+
                 orbit.begin(Color.clear);
+                Blending.disabled.apply();
                 for(var p : requests){
                     if(!p.visible()) continue;
-                    if(params.drawUi){
-                        renderer.planets.batch.proj(cam.combined);
-                        renderer.planets.renderOrbit(p, params);
-                    }
+                    if(params.drawUi) renderer.planets.renderOrbit(p, params);
                 }
+                Blending.normal.apply();
                 orbit.end();
 
                 var stencil = CShaders.blackHoleStencil;

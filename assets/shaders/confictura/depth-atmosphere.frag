@@ -80,6 +80,8 @@ float optic(vec3 p, vec3 q){
 
 vec3 inScatter(vec3 eye, vec3 ray, vec2 bound, vec3 light){
     float len = (bound.y - bound.x) / fNumInScatter;
+    len = min(len, u_innerRadius * 0.5);
+
     vec3 step = ray * len;
     vec3 start = eye + ray * bound.x;
     vec3 march = start + ray * (len * 0.5);

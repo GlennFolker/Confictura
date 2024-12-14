@@ -14,7 +14,7 @@ uniform float u_horizon;
 
 uniform mat4 u_cubeView[6];
 uniform mat4 u_cubeInvView[6];
-uniform mat4 u_proj;
+uniform mat4 u_projView;
 uniform mat4 u_invProj;
 uniform vec2 u_depthRange;
 
@@ -72,7 +72,7 @@ void main(){
     vec2 bound;
     if(intersectSphere(u_relCamPos, ray, u_radius, bound) && bound.x < distance(u_camPos, worldPos)){
         far = gl_DepthRange.far, near = gl_DepthRange.near;
-        vec4 clip = u_proj * vec4(u_camPos + ray * bound.x, 1.0);
+        vec4 clip = u_projView * vec4(u_camPos + ray * bound.x, 1.0);
         gl_FragDepth = (((far - near) * (clip.z / clip.w)) + near + far) / 2.0;
 
         vec3 hit = u_camPos + ray * (bound.x + bound.y) / 2.0 - u_center;

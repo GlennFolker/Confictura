@@ -35,6 +35,10 @@ public abstract class EmissiveObject extends Planet{
         super(name, parent, radius);
     }
 
+    public EmissiveObject(String name, Planet parent, float radius, int sectorSize){
+        super(name, parent, radius, sectorSize);
+    }
+
     @Override
     public void load(){
         super.load();
@@ -107,6 +111,11 @@ public abstract class EmissiveObject extends Planet{
 
         Blending.normal.apply();
         Gl.depthMask(true);
+
+        // Sure, yeah, this makes every planet from the hierarchy *up to this one* draws its atmosphere. I don't care.
+        // I want my stuff to look exactly as I designed them to be, even if the price is a better hardware.
+        lastParams.alwaysDrawAtmosphere = wasAtmospheric;
+        lastParams = null;
     }
 
     public abstract void drawEmissive();

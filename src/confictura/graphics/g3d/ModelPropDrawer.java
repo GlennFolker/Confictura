@@ -35,7 +35,6 @@ public class ModelPropDrawer implements Disposable{
     private static final Vec3 pos = new Vec3(), scl = new Vec3(), vec = new Vec3();
     private static final Quat quat = new Quat();
     private static final Mat3D nor = new Mat3D();
-    private static final Color col = new Color();
 
     protected ObjectMap<Mesh, PropData> data = new ObjectMap<>();
     protected FrameBuffer buffer = new FrameBuffer(2, 2, true);
@@ -145,7 +144,7 @@ public class ModelPropDrawer implements Disposable{
         if(indexOffset == 0) return;
 
         shader.bind();
-        shader.camera = renderContext.camera;
+        shader.camera = renderContext.cam;
         shader.lightDir.set(-1.2f, -0.8f, 0.9f).nor();
         shader.reflectColor.set(!state.rules.lighting ? Color.white : state.rules.ambientLight);
         shader.apply();

@@ -9,8 +9,8 @@ import static arc.Core.*;
 import static mindustry.Vars.*;
 
 public class RenderContext{
-    public Camera3D camera = new Camera3D(){{
-        fov = 60f;
+    public float fovX = 60f;
+    public Camera3D cam = new Camera3D(){{
         near = 1f;
 
         up.set(0f, 0f, -1f);
@@ -21,12 +21,13 @@ public class RenderContext{
 
     public RenderContext(){
         Events.run(Trigger.draw, () -> {
-            int sw = graphics.getWidth(), sh = graphics.getHeight();
+            cam.resize(camera.width, camera.height);
 
-            camera.resize(sw, sh);
-            camera.position.set(Core.camera.position.x, Core.camera.height / 2f / Mathf.tan(camera.fov / 2f * Mathf.degRad, 1f, 1f), -Core.camera.position.y);
-            camera.far = Math.max(150f, camera.position.y * 1.5f);
-            camera.update();
+            double y = cam.width / 2d / Math.tan(fovX / 2d * Mathf.doubleDegRad);
+            cam.position.set(camera.position.x, (float)y, -camera.position.y);
+            cam.fov = (float)(2d * Math.atan2(cam.height, 2d * y) * Mathf.doubleRadDeg);
+            cam.far = Math.max(150f, cam.position.y * 1.5f);
+            cam.update();
         });
 
         Events.on(WorldLoadEvent.class, e -> {

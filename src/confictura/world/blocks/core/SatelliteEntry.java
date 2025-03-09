@@ -46,17 +46,11 @@ public class SatelliteEntry extends CoreBlock{
         }
     }
 
-    @Override
-    public void drawLanding(CoreBuild build, float x, float y){}
-
-    @Override
-    protected void drawLandingThrusters(float x, float y, float rotation, float frame){}
-
     public class SatelliteEntryBuild extends CoreBuild{
         @Override
-        public void beginLaunch(@Nullable CoreBlock launchType){
+        public void beginLaunch(boolean launching){
             if(!headless){
-                if(!renderer.isLaunching()){
+                if(!launching){
                     scene.add(new Element(){
                         float time = -1f;
 
@@ -93,7 +87,6 @@ public class SatelliteEntry extends CoreBlock{
                             Draw.alpha(Interp.pow10Out.apply(1f - open));
 
                             float hw = width / 2f, hh = height / 2f;
-                            float cx = x + hw, cy = y + hh;
                             float rad = Interp.pow5In.apply(open) * Math.max(hw, hh);
 
                             if(rad < hh){
@@ -121,6 +114,9 @@ public class SatelliteEntry extends CoreBlock{
         }
 
         @Override
+        public void updateLaunch(){}
+
+        @Override
         public void endLaunch(){
             if(!renderer.isLaunching()){
                 renderer.setScale(Scl.scl(zoomDone - 1f));
@@ -137,7 +133,7 @@ public class SatelliteEntry extends CoreBlock{
         }
 
         @Override
-        public float landDuration(){
+        public float launchDuration(){
             return renderer.isLaunching() ? 0f : zoomDoneTime;
         }
 
@@ -148,7 +144,7 @@ public class SatelliteEntry extends CoreBlock{
         }
 
         @Override
-        public float zoomLaunching(){
+        public float zoomLaunch(){
             camera.position.set(this);
             ui.hudfrag.shown = false;
             ui.hudGroup.color.a = 0f;
@@ -157,7 +153,7 @@ public class SatelliteEntry extends CoreBlock{
                 //TODO
                 return Scl.scl(4f);
             }else{
-                float in = renderer.getLandTimeIn() * landDuration();
+                float in = renderer.getLandTimeIn() * launchDuration();
                 return
                     bound(in, 0f, zoomAppearTime + 30f, Scl.scl(zoomStart), Scl.scl(zoomAppear), Interp.pow2Out) +
                     bound(in, zoomAppearTime + 30f, zoomFocusTime, Scl.scl(zoomAppear), Scl.scl(zoomFocus), Interp.pow2) +
@@ -171,7 +167,7 @@ public class SatelliteEntry extends CoreBlock{
             Draw.rect(region, x, y);
 
             if(renderer.getLandTime() > 0f){
-                float in = renderer.getLandTimeIn() * landDuration();
+                float in = renderer.getLandTimeIn() * launchDuration();
                 if(!renderer.isLaunching()){
                     Draw.z(Layer.blockAdditive);
                     Draw.blend(Blending.additive);
@@ -194,9 +190,12 @@ public class SatelliteEntry extends CoreBlock{
         }
 
         @Override
-        public void drawLanding(CoreBlock block){}
+        public void drawLaunch(){}
 
         @Override
-        public void updateLandParticles(){}
+        public void drawLanding(float x, float y){}
+
+        @Override
+        protected void drawLandingThrusters(float x, float y, float rotation, float frame){}
     }
 }

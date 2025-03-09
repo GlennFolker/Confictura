@@ -1,15 +1,11 @@
 package confictura.graphics.gl;
 
-import arc.func.*;
 import arc.graphics.*;
 import arc.graphics.Cubemap.*;
 import arc.graphics.Pixmap.*;
 import arc.graphics.Texture.*;
 import arc.graphics.gl.*;
-import arc.struct.*;
 import arc.util.*;
-
-import static arc.Core.*;
 
 /**
  * A cubemap framebuffer that requests depth (and stencil) textures instead of renderbuffers, letting users sample from
@@ -47,76 +43,6 @@ public class CFrameBufferCubemap extends FrameBufferCubemap{
     }
 
     @Override
-    protected void build(){
-        if(!defaultFramebufferHandleInitialized){
-            defaultFramebufferHandleInitialized = true;
-            defaultFramebufferHandle = 0; // Java mods don't work on iOS anyway.
-        }
-
-        int lastHandle = currentBoundFramebuffer == null ? defaultFramebufferHandle : currentBoundFramebuffer.getFramebufferHandle();
-
-        framebufferHandle = Gl.genFramebuffer();
-        Gl.bindFramebuffer(Gl.framebuffer, framebufferHandle);
-
-        // And here we see one of the most horrendous code ever due to Java's stupid tendency of making everything private for no reason.
-        int width = Reflect.get(GLFrameBufferBuilder.class, bufferBuilder, "width");
-        int height = Reflect.get(GLFrameBufferBuilder.class, bufferBuilder, "height");
-
-        var specs = Reflect.<Seq<FrameBufferTextureAttachmentSpec>>get(GLFrameBufferBuilder.class, bufferBuilder, "textureAttachmentSpecs");
-        isMRT = specs.size > 1;
-
-        int colorTextureCounter = 0;
-        if(isMRT){
-            for(var spec : specs){
-                var texture = createTexture(spec);
-                textureAttachments.add(texture);
-
-                if(spec.isColorTexture()){
-                    attachTexture(Gl.colorAttachment0 + colorTextureCounter, texture);
-                    colorTextureCounter++;
-                }else if(Reflect.get(FrameBufferTextureAttachmentSpec.class, spec, "isDepth")){
-                    attachTexture(Gl.depthAttachment, texture);
-                }else if(Reflect.get(FrameBufferTextureAttachmentSpec.class, spec, "isStencil")){
-                    attachTexture(Gl.stencilAttachment, texture);
-                }
-            }
-        }else{
-            var texture = createTexture(specs.first());
-            textureAttachments.add(texture);
-            attachTexture(Gl.colorAttachment0, texture);
-        }
-
-        if(isMRT){
-            var buffer = Buffers.newIntBuffer(colorTextureCounter);
-            for(int i = 0; i < colorTextureCounter; i++){
-                buffer.put(Gl.colorAttachment0 + i);
-            }
-
-            buffer.position(0);
-            gl30.glDrawBuffers(colorTextureCounter, buffer);
-        }
-
-        for(var texture : textureAttachments) Gl.bindTexture(texture.glTarget, 0);
-        int result = Gl.checkFramebufferStatus(Gl.framebuffer);
-
-        Gl.bindFramebuffer(Gl.framebuffer, lastHandle);
-        if(result != Gl.framebufferComplete){
-            for(var texture : textureAttachments) disposeColorTexture(texture);
-
-            Gl.deleteFramebuffer(framebufferHandle);
-            if(result == Gl.framebufferIncompleteAttachment)
-                throw new IllegalStateException("Frame buffer couldn't be constructed: incomplete attachment (" + width + "x" + height + ")");
-            if(result == Gl.framebufferIncompleteDimensions)
-                throw new IllegalStateException("Frame buffer couldn't be constructed: incomplete dimensions");
-            if(result == Gl.framebufferIncompleteMissingAttachment)
-                throw new IllegalStateException("Frame buffer couldn't be constructed: missing attachment");
-            if(result == Gl.framebufferUnsupported)
-                throw new IllegalStateException("Frame buffer couldn't be constructed: unsupported combination of formats");
-            throw new IllegalStateException("Frame buffer couldn't be constructed: unknown error " + result);
-        }
-    }
-
-    @Override
     protected Cubemap createTexture(FrameBufferTextureAttachmentSpec spec){
         var result = super.createTexture(spec);
         if(!spec.isColorTexture()) result.setFilter(TextureFilter.nearest);
@@ -139,7 +65,7 @@ public class CFrameBufferCubemap extends FrameBufferCubemap{
     }
 
     @Override
-    protected void bindSide(CubemapSide side){
+    public void bindSide(CubemapSide side){
         Gl.framebufferTexture2D(Gl.framebuffer, Gl.colorAttachment0, side.glEnum, getTexture().getTextureObjectHandle(), 0);
         if(hasDepth) Gl.framebufferTexture2D(Gl.framebuffer, Gl.depthAttachment, side.glEnum, getDepthTexture().getTextureObjectHandle(), 0);
         if(hasStencil) Gl.framebufferTexture2D(Gl.framebuffer, Gl.stencilAttachment, side.glEnum, getStencilTexture().getTextureObjectHandle(), 0);
@@ -163,22 +89,5 @@ public class CFrameBufferCubemap extends FrameBufferCubemap{
 
         // Ignore filters for depth and stencil textures, as changing them in the first place is always a wrong choice.
         getTexture().setFilter(min, mag);
-    }
-
-    public void eachSide(Cons<CubemapSide> cons){
-        for(var side : sides){
-            bindSide(side);
-            cons.get(side);
-        }
-    }
-
-    @Override
-    public final boolean nextSide(){
-        throw new UnsupportedOperationException("Use `iterateSide()` instead!");
-    }
-
-    @Override
-    public final CubemapSide getSide(){
-        throw new UnsupportedOperationException("Use `iterateSide()` instead!");
     }
 }

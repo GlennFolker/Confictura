@@ -5,6 +5,7 @@ import arc.math.*;
 import arc.math.geom.*;
 import arc.struct.*;
 import confictura.graphics.g3d.CMeshBuilder.IslandShaper.*;
+import confictura.world.celestial.mesh.DualHexMesh.*;
 import mindustry.graphics.g3d.*;
 import mindustry.graphics.g3d.PlanetGrid.*;
 
@@ -219,6 +220,78 @@ public final class CMeshBuilder{
             }
 
             for(var corner : c) corner.v.nor();
+        }
+
+        return end();
+    }
+
+    public static Mesh buildDualHex(DualHexMesher mesher, int divisions, float radius){
+        var grid = PlanetGrid.create(divisions);
+
+        var topology = new Vec2();
+        int tl = grid.tiles.length, cl = grid.corners.length;
+        float[] tileHeights = new float[tl * 2];
+        float[] cornerHeights = new float[cl * 2];
+
+        int count = 0;
+        for(var tile : grid.tiles){
+            mesher.topology(tile.v, topology);
+            if((tileHeights[tile.id] = topology.x) >= (tileHeights[tl + tile.id] = topology.y)){
+                count += 3 * tile.corners.length;
+            }
+        }
+
+        outer:
+        for(var c : grid.corners){
+            mesher.topology(c.v, topology);
+            for(var t : c.tiles){
+                if(tileHeights[t.id] < tileHeights[tl + t.id]){
+                    cornerHeights[c.id] = cornerHeights[cl + c.id] = (topology.x + topology.y) / 2f;
+                    continue outer;
+                }
+            }
+
+            cornerHeights[c.id] = topology.x;
+            cornerHeights[cl + c.id] = topology.y;
+        }
+
+        begin(count * 2);
+        for(var t : grid.tiles){
+            if(tileHeights[t.id] < tileHeights[tl + t.id]) continue;
+
+            Color colHigh = c1, colLow = c2;
+            mesher.color(t.v, colHigh, colLow);
+
+            var c = t.corners;
+            v1.set(c[0].v).setLength(cornerHeights[c[0].id] * radius);
+            v2.set(c[2].v).setLength(cornerHeights[c[2].id] * radius);
+            v3.set(c[4].v).setLength(cornerHeights[c[4].id] * radius);
+
+            var n = normal(nor, v1, v2, v3);
+
+            v1.set(t.v).setLength(tileHeights[t.id] * radius);
+            for(int i = 0, len = c.length; i < len; i++){
+                Corner c1 = c[i], c2 = c[(i + 1) % len];
+                v2.set(c1.v).setLength(cornerHeights[c1.id] * radius);
+                v3.set(c2.v).setLength(cornerHeights[c2.id] * radius);
+
+                verts(v1, v2, v3, n, colHigh);
+            }
+
+            v1.set(c[4].v).setLength(cornerHeights[cl + c[4].id] * radius);
+            v2.set(c[2].v).setLength(cornerHeights[cl + c[2].id] * radius);
+            v3.set(c[0].v).setLength(cornerHeights[cl + c[0].id] * radius);
+
+            n = normal(nor, v1, v2, v3);
+
+            v1.set(t.v).setLength(tileHeights[tl + t.id] * radius);
+            for(int i = 0, len = c.length; i < len; i++){
+                Corner c1 = c[i], c2 = c[(i + 1) % len];
+                v2.set(c1.v).setLength(cornerHeights[cl + c1.id] * radius);
+                v3.set(c2.v).setLength(cornerHeights[cl + c2.id] * radius);
+
+                verts(v1, v3, v2, n, colLow);
+            }
         }
 
         return end();

@@ -11,6 +11,9 @@ import java.lang.reflect.*;
  * A {@link Graphics} mock-module used to logically pretend that the window's screen resolution is something else. This
  * is typically done to adjust rendering code to a {@linkplain FrameBuffer framebuffer}'s size that is different from
  * the screen by overriding what {@link Graphics#getWidth()} and {@link Graphics#getHeight()} return.
+ * <br>
+ * Call {@link #override(int, Runnable)} or {@link #override(int, int, Runnable)}, and the supplied runnable will be
+ * immediately run with {@link Core#graphics} having the overridden screen dimensions.
  * @author GlFolker
  */
 public class SizedGraphics extends Graphics{
@@ -31,16 +34,24 @@ public class SizedGraphics extends Graphics{
         }
     }
 
+    /** @see #override(int, int, Runnable)  */
     public void override(int dimension, Runnable run){
         override(dimension, dimension, run);
     }
 
+    /**
+     * Momentarily assigns this instance to {@link Core#graphics}, overriding its screen dimension. The supplied
+     * runnable will be run within that context and once it exits {@link Core#graphics} will be restored.
+     * @param width  The override width that'll be returned by {@link Graphics#getWidth()}.
+     * @param height The override height that'll be returned by {@link Graphics#getHeight()}.
+     * @param run    The runnable that will be immediately run within the overridden graphical context.
+     */
     public void override(int width, int height, Runnable run){
         overrideWidth = width;
         overrideHeight = height;
 
         var prev = Core.graphics;
-        var prevDelegate = delegate;
+        var prevDelegate = delegate; // Safe-guard against nested `override()` calls.
 
         Core.graphics = this;
         delegate = prev;
